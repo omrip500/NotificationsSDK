@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">PushNotificationSDK</string>
+    <string name="default_notification_channel_id">push_notification_channel</string>
+</resources>
