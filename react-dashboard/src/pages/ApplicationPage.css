@@ -1,0 +1,161 @@
+/* src/pages/ApplicationPage.css */
+.app-page-container {
+  max-width: 800px;
+  margin: 2rem auto;
+  background: #fff;
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+}
+
+.app-page-container h2 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: #333;
+}
+
+.tabs {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.tabs button {
+  padding: 0.5rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  background-color: #eee;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-weight: 500;
+}
+
+.tabs button.active {
+  background-color: #2563eb;
+  color: white;
+}
+
+.tabs button:hover {
+  background-color: #dcdcdc;
+}
+
+.tab-content {
+  border-top: 1px solid #eee;
+  padding-top: 2rem;
+}
+
+.send-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.send-form input,
+.send-form textarea {
+  padding: 0.75rem 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  resize: vertical;
+  width: 100%;
+}
+
+.send-form button {
+  padding: 0.75rem;
+  border: none;
+  border-radius: 8px;
+  background-color: #2563eb;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.send-form button:disabled {
+  background-color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.send-form button:hover:not(:disabled) {
+  background-color: #1d4ed8;
+}
+
+.success {
+  color: green;
+  font-weight: bold;
+}
+
+.error {
+  color: red;
+  font-weight: bold;
+}
+
+.send-form h4 {
+  margin-top: 1rem;
+  font-size: 1.1rem;
+  color: #444;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.25rem;
+}
+
+.send-form label {
+  display: flex;
+  flex-direction: column;
+  font-weight: 500;
+  color: #333;
+}
+
+.send-form select,
+.send-form input[type="number"] {
+  margin-top: 0.5rem;
+  padding: 0.6rem 0.8rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.send-form select[multiple] {
+  height: 100px;
+}
+
+.send-form .location-inputs {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.send-form .location-inputs input {
+  flex: 1;
+}
+
+.filter-checkboxes {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.5rem 1rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.filter-checkboxes label {
+  display: contents;
+}
+
+/* הוסף לקובץ ApplicationPage.css */
+
+.checkbox-list {
+  display: flex;
+  flex-direction: column;
+  margin-top: 0.5rem;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.25rem 0;
+}
+
+.checkbox-item input {
+  transform: scale(1.2);
+}

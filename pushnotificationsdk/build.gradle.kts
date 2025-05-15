@@ -28,4 +28,7 @@ android {
 
 dependencies {
     implementation(libs.firebase.messaging)
+    implementation (libs.retrofit)
+    implementation (libs.converter.gson)
+
 }
