@@ -1,7 +1,13 @@
 package com.example.pushnotificationsdk;
 
 import android.content.Context;
+import android.util.Log;
+
 import com.google.firebase.messaging.FirebaseMessaging;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class PushNotificationManager {
 
@@ -35,6 +41,46 @@ public class PushNotificationManager {
                     }
                 });
     }
+
+    // גרסה 1 – פשוטה: לא מקבלת token, שולפת לבד
+    public void registerToServer(String appId, UserInfo userInfo) {
+        getToken(new OnTokenReceivedListener() {
+            @Override
+            public void onTokenReceived(String token) {
+                registerToServer(token, appId, userInfo);  // ⬅️ קוראת לגרסה השנייה
+            }
+
+            @Override
+            public void onTokenFailed(Exception e) {
+                Log.e("PushSDK", "❌ Failed to get FCM token", e);
+            }
+        });
+    }
+
+    // גרסה 2 – מלאה: מקבלת את ה־token ישירות
+    public void registerToServer(String token, String appId, UserInfo userInfo) {
+        RegisterDeviceRequest request = new RegisterDeviceRequest(token, appId, userInfo);
+        PushApiService service = ApiClient.getService();
+
+        service.registerDevice(request).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    Log.d("PushSDK", "✅ Device registered successfully");
+                } else {
+                    Log.e("PushSDK", "❌ Server error: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Log.e("PushSDK", "❌ Network failure", t);
+            }
+        });
+    }
+
+
+
 
     // Callback interface for receiving the token
     public interface OnTokenReceivedListener {
