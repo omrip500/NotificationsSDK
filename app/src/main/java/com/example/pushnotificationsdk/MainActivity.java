@@ -5,6 +5,9 @@ import android.util.Log;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.util.Arrays;
+import java.util.List;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -24,7 +27,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onTokenReceived(String token) {
                 Log.d("FirebaseToken", "Firebase Token: " + token);
-                // Here you can send the token to the server or print it
+
+                // 👇 שימוש בפונקציה החדשה:
+                List<String> interests = Arrays.asList("sports", "politics");
+                UserInfo user = new UserInfo("omripeer", "male", 26, interests, 32.0853, 34.7818); // ת"א
+                notificationManager.registerToServer(token, "6825f0b2f5d70b84cf230fbf", user);
+
             }
 
             @Override
