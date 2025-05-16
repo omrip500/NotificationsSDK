@@ -1,3 +1,9 @@
 <resources>
     <string name="default_notification_channel_id">push_notification_channel</string>
+    <string name="app_name">PushNotificationSDK</string>
+    <string-array name="gender_options">
+        <item>Male</item>
+        <item>Female</item>
+        <item>Other</item>
+    </string-array>
 </resources>

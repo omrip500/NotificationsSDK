@@ -224,3 +224,57 @@
 .device-card button:hover {
   background-color: #1d4ed8;
 }
+
+/* 💬 שדרוג עיצוב ללשונית Sent Notifications */
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+.notification-log {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.3s ease;
+  word-wrap: break-word;
+}
+
+.notification-log:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+.log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.log-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.log-time {
+  font-size: 0.9rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.log-body {
+  font-size: 1rem;
+  color: #334155;
+  margin: 0;
+}
+
+.log-meta {
+  margin-top: 0.75rem;
+  font-size: 0.95rem;
+  color: #334155;
+  word-break: break-all; /* 💥 מונע גלישה החוצה */
+}
