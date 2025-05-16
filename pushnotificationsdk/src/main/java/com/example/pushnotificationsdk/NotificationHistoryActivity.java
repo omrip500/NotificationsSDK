@@ -45,11 +45,12 @@ public class NotificationHistoryActivity extends AppCompatActivity {
 
     private void fetchHistory(String token) {
         PushApiService service = ApiClient.getService();
-        service.getNotificationHistory(token).enqueue(new Callback<List<com.example.pushnotificationssdk.NotificationLog>>() {
+        service.getNotificationHistory(token).enqueue(new Callback<List<NotificationLog>>() {
             @Override
-            public void onResponse(Call<List<com.example.pushnotificationssdk.NotificationLog>> call, Response<List<com.example.pushnotificationssdk.NotificationLog>> response) {
+            public void onResponse(Call<List<NotificationLog>> call, Response<List<NotificationLog>> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    adapter = new com.example.pushnotificationsdk.NotificationLogAdapter(response.body());
+                    Log.d("History", "Response successful, size: " + response.body().size());
+                    NotificationLogAdapter adapter = new NotificationLogAdapter(response.body());
                     recyclerView.setAdapter(adapter);
                 } else {
                     Log.e("History", "Response error: " + response.code());
@@ -57,9 +58,10 @@ public class NotificationHistoryActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<List<com.example.pushnotificationssdk.NotificationLog>> call, Throwable t) {
+            public void onFailure(Call<List<NotificationLog>> call, Throwable t) {
                 Log.e("History", "Request failed", t);
             }
         });
     }
+
 }

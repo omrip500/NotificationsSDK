@@ -22,22 +22,22 @@ public class NotificationHistoryManager {
         gson = new Gson();
     }
 
-    public void addNotification(com.example.pushnotificationssdk.NotificationLog notificationLog) {
-        List<com.example.pushnotificationssdk.NotificationLog> history = getHistory();
+    public void addNotification(com.example.pushnotificationsdk.NotificationLog notificationLog) {
+        List<com.example.pushnotificationsdk.NotificationLog> history = getHistory();
         history.add(notificationLog);
         saveHistory(history);
     }
 
-    public List<com.example.pushnotificationssdk.NotificationLog> getHistory() {
+    public List<com.example.pushnotificationsdk.NotificationLog> getHistory() {
         String json = sharedPreferences.getString(HISTORY_KEY, null);
         if (json == null) {
             return new ArrayList<>();
         }
-        Type type = new TypeToken<List<com.example.pushnotificationssdk.NotificationLog>>(){}.getType();
+        Type type = new TypeToken<List<com.example.pushnotificationsdk.NotificationLog>>(){}.getType();
         return gson.fromJson(json, type);
     }
 
-    private void saveHistory(List<com.example.pushnotificationssdk.NotificationLog> history) {
+    private void saveHistory(List<com.example.pushnotificationsdk.NotificationLog> history) {
         String json = gson.toJson(history);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putString(HISTORY_KEY, json);
