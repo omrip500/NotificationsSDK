@@ -1,4 +1,4 @@
-package com.example.pushnotificationssdk;
+package com.example.pushnotificationsdk;
 
 import java.util.Map;
 

@@ -13,6 +13,6 @@ public interface PushApiService {
     Call<Void> registerDevice(@Body RegisterDeviceRequest request);
 
     @GET("/api/notifications/history/{token}")
-    Call<List<com.example.pushnotificationssdk.NotificationLog>> getNotificationHistory(@Path("token") String token);
+    Call<List<com.example.pushnotificationsdk.NotificationLog>> getNotificationHistory(@Path("token") String token);
 
 }
