@@ -1,6 +1,7 @@
 package com.example.pushnotificationsdk;
 
 import android.content.Context;
+import android.content.Intent;
 import android.util.Log;
 
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -78,6 +79,21 @@ public class PushNotificationManager {
             }
         });
     }
+
+    public void launchSignupScreen(Context context, String userName) {
+        Intent intent = new Intent(context, NotificationSignupActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.putExtra("user_name", userName); // 👈 העברת השם
+        context.startActivity(intent);
+    }
+
+    public void launchNotificationHistoryScreen(Context context) {
+        Intent intent = new Intent(context, NotificationHistoryActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(intent);
+    }
+
+
 
 
 

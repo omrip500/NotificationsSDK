@@ -30,6 +30,7 @@ function ApplicationPage() {
 
   const [devices, setDevices] = useState([]);
   const [individualMessage, setIndividualMessage] = useState({});
+  const [notificationHistory, setNotificationHistory] = useState([]);
 
   useEffect(() => {
     const fetchInterests = async () => {
@@ -54,12 +55,33 @@ function ApplicationPage() {
           const res = await api.get(`/devices/app/${appId}`, {
             headers: { Authorization: `Bearer ${token}` },
           });
-          setDevices(res.data);
+          setDevices(res.data || []);
         } catch (err) {
           console.error("Failed to fetch devices", err);
         }
       };
       fetchDevices();
+    }
+  }, [activeTab, appId]);
+
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const headers = { Authorization: `Bearer ${token}` };
+
+        const res = await api.get(`/notifications/history/app/${appId}`, {
+          headers,
+        });
+
+        setNotificationHistory(res.data || []);
+      } catch (err) {
+        console.error("Failed to fetch notification history", err);
+      }
+    };
+
+    if (activeTab === "history") {
+      fetchHistory();
     }
   }, [activeTab, appId]);
 
@@ -110,6 +132,17 @@ function ApplicationPage() {
       setTitle("");
       setBody("");
       setSendAt("");
+      setGender("");
+      setAgeMin("");
+      setAgeMax("");
+      setInterests([]);
+      setLocation({ lat: "", lng: "", radiusKm: "" });
+      setShowFilter({
+        gender: false,
+        age: false,
+        interests: false,
+        location: false,
+      });
     } catch (err) {
       setError(
         err.response?.data?.message || "Failed to send/schedule notification."
@@ -352,14 +385,58 @@ function ApplicationPage() {
             {error && <p className="error">{error}</p>}
           </form>
         )}
-
         {activeTab === "stats" && (
           <p>Analytics & statistics will be shown here</p>
         )}
         {activeTab === "history" && (
-          <p>List of previously sent notifications</p>
-        )}
+          <div className="history-list">
+            {notificationHistory.length === 0 ? (
+              <p>No notifications found.</p>
+            ) : (
+              notificationHistory.map((log, index) => (
+                <div key={index} className="notification-log">
+                  <div className="log-header">
+                    <span className="log-title">{log.title}</span>
+                    <span className="log-time">
+                      {new Date(log.sentAt).toLocaleString()}
+                    </span>
+                  </div>
+                  <p className="log-body">{log.body}</p>
 
+                  <div className="log-meta">
+                    <p>
+                      <strong>Type:</strong> {log.type}
+                    </p>
+
+                    {log.type === "broadcast" && log.filters && (
+                      <div>
+                        <strong>Filters:</strong>
+                        <ul
+                          style={{ paddingLeft: "1rem", marginTop: "0.5rem" }}
+                        >
+                          {Object.entries(log.filters).map(([key, val]) => (
+                            <li key={key}>
+                              {key}:{" "}
+                              {Array.isArray(val)
+                                ? val.join(", ")
+                                : val.toString()}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {log.type === "individual" && (
+                      <p>
+                        <strong>Target Token:</strong> {log.token}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
         {activeTab === "individual" && (
           <div className="device-list">
             {devices.length === 0 ? (
