@@ -14,9 +14,9 @@ import java.util.List;
 
 public class NotificationLogAdapter extends RecyclerView.Adapter<NotificationLogAdapter.ViewHolder> {
 
-    private List<com.example.pushnotificationssdk.NotificationLog> logs;
+    private List<com.example.pushnotificationsdk.NotificationLog> logs;
 
-    public NotificationLogAdapter(List<com.example.pushnotificationssdk.NotificationLog> logs) {
+    public NotificationLogAdapter(List<com.example.pushnotificationsdk.NotificationLog> logs) {
         this.logs = logs;
     }
 
@@ -29,7 +29,7 @@ public class NotificationLogAdapter extends RecyclerView.Adapter<NotificationLog
 
     @Override
     public void onBindViewHolder(NotificationLogAdapter.ViewHolder holder, int position) {
-        com.example.pushnotificationssdk.NotificationLog log = logs.get(position);
+        com.example.pushnotificationsdk.NotificationLog log = logs.get(position);
         holder.titleText.setText(log.getTitle());
         holder.bodyText.setText(log.getBody());
         holder.sentAtText.setText("Sent at: " + log.getSentAt());
