@@ -10,6 +10,11 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+
+        <!-- הוספת Activity למסך ההרשמה של ה-SDK -->
+        <activity android:name="com.example.pushnotificationsdk.NotificationSignupActivity" />
+        <!-- הוספת Activity למסך היסטוריית ההודעות של ה-SDK -->
+        <activity android:name="com.example.pushnotificationsdk.NotificationHistoryActivity" />
     </application>
 
 </manifest>

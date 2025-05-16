@@ -1,6 +1,7 @@
 import admin from "../config/firebaseAdmin.js";
 import Device from "../models/Device.js";
 import ScheduledNotification from "../models/ScheduledNotification.js";
+import NotificationLog from "../models/NotificationLog.js";
 
 // helper לחישוב מרחק בין 2 נקודות גאוגרפיות (בק"מ)
 function haversineDistance(lat1, lng1, lat2, lng2) {
@@ -64,6 +65,17 @@ export const sendNotification = async (req, res) => {
 
     const response = await admin.messaging().sendEachForMulticast(message);
 
+    // ✅ שמירת לוגים עם type ו־filters
+    const logs = tokens.map((token) => ({
+      token,
+      appId,
+      title,
+      body,
+      type: "broadcast",
+      filters: Object.keys(filters).length > 0 ? filters : null,
+    }));
+    await NotificationLog.insertMany(logs);
+
     res.status(200).json({
       message: `Notification sent to ${response.successCount} devices`,
       failures: response.failureCount,
@@ -125,6 +137,7 @@ export const getScheduledNotifications = async (req, res) => {
   }
 };
 
+// 🔸 שליחה למשתמשים מסוימים
 export const sendToSpecificTokens = async (req, res) => {
   const { title, body, appId, tokens } = req.body;
 
@@ -140,6 +153,16 @@ export const sendToSpecificTokens = async (req, res) => {
 
     const response = await admin.messaging().sendEachForMulticast(message);
 
+    // ✅ שמירת לוגים עם type individual
+    const logs = tokens.map((token) => ({
+      token,
+      appId,
+      title,
+      body,
+      type: "individual",
+    }));
+    await NotificationLog.insertMany(logs);
+
     res.status(200).json({
       message: `Notification sent to ${response.successCount} devices`,
       failures: response.failureCount,
@@ -148,6 +171,46 @@ export const sendToSpecificTokens = async (req, res) => {
     console.error("❌ Error sending specific notification:", err);
     res.status(500).json({
       message: "Failed to send specific notification",
+      error: err.message,
+    });
+  }
+};
+
+// 🔎 היסטוריה לפי App ID
+export const getNotificationHistoryByAppId = async (req, res) => {
+  const { appId } = req.params;
+
+  if (!appId) {
+    return res.status(400).json({ message: "App ID is required" });
+  }
+
+  try {
+    const history = await NotificationLog.find({ appId }).sort({ sentAt: -1 });
+    res.status(200).json(history);
+  } catch (err) {
+    console.error("❌ Error fetching notification history by appId:", err);
+    res.status(500).json({
+      message: "Failed to fetch notification history",
+      error: err.message,
+    });
+  }
+};
+
+// 🔎 היסטוריה לפי Token (ל־SDK)
+export const getNotificationHistoryByToken = async (req, res) => {
+  const { token } = req.params;
+
+  if (!token) {
+    return res.status(400).json({ message: "Token is required" });
+  }
+
+  try {
+    const history = await NotificationLog.find({ token }).sort({ sentAt: -1 });
+    res.status(200).json(history);
+  } catch (err) {
+    console.error("❌ Error fetching notification history by token:", err);
+    res.status(500).json({
+      message: "Failed to fetch notification history",
       error: err.message,
     });
   }
