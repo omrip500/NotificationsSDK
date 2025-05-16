@@ -1,4 +1,3 @@
-/* src/pages/ApplicationPage.css */
 .app-page-container {
   max-width: 800px;
   margin: 2rem auto;
@@ -62,49 +61,12 @@
   width: 100%;
 }
 
-.send-form button {
+.send-form input[type="datetime-local"] {
   padding: 0.75rem;
-  border: none;
+  border: 1px solid #ccc;
   border-radius: 8px;
-  background-color: #2563eb;
-  color: white;
   font-size: 1rem;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.send-form button:disabled {
-  background-color: #94a3b8;
-  cursor: not-allowed;
-}
-
-.send-form button:hover:not(:disabled) {
-  background-color: #1d4ed8;
-}
-
-.success {
-  color: green;
-  font-weight: bold;
-}
-
-.error {
-  color: red;
-  font-weight: bold;
-}
-
-.send-form h4 {
-  margin-top: 1rem;
-  font-size: 1.1rem;
-  color: #444;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 0.25rem;
-}
-
-.send-form label {
-  display: flex;
-  flex-direction: column;
-  font-weight: 500;
-  color: #333;
+  width: 100%;
 }
 
 .send-form select,
@@ -129,6 +91,51 @@
   flex: 1;
 }
 
+.send-form button {
+  padding: 0.75rem;
+  border: none;
+  border-radius: 8px;
+  background-color: #2563eb;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.send-form button:disabled {
+  background-color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.send-form button:hover:not(:disabled) {
+  background-color: #1d4ed8;
+}
+
+.send-form h4 {
+  margin-top: 1rem;
+  font-size: 1.1rem;
+  color: #444;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.25rem;
+}
+
+.send-form label {
+  display: flex;
+  flex-direction: column;
+  font-weight: 500;
+  color: #333;
+}
+
+.success {
+  color: green;
+  font-weight: bold;
+}
+
+.error {
+  color: red;
+  font-weight: bold;
+}
+
 .filter-checkboxes {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -140,8 +147,6 @@
 .filter-checkboxes label {
   display: contents;
 }
-
-/* הוסף לקובץ ApplicationPage.css */
 
 .checkbox-list {
   display: flex;
@@ -158,4 +163,64 @@
 
 .checkbox-item input {
   transform: scale(1.2);
+}
+
+/* 💬 עיצוב ללשונית Send to Individual */
+.device-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.device-card {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.3s;
+}
+
+.device-card:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+.device-card p {
+  margin: 0.25rem 0;
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.device-card input[type="text"],
+.device-card textarea,
+.device-card input[type="datetime-local"] {
+  width: 100%;
+  margin-top: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding: 0.65rem 1rem;
+  font-size: 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.device-card textarea {
+  min-height: 60px;
+}
+
+.device-card button {
+  background-color: #2563eb;
+  color: white;
+  padding: 0.6rem 1rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.device-card button:hover {
+  background-color: #1d4ed8;
 }

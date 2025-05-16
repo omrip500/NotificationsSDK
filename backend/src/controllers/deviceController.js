@@ -36,3 +36,18 @@ export const registerDeviceToken = async (req, res) => {
     });
   }
 };
+
+export const getDevicesByAppId = async (req, res) => {
+  const { appId } = req.params;
+
+  try {
+    const devices = await Device.find({ appId });
+
+    res.status(200).json(devices);
+  } catch (err) {
+    console.error("❌ Error fetching devices:", err);
+    res
+      .status(500)
+      .json({ message: "Failed to fetch devices", error: err.message });
+  }
+};
