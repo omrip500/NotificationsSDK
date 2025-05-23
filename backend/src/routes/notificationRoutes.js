@@ -3,6 +3,7 @@ import {
   sendNotification,
   getNotificationHistoryByAppId,
   getNotificationHistoryByToken,
+  deleteNotificationById,
 } from "../controllers/notificationController.js";
 import authenticateApiKey from "../middlewares/authenticateApiKey.js";
 import authenticate from "../middlewares/authMiddleware.js";
@@ -20,5 +21,6 @@ router.get("/scheduled/:appId", authenticate, getScheduledNotifications);
 router.post("/send-to-specific", authenticateApiKey, sendToSpecificTokens);
 router.get("/history/app/:appId", getNotificationHistoryByAppId);
 router.get("/history/:token", getNotificationHistoryByToken); // ✅ חדש
+router.delete("/:id", deleteNotificationById); // 👈 חדש
 
 export default router;
