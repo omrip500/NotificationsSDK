@@ -215,3 +215,25 @@ export const getNotificationHistoryByToken = async (req, res) => {
     });
   }
 };
+
+// ❌ מחיקת התראה לפי ID (משמש את ה־SDK)
+export const deleteNotificationById = async (req, res) => {
+  console.log("❌ Deleting notification...");
+
+  const { id } = req.params;
+
+  try {
+    const deleted = await NotificationLog.findByIdAndDelete(id);
+    if (!deleted) {
+      return res.status(404).json({ message: "Notification not found" });
+    }
+
+    res.status(200).json({ message: "Notification deleted" });
+  } catch (err) {
+    console.error("❌ Error deleting notification:", err);
+    res.status(500).json({
+      message: "Failed to delete notification",
+      error: err.message,
+    });
+  }
+};
