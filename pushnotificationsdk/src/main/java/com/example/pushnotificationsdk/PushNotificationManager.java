@@ -93,6 +93,75 @@ public class PushNotificationManager {
         context.startActivity(intent);
     }
 
+    public void launchSettingsScreen(Context context) {
+        Intent intent = new Intent(context, SettingsActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(intent);
+    }
+
+    public void updateUserInfo(String appId, UserInfo userInfo) {
+        getToken(new OnTokenReceivedListener() {
+            @Override
+            public void onTokenReceived(String token) {
+                PushApiService service = ApiClient.getService();
+                UpdateDeviceRequest request = new UpdateDeviceRequest(token, userInfo);
+
+                service.updateDeviceInfo(request).enqueue(new Callback<Void>() {
+                    @Override
+                    public void onResponse(Call<Void> call, Response<Void> response) {
+                        if (response.isSuccessful()) {
+                            Log.d("PushSDK", "✅ Device info updated successfully");
+                        } else {
+                            Log.e("PushSDK", "❌ Update failed: " + response.code());
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<Void> call, Throwable t) {
+                        Log.e("PushSDK", "❌ Network error during update", t);
+                    }
+                });
+            }
+
+            @Override
+            public void onTokenFailed(Exception e) {
+                Log.e("PushSDK", "❌ Failed to get token for update", e);
+            }
+        });
+    }
+
+    public void unregisterDevice() {
+        getToken(new OnTokenReceivedListener() {
+            @Override
+            public void onTokenReceived(String token) {
+                PushApiService service = ApiClient.getService();
+                service.unregisterDevice(token).enqueue(new Callback<Void>() {
+                    @Override
+                    public void onResponse(Call<Void> call, Response<Void> response) {
+                        if (response.isSuccessful()) {
+                            Log.d("PushSDK", "✅ Device unregistered successfully");
+                        } else {
+                            Log.e("PushSDK", "❌ Failed to unregister device. Code: " + response.code());
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<Void> call, Throwable t) {
+                        Log.e("PushSDK", "❌ Network error during unregister", t);
+                    }
+                });
+            }
+
+            @Override
+            public void onTokenFailed(Exception e) {
+                Log.e("PushSDK", "❌ Could not get token for unregister", e);
+            }
+        });
+    }
+
+
+
+
 
 
 

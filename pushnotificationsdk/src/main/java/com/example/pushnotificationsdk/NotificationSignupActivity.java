@@ -16,18 +16,21 @@ public class NotificationSignupActivity extends AppCompatActivity {
     private CheckBox sportsCheck, politicsCheck, techCheck;
     private Button registerButton;
 
-    private String userName; // ✅ הגדרה גלובלית
+    private String userName;
+    private boolean isUpdate = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notification_signup);
 
-        // ✅ קבלת שם המשתמש מתוך Intent
         userName = getIntent().getStringExtra("user_name");
         if (userName == null || userName.isEmpty()) {
-            userName = "anonymous"; // ברירת מחדל
+            userName = "anonymous";
         }
+
+        String mode = getIntent().getStringExtra("mode");
+        isUpdate = mode != null && mode.equals("update");
 
         ageInput = findViewById(R.id.age_input);
         genderSpinner = findViewById(R.id.gender_spinner);
@@ -41,6 +44,30 @@ public class NotificationSignupActivity extends AppCompatActivity {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         genderSpinner.setAdapter(adapter);
 
+        // אם במצב עדכון – נמלא את השדות
+        if (isUpdate) {
+            String genderExtra = getIntent().getStringExtra("gender");
+            int ageExtra = getIntent().getIntExtra("age", -1);
+            ArrayList<String> interestsExtra = getIntent().getStringArrayListExtra("interests");
+
+            if (genderExtra != null) {
+                // הופך ל־"Male" או "Female" לצורך מיקום בספינר
+                String capitalized = genderExtra.substring(0, 1).toUpperCase() + genderExtra.substring(1);
+                int position = adapter.getPosition(capitalized);
+                genderSpinner.setSelection(position);
+            }
+
+            if (ageExtra != -1) {
+                ageInput.setText(String.valueOf(ageExtra));
+            }
+
+            if (interestsExtra != null) {
+                if (interestsExtra.contains("sports")) sportsCheck.setChecked(true);
+                if (interestsExtra.contains("politics")) politicsCheck.setChecked(true);
+                if (interestsExtra.contains("tech")) techCheck.setChecked(true);
+            }
+        }
+
         registerButton.setOnClickListener(v -> {
             String gender = genderSpinner.getSelectedItem().toString().toLowerCase();
             int age = Integer.parseInt(ageInput.getText().toString().trim());
@@ -50,13 +77,18 @@ public class NotificationSignupActivity extends AppCompatActivity {
             if (politicsCheck.isChecked()) interests.add("politics");
             if (techCheck.isChecked()) interests.add("tech");
 
-            // משתמש ב־userName שנקלט מה־Intent
             UserInfo userInfo = new UserInfo(userName, gender, age, interests, 32.0853, 34.7818);
 
-            PushNotificationManager.getInstance(this)
-                    .registerToServer("6825f0b2f5d70b84cf230fbf", userInfo);
+            if (isUpdate) {
+                PushNotificationManager.getInstance(this)
+                        .updateUserInfo("6825f0b2f5d70b84cf230fbf", userInfo);
+                Toast.makeText(this, "Details updated!", Toast.LENGTH_SHORT).show();
+            } else {
+                PushNotificationManager.getInstance(this)
+                        .registerToServer("6825f0b2f5d70b84cf230fbf", userInfo);
+                Toast.makeText(this, "Registered!", Toast.LENGTH_SHORT).show();
+            }
 
-            Toast.makeText(this, "Registered!", Toast.LENGTH_SHORT).show();
             finish();
         });
     }
