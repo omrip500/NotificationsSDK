@@ -198,6 +198,7 @@ export const getNotificationHistoryByAppId = async (req, res) => {
 
 // 🔎 היסטוריה לפי Token (ל־SDK)
 export const getNotificationHistoryByToken = async (req, res) => {
+  console.log("🔎 Fetching notification history by token...");
   const { token } = req.params;
 
   if (!token) {
