@@ -36,6 +36,7 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation(libs.monitor)
     implementation(libs.ext.junit)
+    implementation(libs.material)
     testImplementation ("junit:junit:4.13.2")
 
 }
