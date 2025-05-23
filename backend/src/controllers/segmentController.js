@@ -2,34 +2,42 @@ import Segment from "../models/Segment.js";
 
 export const createSegment = async (req, res) => {
   try {
-    const { name, filters, appId } = req.body;
+    const { appId, name, filters } = req.body;
+    const userId = req.userId;
 
-    if (!name || !appId) {
-      return res.status(400).json({ message: "Missing name or appId" });
-    }
-
-    const newSegment = await Segment.create({
-      name,
+    const segment = new Segment({
       appId,
+      name,
       filters,
+      user: userId,
     });
 
-    res.status(201).json({ message: "Segment created", segment: newSegment });
-  } catch (err) {
-    res
-      .status(500)
-      .json({ message: "Failed to create segment", error: err.message });
+    await segment.save();
+    res.status(201).json(segment);
+  } catch (error) {
+    console.error("Create Segment Error:", error);
+    res.status(500).json({ message: "Failed to create segment" });
   }
 };
 
-export const getSegments = async (req, res) => {
+export const getSegmentsByApp = async (req, res) => {
   try {
     const { appId } = req.params;
-    const segments = await Segment.find({ appId }).sort({ createdAt: -1 });
-    res.status(200).json(segments);
-  } catch (err) {
-    res
-      .status(500)
-      .json({ message: "Failed to fetch segments", error: err.message });
+    const segments = await Segment.find({ appId });
+    res.json(segments);
+  } catch (error) {
+    console.error("Get Segments Error:", error);
+    res.status(500).json({ message: "Failed to fetch segments" });
+  }
+};
+
+export const deleteSegment = async (req, res) => {
+  try {
+    const { segmentId } = req.params;
+    await Segment.findByIdAndDelete(segmentId);
+    res.json({ message: "Segment deleted" });
+  } catch (error) {
+    console.error("Delete Segment Error:", error);
+    res.status(500).json({ message: "Failed to delete segment" });
   }
 };

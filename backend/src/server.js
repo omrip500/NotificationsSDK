@@ -1,13 +1,12 @@
 import express from "express";
-import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
-
 import authRoutes from "./routes/authRoute.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import applicationRoutes from "./routes/applicationRoutes.js";
 import deviceRoutes from "./routes/deviceRoutes.js";
 import segmentRoutes from "./routes/segmentRoutes.js";
+import statsRoutes from "./routes/stats.js";
 import startNotificationWorker from "./workers/notificationWorker.js";
 import connectDB from "./config/db.js";
 
@@ -25,6 +24,7 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/applications", applicationRoutes);
 app.use("/api/devices", deviceRoutes);
 app.use("/api/segments", segmentRoutes);
+app.use("/api/stats", statsRoutes);
 
 // Connect to MongoDB
 connectDB();

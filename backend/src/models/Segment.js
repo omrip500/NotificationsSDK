@@ -12,7 +12,7 @@ const segmentSchema = new mongoose.Schema(
       required: true,
     },
     filters: {
-      gender: String,
+      gender: { type: String },
       ageMin: Number,
       ageMax: Number,
       interests: [String],
@@ -21,6 +21,11 @@ const segmentSchema = new mongoose.Schema(
         lng: Number,
         radiusKm: Number,
       },
+    },
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
   },
   { timestamps: true }

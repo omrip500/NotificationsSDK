@@ -278,3 +278,41 @@
   color: #334155;
   word-break: break-all; /* 💥 מונע גלישה החוצה */
 }
+
+.segment-selector {
+  margin-bottom: 1.5rem;
+}
+
+.segment-selector label {
+  font-weight: 500;
+  color: #333;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.segment-selector select {
+  width: 100%;
+  padding: 0.65rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.segment-form-toggle {
+  margin-bottom: 2rem;
+}
+
+.toggle-segment-form-button {
+  background-color: #2563eb;
+  color: white;
+  border: none;
+  padding: 0.65rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+}
+
+.toggle-segment-form-button:hover {
+  background-color: #1d4ed8;
+}

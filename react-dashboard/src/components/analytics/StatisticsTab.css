@@ -1,0 +1,37 @@
+.statistics-tab {
+  margin-top: 16px;
+}
+
+.sub-tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.sub-tabs button {
+  padding: 8px 16px;
+  background-color: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sub-tabs button.active {
+  border-color: #0ea5e9;
+  color: #0ea5e9;
+}
+
+.sub-tabs button:hover {
+  color: #0ea5e9;
+}
+
+.sub-tab-content {
+  padding: 16px;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}

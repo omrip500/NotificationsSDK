@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from "../services/api";
+import SegmentManager from "../components/segments/SegmentManager";
+import SegmentForm from "../components/segments/SegmentForm";
+import StatisticsTab from "../components/analytics/StatisticsTab";
 import "./ApplicationPage.css";
 
 function ApplicationPage() {
@@ -31,6 +34,9 @@ function ApplicationPage() {
   const [devices, setDevices] = useState([]);
   const [individualMessage, setIndividualMessage] = useState({});
   const [notificationHistory, setNotificationHistory] = useState([]);
+
+  const [segments, setSegments] = useState([]);
+  const [selectedSegmentId, setSelectedSegmentId] = useState("");
 
   useEffect(() => {
     const fetchInterests = async () => {
@@ -69,11 +75,9 @@ function ApplicationPage() {
       try {
         const token = localStorage.getItem("token");
         const headers = { Authorization: `Bearer ${token}` };
-
         const res = await api.get(`/notifications/history/app/${appId}`, {
           headers,
         });
-
         setNotificationHistory(res.data || []);
       } catch (err) {
         console.error("Failed to fetch notification history", err);
@@ -85,31 +89,61 @@ function ApplicationPage() {
     }
   }, [activeTab, appId]);
 
+  useEffect(() => {
+    const fetchSegments = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await api.get(`/segments/${appId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setSegments(res.data || []);
+      } catch (err) {
+        console.error("❌ Failed to fetch segments", err);
+      }
+    };
+    fetchSegments();
+  }, [appId]);
+
   const handleSendNotification = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage("");
     setError("");
 
-    const filters = {};
-    if (showFilter.gender && gender) filters.gender = gender;
-    if (showFilter.age) {
-      if (ageMin) filters.ageMin = Number(ageMin);
-      if (ageMax) filters.ageMax = Number(ageMax);
-    }
-    if (showFilter.interests && interests.length > 0)
-      filters.interests = interests;
-    if (
-      showFilter.location &&
-      location.lat &&
-      location.lng &&
-      location.radiusKm
-    ) {
-      filters.location = {
-        lat: Number(location.lat),
-        lng: Number(location.lng),
-        radiusKm: Number(location.radiusKm),
-      };
+    let filters = {};
+    if (selectedSegmentId) {
+      const selectedSegment = segments.find((s) => s._id === selectedSegmentId);
+      if (
+        selectedSegment &&
+        selectedSegment.filters &&
+        Object.keys(selectedSegment.filters).length > 0
+      ) {
+        filters = selectedSegment.filters;
+      } else {
+        setError("Selected segment has no filters.");
+        setLoading(false);
+        return;
+      }
+    } else {
+      if (showFilter.gender && gender) filters.gender = gender;
+      if (showFilter.age) {
+        if (ageMin) filters.ageMin = Number(ageMin);
+        if (ageMax) filters.ageMax = Number(ageMax);
+      }
+      if (showFilter.interests && interests.length > 0)
+        filters.interests = interests;
+      if (
+        showFilter.location &&
+        location.lat &&
+        location.lng &&
+        location.radiusKm
+      ) {
+        filters.location = {
+          lat: Number(location.lat),
+          lng: Number(location.lng),
+          radiusKm: Number(location.radiusKm),
+        };
+      }
     }
 
     const payload = { appId, title, body, filters };
@@ -143,6 +177,7 @@ function ApplicationPage() {
         interests: false,
         location: false,
       });
+      setSelectedSegmentId("");
     } catch (err) {
       setError(
         err.response?.data?.message || "Failed to send/schedule notification."
@@ -237,6 +272,12 @@ function ApplicationPage() {
         >
           Send to Individual
         </button>
+        <button
+          className={activeTab === "segments" ? "active" : ""}
+          onClick={() => setActiveTab("segments")}
+        >
+          Manage Segments
+        </button>
       </div>
 
       <div className="tab-content">
@@ -255,7 +296,6 @@ function ApplicationPage() {
               onChange={(e) => setBody(e.target.value)}
               required
             />
-
             <label>
               Send At (optional):
               <input
@@ -265,112 +305,136 @@ function ApplicationPage() {
               />
             </label>
 
-            <hr />
-            <h4>Optional Filters</h4>
-            <div className="filter-checkboxes">
-              {Object.keys(showFilter).map((filter) => (
-                <label key={filter}>
-                  <span>
-                    {filter.charAt(0).toUpperCase() + filter.slice(1)}
-                  </span>
-                  <input
-                    type="checkbox"
-                    checked={showFilter[filter]}
-                    onChange={() => toggleFilter(filter)}
-                  />
-                </label>
-              ))}
-            </div>
-
-            {showFilter.gender && (
+            {segments.length > 0 && (
               <label>
-                Gender:
+                Choose Saved Segment:
                 <select
-                  value={gender}
-                  onChange={(e) => setGender(e.target.value)}
+                  value={selectedSegmentId}
+                  onChange={(e) => setSelectedSegmentId(e.target.value)}
                 >
-                  <option value="">Any</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
+                  <option value="">-- None --</option>
+                  {segments.map((seg) => (
+                    <option key={seg._id} value={seg._id}>
+                      {seg.name}
+                    </option>
+                  ))}
                 </select>
               </label>
             )}
 
-            {showFilter.age && (
+            {!selectedSegmentId && (
               <>
-                <label>
-                  Age Min:
-                  <input
-                    type="number"
-                    value={ageMin}
-                    onChange={(e) => setAgeMin(e.target.value)}
-                  />
-                </label>
-                <label>
-                  Age Max:
-                  <input
-                    type="number"
-                    value={ageMax}
-                    onChange={(e) => setAgeMax(e.target.value)}
-                  />
-                </label>
-              </>
-            )}
-
-            {showFilter.interests && (
-              <div className="checkbox-list">
-                <span>Interests:</span>
-                {availableInterests.length === 0 ? (
-                  <p>Loading...</p>
-                ) : (
-                  availableInterests.map((interest) => (
-                    <label key={interest} className="checkbox-item">
+                <hr />
+                <h4>Optional Filters</h4>
+                <div className="filter-checkboxes">
+                  {Object.keys(showFilter).map((filter) => (
+                    <label key={filter}>
+                      <span>
+                        {filter.charAt(0).toUpperCase() + filter.slice(1)}
+                      </span>
                       <input
                         type="checkbox"
-                        value={interest}
-                        checked={interests.includes(interest)}
-                        onChange={() => handleInterestToggle(interest)}
+                        checked={showFilter[filter]}
+                        onChange={() => toggleFilter(filter)}
                       />
-                      {interest}
                     </label>
-                  ))
-                )}
-              </div>
-            )}
-
-            {showFilter.location && (
-              <label>
-                Location:
-                <div className="location-inputs">
-                  <input
-                    type="number"
-                    placeholder="Latitude"
-                    step="0.0001"
-                    value={location.lat}
-                    onChange={(e) =>
-                      setLocation({ ...location, lat: e.target.value })
-                    }
-                  />
-                  <input
-                    type="number"
-                    placeholder="Longitude"
-                    step="0.0001"
-                    value={location.lng}
-                    onChange={(e) =>
-                      setLocation({ ...location, lng: e.target.value })
-                    }
-                  />
-                  <input
-                    type="number"
-                    placeholder="Radius (km)"
-                    step="0.1"
-                    value={location.radiusKm}
-                    onChange={(e) =>
-                      setLocation({ ...location, radiusKm: e.target.value })
-                    }
-                  />
+                  ))}
                 </div>
-              </label>
+
+                {showFilter.gender && (
+                  <label>
+                    Gender:
+                    <select
+                      value={gender}
+                      onChange={(e) => setGender(e.target.value)}
+                    >
+                      <option value="">Any</option>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                    </select>
+                  </label>
+                )}
+
+                {showFilter.age && (
+                  <>
+                    <label>
+                      Age Min:
+                      <input
+                        type="number"
+                        value={ageMin}
+                        onChange={(e) => setAgeMin(e.target.value)}
+                      />
+                    </label>
+                    <label>
+                      Age Max:
+                      <input
+                        type="number"
+                        value={ageMax}
+                        onChange={(e) => setAgeMax(e.target.value)}
+                      />
+                    </label>
+                  </>
+                )}
+
+                {showFilter.interests && (
+                  <div className="checkbox-list">
+                    <span>Interests:</span>
+                    {availableInterests.length === 0 ? (
+                      <p>Loading...</p>
+                    ) : (
+                      availableInterests.map((interest) => (
+                        <label key={interest} className="checkbox-item">
+                          <input
+                            type="checkbox"
+                            value={interest}
+                            checked={interests.includes(interest)}
+                            onChange={() => handleInterestToggle(interest)}
+                          />
+                          {interest}
+                        </label>
+                      ))
+                    )}
+                  </div>
+                )}
+
+                {showFilter.location && (
+                  <label>
+                    Location:
+                    <div className="location-inputs">
+                      <input
+                        type="number"
+                        placeholder="Latitude"
+                        step="0.0001"
+                        value={location.lat}
+                        onChange={(e) =>
+                          setLocation({ ...location, lat: e.target.value })
+                        }
+                      />
+                      <input
+                        type="number"
+                        placeholder="Longitude"
+                        step="0.0001"
+                        value={location.lng}
+                        onChange={(e) =>
+                          setLocation({ ...location, lng: e.target.value })
+                        }
+                      />
+                      <input
+                        type="number"
+                        placeholder="Radius (km)"
+                        step="0.1"
+                        value={location.radiusKm}
+                        onChange={(e) =>
+                          setLocation({
+                            ...location,
+                            radiusKm: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                  </label>
+                )}
+              </>
             )}
 
             <button type="submit" disabled={loading}>
@@ -385,9 +449,9 @@ function ApplicationPage() {
             {error && <p className="error">{error}</p>}
           </form>
         )}
-        {activeTab === "stats" && (
-          <p>Analytics & statistics will be shown here</p>
-        )}
+
+        {activeTab === "stats" && <StatisticsTab appId={appId} />}
+
         {activeTab === "history" && (
           <div className="history-list">
             {notificationHistory.length === 0 ? (
@@ -402,18 +466,14 @@ function ApplicationPage() {
                     </span>
                   </div>
                   <p className="log-body">{log.body}</p>
-
                   <div className="log-meta">
                     <p>
                       <strong>Type:</strong> {log.type}
                     </p>
-
                     {log.type === "broadcast" && log.filters && (
                       <div>
                         <strong>Filters:</strong>
-                        <ul
-                          style={{ paddingLeft: "1rem", marginTop: "0.5rem" }}
-                        >
+                        <ul>
                           {Object.entries(log.filters).map(([key, val]) => (
                             <li key={key}>
                               {key}:{" "}
@@ -425,7 +485,6 @@ function ApplicationPage() {
                         </ul>
                       </div>
                     )}
-
                     {log.type === "individual" && (
                       <p>
                         <strong>Target Token:</strong> {log.token}
@@ -437,6 +496,7 @@ function ApplicationPage() {
             )}
           </div>
         )}
+
         {activeTab === "individual" && (
           <div className="device-list">
             {devices.length === 0 ? (
@@ -501,6 +561,31 @@ function ApplicationPage() {
                 );
               })
             )}
+          </div>
+        )}
+
+        {activeTab === "segments" && (
+          <div>
+            <SegmentForm
+              appId={appId}
+              onSegmentCreated={async () => {
+                const token = localStorage.getItem("token");
+                const res = await api.get(`/segments/${appId}`, {
+                  headers: { Authorization: `Bearer ${token}` },
+                });
+                setSegments(res.data || []);
+              }}
+            />
+            <SegmentManager
+              appId={appId}
+              onSegmentsChange={async () => {
+                const token = localStorage.getItem("token");
+                const res = await api.get(`/segments/${appId}`, {
+                  headers: { Authorization: `Bearer ${token}` },
+                });
+                setSegments(res.data || []);
+              }}
+            />
           </div>
         )}
       </div>
