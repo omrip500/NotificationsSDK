@@ -4,8 +4,10 @@ import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
+import retrofit2.http.PUT;
 import retrofit2.http.Path;
 
 public interface PushApiService {
@@ -14,5 +16,17 @@ public interface PushApiService {
 
     @GET("/api/notifications/history/{token}")
     Call<List<com.example.pushnotificationsdk.NotificationLog>> getNotificationHistory(@Path("token") String token);
+
+    @GET("/api/devices/me/{token}")
+    Call<UserInfoResponse> getDeviceInfoByToken(@Path("token") String token);
+
+    @PUT("/api/devices/update")
+    Call<Void> updateDeviceInfo(@Body UpdateDeviceRequest request);
+
+    @DELETE("/api/devices/unregister/{token}")
+    Call<Void> unregisterDevice(@Path("token") String token);
+
+
+
 
 }
