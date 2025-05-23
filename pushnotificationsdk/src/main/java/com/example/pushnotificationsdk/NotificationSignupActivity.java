@@ -24,6 +24,10 @@ public class NotificationSignupActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notification_signup);
 
+        Button backButton = findViewById(R.id.button_back);
+        backButton.setOnClickListener(v -> finish());
+
+
         userName = getIntent().getStringExtra("user_name");
         if (userName == null || userName.isEmpty()) {
             userName = "anonymous";
@@ -91,5 +95,6 @@ public class NotificationSignupActivity extends AppCompatActivity {
 
             finish();
         });
+
     }
 }
