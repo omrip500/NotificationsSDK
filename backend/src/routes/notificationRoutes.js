@@ -11,6 +11,7 @@ import {
   scheduleNotification,
   getScheduledNotifications,
   sendToSpecificTokens,
+  getDailyNotificationStats,
 } from "../controllers/notificationController.js";
 
 const router = express.Router();
@@ -22,5 +23,6 @@ router.post("/send-to-specific", authenticateApiKey, sendToSpecificTokens);
 router.get("/history/app/:appId", getNotificationHistoryByAppId);
 router.get("/history/:token", getNotificationHistoryByToken); // ✅ חדש
 router.delete("/:id", deleteNotificationById); // 👈 חדש
+router.get("/stats/daily/:appId", getDailyNotificationStats);
 
 export default router;

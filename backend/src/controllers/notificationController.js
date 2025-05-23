@@ -22,6 +22,11 @@ export const sendNotification = async (req, res) => {
   console.log("📢 Sending notification...");
   const { title, body, appId, filters = {} } = req.body;
 
+  console.log("title", title);
+  console.log("body", body);
+  console.log("appId", appId);
+  console.log("filters", filters);
+
   if (!title || !body || !appId) {
     return res.status(400).json({ message: "Missing required fields" });
   }
@@ -234,6 +239,35 @@ export const deleteNotificationById = async (req, res) => {
     console.error("❌ Error deleting notification:", err);
     res.status(500).json({
       message: "Failed to delete notification",
+      error: err.message,
+    });
+  }
+};
+
+// 🔹 סטטיסטיקה לפי תאריך
+export const getDailyNotificationStats = async (req, res) => {
+  const { appId } = req.params;
+  if (!appId) return res.status(400).json({ message: "App ID is required" });
+
+  try {
+    const stats = await NotificationLog.aggregate([
+      { $match: { appId } },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-%m-%d", date: "$sentAt" },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    res.status(200).json(stats);
+  } catch (err) {
+    console.error("❌ Error fetching daily stats:", err);
+    res.status(500).json({
+      message: "Failed to fetch stats",
       error: err.message,
     });
   }
