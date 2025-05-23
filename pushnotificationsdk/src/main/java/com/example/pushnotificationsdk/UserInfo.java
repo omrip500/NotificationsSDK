@@ -19,5 +19,31 @@ public class UserInfo {
         this.lng = lng;
     }
 
+    public String getUserId() {
+        return userId;
+    }
+
+    public String getGender() {
+        return gender;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public List<String> getInterests() {
+        return interests;
+    }
+
+    public double getLat() {
+        return lat;
+    }
+
+    public double getLng() {
+        return lng;
+    }
+
+
+
     // Getters and setters (או השתמש ב־Gson אם אתה לא צריך אותם ידנית)
 }

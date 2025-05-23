@@ -53,5 +53,10 @@ public class MainActivity extends AppCompatActivity {
         historyButton.setOnClickListener(v -> {
             PushNotificationManager.getInstance(this).launchNotificationHistoryScreen(this);
         });
+
+        Button settingsButton = findViewById(R.id.settings_button);
+        settingsButton.setOnClickListener(v -> {
+            notificationManager.launchSettingsScreen(this);
+        });
     }
 }

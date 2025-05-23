@@ -16,6 +16,9 @@
         <activity android:name="com.example.pushnotificationsdk.NotificationSignupActivity" />
         <!-- הוספת Activity למסך היסטוריית ההודעות של ה-SDK -->
         <activity android:name="com.example.pushnotificationsdk.NotificationHistoryActivity" />
+
+        <activity android:name="com.example.pushnotificationsdk.SettingsActivity" />
+
     </application>
 
 </manifest>
