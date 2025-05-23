@@ -15,6 +15,7 @@ constraintlayout = "2.2.1"
 retrofit = "2.11.0"
 recyclerview = "1.4.0"
 cardview = "1.0.0"
+monitor = "1.7.2"
 
 [libraries]
 appcompat-v161 = { module = "androidx.appcompat:appcompat", version.ref = "appcompatVersion" }
@@ -33,6 +34,7 @@ constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayo
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 recyclerview = { group = "androidx.recyclerview", name = "recyclerview", version.ref = "recyclerview" }
 cardview = { group = "androidx.cardview", name = "cardview", version.ref = "cardview" }
+monitor = { group = "androidx.test", name = "monitor", version.ref = "monitor" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
