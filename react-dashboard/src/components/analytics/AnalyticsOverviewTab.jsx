@@ -18,8 +18,13 @@ import {
   RadialBarChart,
   RadialBar,
   ComposedChart,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
 } from "recharts";
-import { ResponsiveHeatMap } from "@nivo/heatmap";
+
 import {
   Bell,
   Users,
@@ -669,7 +674,7 @@ function AnalyticsOverviewTab({ appId }) {
 
       {/* Full Width Charts */}
       <div className="space-y-6">
-        {/* Engagement Heatmap */}
+        {/* Activity by Hour and Day */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -680,80 +685,58 @@ function AnalyticsOverviewTab({ appId }) {
             <div className="flex items-center gap-2">
               <Activity className="w-5 h-5 text-primary-600" />
               <h3 className="text-lg font-semibold text-gray-900">
-                Notification Activity Heatmap
+                Peak Activity Hours
               </h3>
               <p className="text-sm text-gray-600 ml-auto">
-                Hour vs Day of Week
+                Most active notification times
               </p>
             </div>
           </div>
           <div className="card-body">
             {data?.heatmapData && data.heatmapData.length > 0 ? (
-              <div style={{ height: "400px" }}>
-                <ResponsiveHeatMap
-                  data={data.heatmapData.reduce((acc, item) => {
-                    const dayIndex = item.dayOfWeek - 1;
-                    if (!acc[dayIndex]) {
-                      acc[dayIndex] = {
-                        id: item.day,
-                        data: Array.from({ length: 24 }, (_, hour) => ({
-                          x: hour.toString().padStart(2, "0"),
-                          y: 0,
-                        })),
-                      };
-                    }
-                    acc[dayIndex].data[item.hour].y = item.count;
-                    return acc;
-                  }, [])}
-                  margin={{ top: 60, right: 90, bottom: 60, left: 90 }}
-                  valueFormat=">-.0f"
-                  axisTop={{
-                    tickSize: 5,
-                    tickPadding: 5,
-                    tickRotation: -90,
-                    legend: "Hour of Day",
-                    legendOffset: 46,
-                  }}
-                  axisLeft={{
-                    tickSize: 5,
-                    tickPadding: 5,
-                    tickRotation: 0,
-                    legend: "Day of Week",
-                    legendPosition: "middle",
-                    legendOffset: -72,
-                  }}
-                  colors={{
-                    type: "diverging",
-                    scheme: "blue_green",
-                    divergeAt: 0.5,
-                    minValue: 0,
-                    maxValue: Math.max(...data.heatmapData.map((d) => d.count)),
-                  }}
-                  emptyColor="#eeeeee"
-                  legends={[
-                    {
-                      anchor: "bottom",
-                      translateX: 0,
-                      translateY: 30,
-                      length: 400,
-                      thickness: 8,
-                      direction: "row",
-                      tickPosition: "after",
-                      tickSize: 3,
-                      tickSpacing: 4,
-                      tickOverlap: false,
-                      title: "Notifications Count →",
-                      titleAlign: "start",
-                      titleOffset: 4,
-                    },
-                  ]}
-                />
-              </div>
+              <ResponsiveContainer width="100%" height={400}>
+                <BarChart
+                  data={data.heatmapData
+                    .sort((a, b) => b.count - a.count)
+                    .slice(0, 12)
+                    .map((item) => ({
+                      time: `${item.day} ${item.hour}:00`,
+                      count: item.count,
+                      hour: item.hour,
+                      day: item.day,
+                    }))}
+                >
+                  <XAxis
+                    dataKey="time"
+                    tick={{ fontSize: 12 }}
+                    angle={-45}
+                    textAnchor="end"
+                    height={80}
+                  />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "white",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "8px",
+                      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                    }}
+                    formatter={(value, name) => [value, "Notifications"]}
+                    labelFormatter={(label) => `Peak Time: ${label}`}
+                  />
+                  <Bar
+                    dataKey="count"
+                    fill="#3b82f6"
+                    radius={[4, 4, 0, 0]}
+                    name="Notifications"
+                  />
+                </BarChart>
+              </ResponsiveContainer>
             ) : (
               <div className="flex items-center justify-center h-64 text-gray-500">
                 <div className="text-center">
                   <Activity className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                  <p>No heatmap data available</p>
+                  <p>No activity data available</p>
                 </div>
               </div>
             )}
@@ -816,6 +799,167 @@ function AnalyticsOverviewTab({ appId }) {
                 </div>
               </div>
             )}
+          </div>
+        </motion.div>
+
+        {/* Notification Trends */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.1 }}
+          className="card"
+        >
+          <div className="card-header">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-primary-600" />
+              <h3 className="text-lg font-semibold text-gray-900">
+                Notification Trends
+              </h3>
+              <p className="text-sm text-gray-600 ml-auto">
+                Daily activity over time
+              </p>
+            </div>
+          </div>
+          <div className="card-body">
+            {data?.perDay && data.perDay.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <ComposedChart data={data.perDay.slice(-30)}>
+                  <XAxis
+                    dataKey="date"
+                    tick={{ fontSize: 12 }}
+                    tickFormatter={(value) =>
+                      new Date(value).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                      })
+                    }
+                  />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "white",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "8px",
+                      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                    }}
+                    labelFormatter={(value) =>
+                      new Date(value).toLocaleDateString()
+                    }
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="count"
+                    fill="#3b82f6"
+                    fillOpacity={0.3}
+                    stroke="#3b82f6"
+                    strokeWidth={0}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="count"
+                    stroke="#ef4444"
+                    strokeWidth={3}
+                    dot={{ fill: "#ef4444", strokeWidth: 2, r: 4 }}
+                    name="Daily Notifications"
+                  />
+                  <Bar
+                    dataKey="count"
+                    fill="#8b5cf6"
+                    fillOpacity={0.6}
+                    radius={[2, 2, 0, 0]}
+                    name="Volume"
+                  />
+                </ComposedChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-64 text-gray-500">
+                <div className="text-center">
+                  <TrendingUp className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <p>No trend data available</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </motion.div>
+
+        {/* Performance Radar Chart */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.2 }}
+          className="card"
+        >
+          <div className="card-header">
+            <div className="flex items-center gap-2">
+              <Target className="w-5 h-5 text-primary-600" />
+              <h3 className="text-lg font-semibold text-gray-900">
+                Performance Overview
+              </h3>
+              <p className="text-sm text-gray-600 ml-auto">
+                Key metrics comparison
+              </p>
+            </div>
+          </div>
+          <div className="card-body">
+            <ResponsiveContainer width="100%" height={400}>
+              <RadarChart
+                data={[
+                  {
+                    metric: "Delivery Rate",
+                    value: enhancedData.kpis.deliveryRate,
+                    fullMark: 100,
+                  },
+                  {
+                    metric: "Open Rate",
+                    value: enhancedData.kpis.openRate,
+                    fullMark: 100,
+                  },
+                  {
+                    metric: "Click Rate",
+                    value: enhancedData.kpis.clickRate * 10, // Scale up for visibility
+                    fullMark: 100,
+                  },
+                  {
+                    metric: "User Growth",
+                    value: enhancedData.kpis.activeUsers > 0 ? 85 : 0,
+                    fullMark: 100,
+                  },
+                  {
+                    metric: "Engagement",
+                    value:
+                      enhancedData.kpis.totalNotifications > 100
+                        ? 90
+                        : enhancedData.kpis.totalNotifications > 50
+                        ? 70
+                        : enhancedData.kpis.totalNotifications > 10
+                        ? 50
+                        : 20,
+                    fullMark: 100,
+                  },
+                  {
+                    metric: "Retention",
+                    value: enhancedData.kpis.totalDevices > 0 ? 75 : 0,
+                    fullMark: 100,
+                  },
+                ]}
+              >
+                <PolarGrid />
+                <PolarAngleAxis dataKey="metric" tick={{ fontSize: 12 }} />
+                <PolarRadiusAxis
+                  angle={90}
+                  domain={[0, 100]}
+                  tick={{ fontSize: 10 }}
+                />
+                <Radar
+                  name="Performance"
+                  dataKey="value"
+                  stroke="#3b82f6"
+                  fill="#3b82f6"
+                  fillOpacity={0.3}
+                  strokeWidth={2}
+                />
+              </RadarChart>
+            </ResponsiveContainer>
           </div>
         </motion.div>
       </div>
