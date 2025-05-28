@@ -172,9 +172,19 @@ public class LocationTrackingService extends Service {
                 longitude
         );
 
-        // Update location in database
-        PushNotificationManager.getInstance(this).updateUserLocation("6825f0b2f5d70b84cf230fbf", updatedUser);
+        // Get the device token and update location in database (using efficient location-only endpoint)
+        PushNotificationManager.getInstance(this).getToken(new PushNotificationManager.OnTokenReceivedListener() {
+            @Override
+            public void onTokenReceived(String token) {
+                PushNotificationManager.getInstance(LocationTrackingService.this)
+                        .updateUserLocation(token, latitude, longitude);
+                Log.d(TAG, "📍 Location updated in database: " + latitude + ", " + longitude);
+            }
 
-        Log.d(TAG, "📍 Location updated in database: " + latitude + ", " + longitude);
+            @Override
+            public void onTokenFailed(Exception e) {
+                Log.e(TAG, "❌ Failed to get token for location update", e);
+            }
+        });
     }
 }
