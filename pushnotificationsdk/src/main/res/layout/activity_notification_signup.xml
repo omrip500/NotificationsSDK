@@ -109,22 +109,30 @@
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <!-- Gender Selection -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Gender"
-                    android:textSize="@dimen/text_size_md"
-                    android:textColor="@color/on_surface"
-                    android:fontFamily="sans-serif-medium"
-                    android:layout_marginBottom="@dimen/spacing_sm" />
-
-                <Spinner
-                    android:id="@+id/gender_spinner"
+                <LinearLayout
+                    android:id="@+id/gender_layout"
                     android:layout_width="match_parent"
-                    android:layout_height="@dimen/input_height"
-                    android:background="@drawable/bg_input_field"
-                    android:padding="@dimen/spacing_md"
-                    android:layout_marginBottom="@dimen/spacing_lg" />
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Gender"
+                        android:textSize="@dimen/text_size_md"
+                        android:textColor="@color/on_surface"
+                        android:fontFamily="sans-serif-medium"
+                        android:layout_marginBottom="@dimen/spacing_sm" />
+
+                    <Spinner
+                        android:id="@+id/gender_spinner"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/input_height"
+                        android:background="@drawable/bg_input_field"
+                        android:padding="@dimen/spacing_md"
+                        android:layout_marginBottom="@dimen/spacing_lg" />
+
+                </LinearLayout>
 
                 <!-- Interests Section -->
                 <TextView
@@ -145,37 +153,13 @@
                     app:cardBackgroundColor="@color/surface_variant">
 
                     <LinearLayout
+                        android:id="@+id/interests_container"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
                         android:padding="@dimen/spacing_md">
 
-                        <com.google.android.material.checkbox.MaterialCheckBox
-                            android:id="@+id/checkbox_sports"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="Sports"
-                            android:textSize="@dimen/text_size_md"
-                            android:fontFamily="sans-serif"
-                            android:padding="@dimen/spacing_sm" />
-
-                        <com.google.android.material.checkbox.MaterialCheckBox
-                            android:id="@+id/checkbox_politics"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="Politics"
-                            android:textSize="@dimen/text_size_md"
-                            android:fontFamily="sans-serif"
-                            android:padding="@dimen/spacing_sm" />
-
-                        <com.google.android.material.checkbox.MaterialCheckBox
-                            android:id="@+id/checkbox_tech"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="Technology"
-                            android:textSize="@dimen/text_size_md"
-                            android:fontFamily="sans-serif"
-                            android:padding="@dimen/spacing_sm" />
+                        <!-- Dynamic interests will be added here -->
 
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>

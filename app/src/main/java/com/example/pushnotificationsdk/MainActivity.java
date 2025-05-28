@@ -7,6 +7,8 @@ import android.widget.Button;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.pushnotificationsdk.PushNotificationManager;
+import com.example.pushnotificationsdk.SDKConfiguration;
+import com.example.pushnotificationsdk.InterestOption;
 
 import java.util.Arrays;
 import java.util.List;
@@ -18,29 +20,14 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // ✨ Configure the SDK ✨
+        configureSDK();
+
         // ✨ Using the SDK ✨
         PushNotificationManager notificationManager = PushNotificationManager.getInstance(this);
 
         // Initializing Firebase Messaging
         notificationManager.initialize();
-
-        // Getting the Firebase token
-        notificationManager.getToken(new PushNotificationManager.OnTokenReceivedListener() {
-            @Override
-            public void onTokenReceived(String token) {
-                Log.d("FirebaseToken", "Firebase Token: " + token);
-
-                // 👇 שימוש בפונקציה החדשה:
-                List<String> interests = Arrays.asList("sports", "politics");
-                UserInfo user = new UserInfo("omripeer", "male", 24, interests, 32.0853, 34.7818); // ת"א
-                notificationManager.registerToServer(token, "6825f0b2f5d70b84cf230fbf", user);
-            }
-
-            @Override
-            public void onTokenFailed(Exception e) {
-                Log.e("FirebaseToken", "Failed to get token", e);
-            }
-        });
 
         // כפתור פתיחת מסך Signup (באמצעות SDK)
         Button signupButton = findViewById(R.id.signup_button);
@@ -58,5 +45,27 @@ public class MainActivity extends AppCompatActivity {
         settingsButton.setOnClickListener(v -> {
             notificationManager.launchSettingsScreen(this);
         });
+    }
+
+    private void configureSDK() {
+        // Configure SDK with custom interests and settings
+        PushNotificationManager manager = PushNotificationManager.getInstance(this);
+
+        SDKConfiguration config = manager.getConfigurationBuilder()
+                .setSignupTitle("Join Our Community")
+                .setSignupSubtitle("Get personalized notifications just for you")
+                .addInterest(new InterestOption("sports", "Sports", "Sports news and updates", true))
+                .addInterest(new InterestOption("technology", "Technology", "Latest tech news"))
+                .addInterest(new InterestOption("politics", "Politics", "Political updates"))
+                .addInterest(new InterestOption("entertainment", "Entertainment", "Movies, TV shows and celebrity news"))
+                .addInterest(new InterestOption("business", "Business", "Business and finance news"))
+                .setGenderOptions(new String[]{"Male", "Female", "Other", "Prefer not to say"})
+                .showAgeField(true)
+                .showGenderField(true)
+                .build();
+
+        manager.configure(config);
+
+        Log.d("MainActivity", "✅ SDK configured with custom settings");
     }
 }
