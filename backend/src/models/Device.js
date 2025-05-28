@@ -8,6 +8,11 @@ const deviceSchema = new mongoose.Schema(
       ref: "Application",
       required: true,
     },
+    clientId: {
+      type: String,
+      required: true,
+      index: true, // Add index for better query performance
+    },
     userInfo: {
       userId: String,
       gender: String,
@@ -23,7 +28,11 @@ const deviceSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-deviceSchema.index({ token: 1, appId: 1 }, { unique: true });
+// Compound index for unique device registration per client
+deviceSchema.index({ token: 1, appId: 1, clientId: 1 }, { unique: true });
+
+// Additional index for efficient clientId queries
+deviceSchema.index({ clientId: 1 });
 
 const Device = mongoose.model("Device", deviceSchema);
 export default Device;
