@@ -21,7 +21,7 @@ import SegmentManager from "../components/segments/SegmentManager";
 import SegmentForm from "../components/segments/SegmentForm";
 import StatisticsTab from "../components/analytics/StatisticsTab";
 import ScheduledNotificationsTab from "../components/scheduled/ScheduledNotificationsTab";
-import LocationBasedNotificationTab from "../components/map/LocationBasedNotificationTab";
+import SimpleLocationTab from "../components/map/SimpleLocationTab";
 
 function ApplicationPage() {
   const { appId } = useParams();
@@ -670,9 +670,7 @@ function ApplicationPage() {
             </motion.div>
           )}
 
-          {activeTab === "location" && (
-            <LocationBasedNotificationTab appId={appId} />
-          )}
+          {activeTab === "location" && <SimpleLocationTab appId={appId} />}
 
           {activeTab === "scheduled" && (
             <ScheduledNotificationsTab appId={appId} />

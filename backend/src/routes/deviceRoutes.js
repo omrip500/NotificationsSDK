@@ -5,6 +5,7 @@ import {
   getDeviceByToken,
   getDevicesWithLocation,
   updateDeviceInfo,
+  updateDeviceLocation,
   unregisterDevice,
 } from "../controllers/deviceController.js";
 import authenticate from "../middlewares/authMiddleware.js";
@@ -19,6 +20,7 @@ router.get("/app/:appId/with-location", authenticate, getDevicesWithLocation);
 router.get("/me/:token", getDeviceByToken);
 
 router.put("/update", updateDeviceInfo);
+router.put("/update-location", updateDeviceLocation);
 
 router.delete("/unregister/:token", unregisterDevice);
 
