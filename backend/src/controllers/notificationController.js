@@ -272,3 +272,65 @@ export const getDailyNotificationStats = async (req, res) => {
     });
   }
 };
+
+// 🔸 עדכון התראה מתוזמנת
+export const updateScheduledNotification = async (req, res) => {
+  const { id } = req.params;
+  const { title, body, sendAt, filters } = req.body;
+
+  try {
+    const notification = await ScheduledNotification.findById(id);
+    if (!notification) {
+      return res
+        .status(404)
+        .json({ message: "Scheduled notification not found" });
+    }
+
+    if (notification.status !== "pending") {
+      return res
+        .status(400)
+        .json({ message: "Cannot update non-pending notification" });
+    }
+
+    const updatedNotification = await ScheduledNotification.findByIdAndUpdate(
+      id,
+      { title, body, sendAt: new Date(sendAt), filters },
+      { new: true }
+    );
+
+    res.json(updatedNotification);
+  } catch (err) {
+    console.error("❌ Error updating scheduled notification:", err);
+    res
+      .status(500)
+      .json({ message: "Failed to update scheduled notification" });
+  }
+};
+
+// 🔸 מחיקת התראה מתוזמנת
+export const deleteScheduledNotification = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const notification = await ScheduledNotification.findById(id);
+    if (!notification) {
+      return res
+        .status(404)
+        .json({ message: "Scheduled notification not found" });
+    }
+
+    if (notification.status !== "pending") {
+      return res
+        .status(400)
+        .json({ message: "Cannot delete non-pending notification" });
+    }
+
+    await ScheduledNotification.findByIdAndDelete(id);
+    res.json({ message: "Scheduled notification deleted successfully" });
+  } catch (err) {
+    console.error("❌ Error deleting scheduled notification:", err);
+    res
+      .status(500)
+      .json({ message: "Failed to delete scheduled notification" });
+  }
+};
