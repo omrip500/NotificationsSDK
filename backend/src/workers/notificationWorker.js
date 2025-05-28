@@ -2,6 +2,7 @@ import cron from "node-cron";
 import ScheduledNotification from "../models/ScheduledNotification.js";
 import Device from "../models/Device.js";
 import admin from "../config/firebaseAdmin.js";
+import { sendNotificationForClient } from "../config/firebaseAppManager.js";
 
 // helper לחישוב מרחק בין 2 נקודות
 function haversineDistance(lat1, lng1, lat2, lng2) {
@@ -61,21 +62,65 @@ async function processScheduledNotification(notification) {
       });
     }
 
-    const tokens = devices.map((d) => d.token);
-    if (tokens.length === 0) {
+    if (devices.length === 0) {
       console.log(`🟡 No matching devices for notification: "${title}"`);
       return;
     }
 
-    const message = {
-      notification: { title, body },
-      tokens,
-    };
+    // קיבוץ מכשירים לפי clientId
+    const devicesByClient = devices.reduce((acc, device) => {
+      const clientId = device.clientId;
+      if (!acc[clientId]) {
+        acc[clientId] = [];
+      }
+      acc[clientId].push(device);
+      return acc;
+    }, {});
 
-    const response = await admin.messaging().sendEachForMulticast(message);
+    let totalSuccessCount = 0;
+    let totalFailureCount = 0;
+
+    // שליחה לכל client בנפרד
+    for (const [clientId, clientDevices] of Object.entries(devicesByClient)) {
+      try {
+        const tokens = clientDevices.map((d) => d.token);
+        const message = {
+          notification: { title, body },
+          tokens,
+        };
+
+        console.log(
+          `📤 Sending scheduled notification to ${tokens.length} devices for client: ${clientId}`
+        );
+        const response = await sendNotificationForClient(clientId, message);
+
+        totalSuccessCount += response.successCount;
+        totalFailureCount += response.failureCount;
+      } catch (error) {
+        console.error(
+          `❌ Failed to send scheduled notification for client ${clientId}:`,
+          error.message
+        );
+
+        // אם זו שגיאת service account, נדלג על הלקוח הזה
+        if (
+          error.message.includes("Service account not found") ||
+          error.message.includes("ClientId is required") ||
+          error.message.includes("Please upload your Firebase service account")
+        ) {
+          console.error(
+            `⚠️ Skipping client ${clientId} due to missing service account`
+          );
+        }
+
+        totalFailureCount += clientDevices.length;
+      }
+    }
 
     console.log(
-      `✅ Sent scheduled notification "${title}" to ${response.successCount} devices`
+      `✅ Sent scheduled notification "${title}" to ${totalSuccessCount} devices across ${
+        Object.keys(devicesByClient).length
+      } clients`
     );
   } catch (err) {
     console.error("❌ Failed to send scheduled notification:", err);

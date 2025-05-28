@@ -9,6 +9,7 @@ import segmentRoutes from "./routes/segmentRoutes.js";
 import statsRoutes from "./routes/stats.js";
 import startNotificationWorker from "./workers/notificationWorker.js";
 import connectDB from "./config/db.js";
+import { clearCache } from "./config/firebaseAppManager.js";
 
 dotenv.config();
 
@@ -33,6 +34,9 @@ connectDB();
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {
   console.log(`🚀 Server is running on port ${PORT}`);
+
+  // Clear Firebase apps cache on startup
+  clearCache();
 
   // Start scheduled notifications worker
   startNotificationWorker();

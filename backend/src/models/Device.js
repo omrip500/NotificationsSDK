@@ -8,6 +8,10 @@ const deviceSchema = new mongoose.Schema(
       ref: "Application",
       required: true,
     },
+    clientId: {
+      type: String,
+      required: true,
+    },
     userInfo: {
       userId: String,
       gender: String,
@@ -23,7 +27,11 @@ const deviceSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-deviceSchema.index({ token: 1, appId: 1 }, { unique: true });
+// אינדקס ייחודי עבור token + appId + clientId
+deviceSchema.index({ token: 1, appId: 1, clientId: 1 }, { unique: true });
+
+// אינדקס נוסף לחיפוש מהיר לפי clientId
+deviceSchema.index({ clientId: 1 });
 
 const Device = mongoose.model("Device", deviceSchema);
 export default Device;

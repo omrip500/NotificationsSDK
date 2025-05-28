@@ -1,4 +1,5 @@
 import admin from "../config/firebaseAdmin.js";
+import { sendNotificationForClient } from "../config/firebaseAppManager.js";
 import Device from "../models/Device.js";
 import ScheduledNotification from "../models/ScheduledNotification.js";
 import NotificationLog from "../models/NotificationLog.js";
@@ -58,32 +59,83 @@ export const sendNotification = async (req, res) => {
       });
     }
 
-    const tokens = devices.map((d) => d.token);
-    if (tokens.length === 0) {
+    if (devices.length === 0) {
       return res.status(404).json({ message: "No matching devices found" });
     }
 
-    const message = {
-      notification: { title, body },
-      tokens,
-    };
+    // קיבוץ מכשירים לפי clientId
+    const devicesByClient = devices.reduce((acc, device) => {
+      const clientId = device.clientId;
+      if (!acc[clientId]) {
+        acc[clientId] = [];
+      }
+      acc[clientId].push(device);
+      return acc;
+    }, {});
 
-    const response = await admin.messaging().sendEachForMulticast(message);
+    let totalSuccessCount = 0;
+    let totalFailureCount = 0;
+    const allLogs = [];
 
-    // ✅ שמירת לוגים עם type ו־filters
-    const logs = tokens.map((token) => ({
-      token,
-      appId,
-      title,
-      body,
-      type: "broadcast",
-      filters: Object.keys(filters).length > 0 ? filters : null,
-    }));
-    await NotificationLog.insertMany(logs);
+    // שליחה לכל client בנפרד
+    for (const [clientId, clientDevices] of Object.entries(devicesByClient)) {
+      try {
+        const tokens = clientDevices.map((d) => d.token);
+        const message = {
+          notification: { title, body },
+          tokens,
+        };
+
+        console.log(
+          `📤 Sending to ${tokens.length} devices for client: ${clientId}`
+        );
+        const response = await sendNotificationForClient(clientId, message);
+
+        totalSuccessCount += response.successCount;
+        totalFailureCount += response.failureCount;
+
+        // הוספת לוגים עבור client זה
+        const logs = tokens.map((token) => ({
+          token,
+          appId,
+          title,
+          body,
+          type: "broadcast",
+          filters: Object.keys(filters).length > 0 ? filters : null,
+        }));
+        allLogs.push(...logs);
+      } catch (error) {
+        console.error(
+          `❌ Failed to send notifications for client ${clientId}:`,
+          error.message
+        );
+
+        // אם זו שגיאת service account, נחזיר שגיאה מיידית
+        if (
+          error.message.includes("Service account not found") ||
+          error.message.includes("ClientId is required") ||
+          error.message.includes("Please upload your Firebase service account")
+        ) {
+          throw new Error(`${error.message} (Client: ${clientId})`);
+        }
+
+        // נספור את כל המכשירים של הלקוח הזה כ-failures
+        totalFailureCount += clientDevices.length;
+      }
+    }
+
+    // שמירת כל הלוגים
+    if (allLogs.length > 0) {
+      await NotificationLog.insertMany(allLogs);
+    }
 
     res.status(200).json({
-      message: `Notification sent to ${response.successCount} devices`,
-      failures: response.failureCount,
+      message: `Notification sent to ${totalSuccessCount} devices across ${
+        Object.keys(devicesByClient).length
+      } clients`,
+      successCount: totalSuccessCount,
+      failures: totalFailureCount,
+      clientsCount: Object.keys(devicesByClient).length,
     });
   } catch (err) {
     console.error("❌ Error sending notification:", err);
@@ -154,26 +206,87 @@ export const sendToSpecificTokens = async (req, res) => {
   }
 
   try {
-    const message = {
-      notification: { title, body },
-      tokens,
-    };
-
-    const response = await admin.messaging().sendEachForMulticast(message);
-
-    // ✅ שמירת לוגים עם type individual
-    const logs = tokens.map((token) => ({
-      token,
+    // מציאת המכשירים לפי tokens כדי לקבל את clientId
+    const devices = await Device.find({
       appId,
-      title,
-      body,
-      type: "individual",
-    }));
-    await NotificationLog.insertMany(logs);
+      token: { $in: tokens },
+    });
+
+    if (devices.length === 0) {
+      return res.status(404).json({ message: "No matching devices found" });
+    }
+
+    // קיבוץ מכשירים לפי clientId
+    const devicesByClient = devices.reduce((acc, device) => {
+      const clientId = device.clientId;
+      if (!acc[clientId]) {
+        acc[clientId] = [];
+      }
+      acc[clientId].push(device);
+      return acc;
+    }, {});
+
+    let totalSuccessCount = 0;
+    let totalFailureCount = 0;
+    const allLogs = [];
+
+    // שליחה לכל client בנפרד
+    for (const [clientId, clientDevices] of Object.entries(devicesByClient)) {
+      try {
+        const clientTokens = clientDevices.map((d) => d.token);
+        const message = {
+          notification: { title, body },
+          tokens: clientTokens,
+        };
+
+        console.log(
+          `📤 Sending to ${clientTokens.length} specific devices for client: ${clientId}`
+        );
+        const response = await sendNotificationForClient(clientId, message);
+
+        totalSuccessCount += response.successCount;
+        totalFailureCount += response.failureCount;
+
+        // הוספת לוגים עבור client זה
+        const logs = clientTokens.map((token) => ({
+          token,
+          appId,
+          title,
+          body,
+          type: "individual",
+        }));
+        allLogs.push(...logs);
+      } catch (error) {
+        console.error(
+          `❌ Failed to send specific notifications for client ${clientId}:`,
+          error.message
+        );
+
+        // אם זו שגיאת service account, נחזיר שגיאה מיידית
+        if (
+          error.message.includes("Service account not found") ||
+          error.message.includes("ClientId is required") ||
+          error.message.includes("Please upload your Firebase service account")
+        ) {
+          throw new Error(`${error.message} (Client: ${clientId})`);
+        }
+
+        totalFailureCount += clientDevices.length;
+      }
+    }
+
+    // שמירת כל הלוגים
+    if (allLogs.length > 0) {
+      await NotificationLog.insertMany(allLogs);
+    }
 
     res.status(200).json({
-      message: `Notification sent to ${response.successCount} devices`,
-      failures: response.failureCount,
+      message: `Notification sent to ${totalSuccessCount} devices across ${
+        Object.keys(devicesByClient).length
+      } clients`,
+      successCount: totalSuccessCount,
+      failures: totalFailureCount,
+      clientsCount: Object.keys(devicesByClient).length,
     });
   } catch (err) {
     console.error("❌ Error sending specific notification:", err);
@@ -364,32 +477,79 @@ export const sendNotificationByLocation = async (req, res) => {
       });
     }
 
-    const tokens = devices.map((device) => device.token);
+    // קיבוץ מכשירים לפי clientId
+    const devicesByClient = devices.reduce((acc, device) => {
+      const clientId = device.clientId;
+      if (!acc[clientId]) {
+        acc[clientId] = [];
+      }
+      acc[clientId].push(device);
+      return acc;
+    }, {});
 
-    // שליחת ההתראה
-    const message = {
-      notification: { title, body },
-      tokens,
-    };
+    let totalSuccessCount = 0;
+    let totalFailureCount = 0;
+    const allLogs = [];
 
-    const response = await admin.messaging().sendEachForMulticast(message);
+    // שליחה לכל client בנפרד
+    for (const [clientId, clientDevices] of Object.entries(devicesByClient)) {
+      try {
+        const tokens = clientDevices.map((d) => d.token);
+        const message = {
+          notification: { title, body },
+          tokens,
+        };
 
-    // שמירת לוגים
-    const logs = tokens.map((token) => ({
-      token,
-      appId,
-      title,
-      body,
-      type: "location-based",
-      filters: { location: bounds },
-    }));
-    await NotificationLog.insertMany(logs);
+        console.log(
+          `📤 Sending location-based notification to ${tokens.length} devices for client: ${clientId}`
+        );
+        const response = await sendNotificationForClient(clientId, message);
+
+        totalSuccessCount += response.successCount;
+        totalFailureCount += response.failureCount;
+
+        // הוספת לוגים עבור client זה
+        const logs = tokens.map((token) => ({
+          token,
+          appId,
+          title,
+          body,
+          type: "location-based",
+          filters: { location: bounds },
+        }));
+        allLogs.push(...logs);
+      } catch (error) {
+        console.error(
+          `❌ Failed to send location-based notifications for client ${clientId}:`,
+          error.message
+        );
+
+        // אם זו שגיאת service account, נחזיר שגיאה מיידית
+        if (
+          error.message.includes("Service account not found") ||
+          error.message.includes("ClientId is required") ||
+          error.message.includes("Please upload your Firebase service account")
+        ) {
+          throw new Error(`${error.message} (Client: ${clientId})`);
+        }
+
+        totalFailureCount += clientDevices.length;
+      }
+    }
+
+    // שמירת כל הלוגים
+    if (allLogs.length > 0) {
+      await NotificationLog.insertMany(allLogs);
+    }
 
     res.status(200).json({
-      message: `Notification sent to ${response.successCount} devices in the specified area`,
+      message: `Notification sent to ${totalSuccessCount} devices in the specified area across ${
+        Object.keys(devicesByClient).length
+      } clients`,
       devicesFound: devices.length,
-      successCount: response.successCount,
-      failureCount: response.failureCount,
+      successCount: totalSuccessCount,
+      failureCount: totalFailureCount,
+      clientsCount: Object.keys(devicesByClient).length,
       bounds,
     });
   } catch (err) {

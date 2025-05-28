@@ -1,12 +1,27 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Plus, Smartphone, Users, BarChart3, Settings } from "lucide-react";
+import {
+  Plus,
+  Smartphone,
+  Users,
+  BarChart3,
+  Settings,
+  Upload,
+  FileText,
+  CheckCircle,
+  AlertCircle,
+} from "lucide-react";
 import api from "../services/api";
 
 function DashboardPage() {
   const [applications, setApplications] = useState([]);
   const [name, setName] = useState("");
+  const [platform, setPlatform] = useState("android");
+  const [interests, setInterests] = useState("");
+  const [serviceAccountFile, setServiceAccountFile] = useState(null);
+  const [clientId, setClientId] = useState("");
+  const [uploadStatus, setUploadStatus] = useState(""); // "uploading", "success", "error"
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -26,22 +41,106 @@ function DashboardPage() {
     }
   };
 
-  const handleCreate = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
+  const generateClientId = async () => {
     try {
       const token = localStorage.getItem("token");
+      const res = await api.get("/applications/generate-client-id", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setClientId(res.data.clientId);
+    } catch (err) {
+      setError("Failed to generate client ID.");
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.type !== "application/json") {
+        setError("Please select a valid JSON file.");
+        return;
+      }
+      setServiceAccountFile(file);
+      setUploadStatus("");
+    }
+  };
+
+  const uploadServiceAccount = async () => {
+    if (!serviceAccountFile || !clientId) {
+      setError(
+        "Please select a service account file and generate a client ID."
+      );
+      return;
+    }
+
+    setUploadStatus("uploading");
+    try {
+      const fileContent = await serviceAccountFile.text();
+      const token = localStorage.getItem("token");
+
       await api.post(
-        "/applications/create",
-        { name },
+        "/applications/upload-service-account",
+        {
+          serviceAccountData: fileContent,
+          clientId: clientId,
+        },
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
+
+      setUploadStatus("success");
+    } catch (err) {
+      setUploadStatus("error");
+      setError(
+        err.response?.data?.message || "Failed to upload service account."
+      );
+    }
+  };
+
+  const handleCreate = async (e) => {
+    e.preventDefault();
+
+    if (uploadStatus !== "success") {
+      setError("Please upload a service account file first.");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const token = localStorage.getItem("token");
+      const interestsArray = interests
+        .split(",")
+        .map((i) => i.trim())
+        .filter((i) => i);
+
+      await api.post(
+        "/applications/create",
+        {
+          name,
+          platform,
+          clientId,
+          interests: interestsArray,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // Reset form
       setName("");
+      setPlatform("android");
+      setInterests("");
+      setServiceAccountFile(null);
+      setClientId("");
+      setUploadStatus("");
       setShowCreateForm(false);
       fetchApplications();
     } catch (err) {
@@ -111,40 +210,186 @@ function DashboardPage() {
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="bg-white rounded-xl p-6 w-full max-w-md mx-4"
+              className="bg-white rounded-xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 Create New Application
               </h3>
-              <form onSubmit={handleCreate} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Application Name
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Enter application name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="input"
-                    required
-                  />
+              <form onSubmit={handleCreate} className="space-y-6">
+                {/* Basic Info */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Application Name
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Enter application name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="input"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Platform
+                    </label>
+                    <select
+                      value={platform}
+                      onChange={(e) => setPlatform(e.target.value)}
+                      className="input"
+                    >
+                      <option value="android">Android</option>
+                      <option value="ios">iOS</option>
+                      <option value="web">Web</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Interests (comma-separated)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g., sports, news, technology"
+                      value={interests}
+                      onChange={(e) => setInterests(e.target.value)}
+                      className="input"
+                    />
+                  </div>
                 </div>
+
+                {/* Firebase Setup */}
+                <div className="border-t pt-6">
+                  <h4 className="text-md font-medium text-gray-900 mb-4">
+                    Firebase Configuration
+                  </h4>
+
+                  {/* Client ID Generation */}
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Client ID
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          placeholder="Generate a unique client ID"
+                          value={clientId}
+                          readOnly
+                          className="input flex-1 bg-gray-50"
+                        />
+                        <button
+                          type="button"
+                          onClick={generateClientId}
+                          className="btn-outline px-4"
+                        >
+                          Generate
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Service Account Upload */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Firebase Service Account JSON
+                      </label>
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-center w-full">
+                          <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                            <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                              <Upload className="w-8 h-8 mb-2 text-gray-400" />
+                              <p className="mb-2 text-sm text-gray-500">
+                                <span className="font-semibold">
+                                  Click to upload
+                                </span>{" "}
+                                service account JSON
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                JSON files only
+                              </p>
+                            </div>
+                            <input
+                              type="file"
+                              accept=".json"
+                              onChange={handleFileChange}
+                              className="hidden"
+                            />
+                          </label>
+                        </div>
+
+                        {serviceAccountFile && (
+                          <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg">
+                            <FileText className="w-5 h-5 text-blue-600" />
+                            <span className="text-sm text-blue-800">
+                              {serviceAccountFile.name}
+                            </span>
+                          </div>
+                        )}
+
+                        {serviceAccountFile &&
+                          clientId &&
+                          uploadStatus !== "success" && (
+                            <button
+                              type="button"
+                              onClick={uploadServiceAccount}
+                              disabled={uploadStatus === "uploading"}
+                              className="btn-primary w-full"
+                            >
+                              {uploadStatus === "uploading"
+                                ? "Uploading..."
+                                : "Upload Service Account"}
+                            </button>
+                          )}
+
+                        {uploadStatus === "success" && (
+                          <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg">
+                            <CheckCircle className="w-5 h-5 text-green-600" />
+                            <span className="text-sm text-green-800">
+                              Service account uploaded successfully!
+                            </span>
+                          </div>
+                        )}
+
+                        {uploadStatus === "error" && (
+                          <div className="flex items-center gap-2 p-3 bg-red-50 rounded-lg">
+                            <AlertCircle className="w-5 h-5 text-red-600" />
+                            <span className="text-sm text-red-800">
+                              Failed to upload service account
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="flex gap-3 pt-4">
                   <button
                     type="button"
-                    onClick={() => setShowCreateForm(false)}
+                    onClick={() => {
+                      setShowCreateForm(false);
+                      setName("");
+                      setPlatform("android");
+                      setInterests("");
+                      setServiceAccountFile(null);
+                      setClientId("");
+                      setUploadStatus("");
+                      setError(null);
+                    }}
                     className="btn-outline flex-1"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    disabled={loading}
+                    disabled={loading || uploadStatus !== "success"}
                     className="btn-primary flex-1"
                   >
-                    {loading ? "Creating..." : "Create"}
+                    {loading ? "Creating..." : "Create Application"}
                   </button>
                 </div>
               </form>
@@ -184,7 +429,17 @@ function DashboardPage() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-primary-600 transition-colors">
                   {app.name}
                 </h3>
-                <p className="text-sm text-gray-500 mb-4">App ID: {app._id}</p>
+                <div className="space-y-1 mb-4">
+                  <p className="text-sm text-gray-500">App ID: {app._id}</p>
+                  {app.clientId && (
+                    <p className="text-sm text-gray-500">
+                      Client ID: {app.clientId}
+                    </p>
+                  )}
+                  <p className="text-sm text-gray-500">
+                    Platform: {app.platform || "android"}
+                  </p>
+                </div>
                 <div className="flex items-center justify-between text-sm text-gray-600">
                   <span>Click to manage</span>
                   <span className="text-primary-600 group-hover:text-primary-700">
