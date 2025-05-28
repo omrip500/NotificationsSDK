@@ -23,6 +23,7 @@ import StatisticsTab from "../components/analytics/StatisticsTab";
 function ApplicationPage() {
   const { appId } = useParams();
   const [activeTab, setActiveTab] = useState("send");
+  const [appInfo, setAppInfo] = useState(null);
 
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -55,6 +56,22 @@ function ApplicationPage() {
   // History search and filter states
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredHistory, setFilteredHistory] = useState([]);
+  const [dateFilter, setDateFilter] = useState({ from: "", to: "" });
+
+  useEffect(() => {
+    const fetchAppInfo = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await api.get(`/applications/${appId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setAppInfo(res.data);
+      } catch (err) {
+        console.error("Failed to fetch app info", err);
+      }
+    };
+    fetchAppInfo();
+  }, [appId]);
 
   useEffect(() => {
     const fetchInterests = async () => {
@@ -107,19 +124,36 @@ function ApplicationPage() {
     }
   }, [activeTab, appId]);
 
-  // Filter history based on search term
+  // Filter history based on search term and date
   useEffect(() => {
-    if (!searchTerm) {
-      setFilteredHistory(notificationHistory);
-    } else {
-      const filtered = notificationHistory.filter(
+    let filtered = notificationHistory;
+
+    // Filter by search term
+    if (searchTerm) {
+      filtered = filtered.filter(
         (log) =>
           log.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
           log.body.toLowerCase().includes(searchTerm.toLowerCase())
       );
-      setFilteredHistory(filtered);
     }
-  }, [notificationHistory, searchTerm]);
+
+    // Filter by date range
+    if (dateFilter.from || dateFilter.to) {
+      filtered = filtered.filter((log) => {
+        const logDate = new Date(log.sentAt);
+        const fromDate = dateFilter.from ? new Date(dateFilter.from) : null;
+        const toDate = dateFilter.to
+          ? new Date(dateFilter.to + "T23:59:59")
+          : null;
+
+        if (fromDate && logDate < fromDate) return false;
+        if (toDate && logDate > toDate) return false;
+        return true;
+      });
+    }
+
+    setFilteredHistory(filtered);
+  }, [notificationHistory, searchTerm, dateFilter]);
 
   useEffect(() => {
     const fetchSegments = async () => {
@@ -308,9 +342,12 @@ function ApplicationPage() {
           className="mb-8"
         >
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Application Management
+            {appInfo?.name || "Application Management"}
           </h1>
-          <p className="text-gray-600">App ID: {appId}</p>
+          <p className="text-gray-600">
+            App ID: {appId}{" "}
+            {appInfo?.platform && `• Platform: ${appInfo.platform}`}
+          </p>
         </motion.div>
 
         {/* Tabs */}
@@ -348,172 +385,284 @@ function ApplicationPage() {
 
         <div className="tab-content">
           {activeTab === "send" && (
-            <form className="send-form" onSubmit={handleSendNotification}>
-              <input
-                type="text"
-                placeholder="Notification Title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                required
-              />
-              <textarea
-                placeholder="Notification Body"
-                value={body}
-                onChange={(e) => setBody(e.target.value)}
-                required
-              />
-              <label>
-                Send At (optional):
-                <input
-                  type="datetime-local"
-                  value={sendAt}
-                  onChange={(e) => setSendAt(e.target.value)}
-                />
-              </label>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-6"
+            >
+              <form className="card" onSubmit={handleSendNotification}>
+                <div className="card-header">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Send Notification
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Create and send notifications to your users
+                  </p>
+                </div>
 
-              {segments.length > 0 && (
-                <label>
-                  Choose Saved Segment:
-                  <select
-                    value={selectedSegmentId}
-                    onChange={(e) => setSelectedSegmentId(e.target.value)}
-                  >
-                    <option value="">-- None --</option>
-                    {segments.map((seg) => (
-                      <option key={seg._id} value={seg._id}>
-                        {seg.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              )}
-
-              {!selectedSegmentId && (
-                <>
-                  <hr />
-                  <h4>Optional Filters</h4>
-                  <div className="filter-checkboxes">
-                    {Object.keys(showFilter).map((filter) => (
-                      <label key={filter}>
-                        <span>
-                          {filter.charAt(0).toUpperCase() + filter.slice(1)}
-                        </span>
-                        <input
-                          type="checkbox"
-                          checked={showFilter[filter]}
-                          onChange={() => toggleFilter(filter)}
-                        />
+                <div className="card-body space-y-6">
+                  {/* Basic Notification Info */}
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Notification Title
                       </label>
-                    ))}
-                  </div>
+                      <input
+                        type="text"
+                        placeholder="Enter notification title"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        className="input"
+                        required
+                      />
+                    </div>
 
-                  {showFilter.gender && (
-                    <label>
-                      Gender:
-                      <select
-                        value={gender}
-                        onChange={(e) => setGender(e.target.value)}
-                      >
-                        <option value="">Any</option>
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                      </select>
-                    </label>
-                  )}
-
-                  {showFilter.age && (
-                    <>
-                      <label>
-                        Age Min:
-                        <input
-                          type="number"
-                          value={ageMin}
-                          onChange={(e) => setAgeMin(e.target.value)}
-                        />
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Notification Body
                       </label>
-                      <label>
-                        Age Max:
-                        <input
-                          type="number"
-                          value={ageMax}
-                          onChange={(e) => setAgeMax(e.target.value)}
-                        />
-                      </label>
-                    </>
-                  )}
+                      <textarea
+                        placeholder="Enter notification message"
+                        value={body}
+                        onChange={(e) => setBody(e.target.value)}
+                        className="textarea"
+                        rows={4}
+                        required
+                      />
+                    </div>
 
-                  {showFilter.interests && (
-                    <div className="checkbox-list">
-                      <span>Interests:</span>
-                      {availableInterests.length === 0 ? (
-                        <p>Loading...</p>
-                      ) : (
-                        availableInterests.map((interest) => (
-                          <label key={interest} className="checkbox-item">
-                            <input
-                              type="checkbox"
-                              value={interest}
-                              checked={interests.includes(interest)}
-                              onChange={() => handleInterestToggle(interest)}
-                            />
-                            {interest}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Send At (optional)
+                        </label>
+                        <div className="relative">
+                          <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                          <input
+                            type="datetime-local"
+                            value={sendAt}
+                            onChange={(e) => setSendAt(e.target.value)}
+                            className="input pl-10"
+                          />
+                        </div>
+                      </div>
+
+                      {segments.length > 0 && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Choose Saved Segment
                           </label>
-                        ))
+                          <select
+                            value={selectedSegmentId}
+                            onChange={(e) =>
+                              setSelectedSegmentId(e.target.value)
+                            }
+                            className="input"
+                          >
+                            <option value="">-- None --</option>
+                            {segments.map((seg) => (
+                              <option key={seg._id} value={seg._id}>
+                                {seg.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
                       )}
                     </div>
-                  )}
+                  </div>
 
-                  {showFilter.location && (
-                    <label>
-                      Location:
-                      <div className="location-inputs">
-                        <input
-                          type="number"
-                          placeholder="Latitude"
-                          step="0.0001"
-                          value={location.lat}
-                          onChange={(e) =>
-                            setLocation({ ...location, lat: e.target.value })
-                          }
-                        />
-                        <input
-                          type="number"
-                          placeholder="Longitude"
-                          step="0.0001"
-                          value={location.lng}
-                          onChange={(e) =>
-                            setLocation({ ...location, lng: e.target.value })
-                          }
-                        />
-                        <input
-                          type="number"
-                          placeholder="Radius (km)"
-                          step="0.1"
-                          value={location.radiusKm}
-                          onChange={(e) =>
-                            setLocation({
-                              ...location,
-                              radiusKm: e.target.value,
-                            })
-                          }
-                        />
+                  {!selectedSegmentId && (
+                    <>
+                      <div className="border-t pt-6">
+                        <h4 className="text-md font-medium text-gray-900 mb-4">
+                          Optional Filters
+                        </h4>
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                          {Object.keys(showFilter).map((filter) => (
+                            <label
+                              key={filter}
+                              className="flex items-center space-x-2 cursor-pointer"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={showFilter[filter]}
+                                onChange={() => toggleFilter(filter)}
+                                className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                              />
+                              <span className="text-sm font-medium text-gray-700">
+                                {filter.charAt(0).toUpperCase() +
+                                  filter.slice(1)}
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+
+                        <div className="space-y-4">
+                          {showFilter.gender && (
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Gender
+                              </label>
+                              <select
+                                value={gender}
+                                onChange={(e) => setGender(e.target.value)}
+                                className="input"
+                              >
+                                <option value="">Any</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                              </select>
+                            </div>
+                          )}
+
+                          {showFilter.age && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                  Age Min
+                                </label>
+                                <input
+                                  type="number"
+                                  value={ageMin}
+                                  onChange={(e) => setAgeMin(e.target.value)}
+                                  className="input"
+                                  placeholder="Minimum age"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                  Age Max
+                                </label>
+                                <input
+                                  type="number"
+                                  value={ageMax}
+                                  onChange={(e) => setAgeMax(e.target.value)}
+                                  className="input"
+                                  placeholder="Maximum age"
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                          {showFilter.interests && (
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Interests
+                              </label>
+                              {availableInterests.length === 0 ? (
+                                <p className="text-sm text-gray-500">
+                                  Loading interests...
+                                </p>
+                              ) : (
+                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                                  {availableInterests.map((interest) => (
+                                    <label
+                                      key={interest}
+                                      className="flex items-center space-x-2 cursor-pointer"
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        value={interest}
+                                        checked={interests.includes(interest)}
+                                        onChange={() =>
+                                          handleInterestToggle(interest)
+                                        }
+                                        className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                                      />
+                                      <span className="text-sm text-gray-700">
+                                        {interest}
+                                      </span>
+                                    </label>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {showFilter.location && (
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Location
+                              </label>
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <input
+                                  type="number"
+                                  placeholder="Latitude"
+                                  step="0.0001"
+                                  value={location.lat}
+                                  onChange={(e) =>
+                                    setLocation({
+                                      ...location,
+                                      lat: e.target.value,
+                                    })
+                                  }
+                                  className="input"
+                                />
+                                <input
+                                  type="number"
+                                  placeholder="Longitude"
+                                  step="0.0001"
+                                  value={location.lng}
+                                  onChange={(e) =>
+                                    setLocation({
+                                      ...location,
+                                      lng: e.target.value,
+                                    })
+                                  }
+                                  className="input"
+                                />
+                                <input
+                                  type="number"
+                                  placeholder="Radius (km)"
+                                  step="0.1"
+                                  value={location.radiusKm}
+                                  onChange={(e) =>
+                                    setLocation({
+                                      ...location,
+                                      radiusKm: e.target.value,
+                                    })
+                                  }
+                                  className="input"
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </label>
+                    </>
                   )}
-                </>
-              )}
+                </div>
 
-              <button type="submit" disabled={loading}>
-                {loading
-                  ? "Sending..."
-                  : sendAt
-                  ? "Schedule Notification"
-                  : "Send Notification"}
-              </button>
+                <div className="card-footer">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      {message && (
+                        <p className="text-sm text-success-600">{message}</p>
+                      )}
+                      {error && (
+                        <p className="text-sm text-error-600">{error}</p>
+                      )}
+                    </div>
 
-              {message && <p className="success">{message}</p>}
-              {error && <p className="error">{error}</p>}
-            </form>
+                    <motion.button
+                      type="submit"
+                      disabled={loading}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="btn-primary flex items-center gap-2"
+                    >
+                      <Send className="w-4 h-4" />
+                      {loading
+                        ? "Sending..."
+                        : sendAt
+                        ? "Schedule Notification"
+                        : "Send Notification"}
+                    </motion.button>
+                  </div>
+                </div>
+              </form>
+            </motion.div>
           )}
 
           {activeTab === "stats" && <StatisticsTab appId={appId} />}
@@ -527,26 +676,81 @@ function ApplicationPage() {
               {/* Search and Filter Bar */}
               <div className="card">
                 <div className="card-body">
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    <div className="flex-1">
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                        <input
-                          type="text"
-                          placeholder="Search notifications..."
-                          value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
-                          className="input pl-10"
-                        />
+                  <div className="flex flex-col gap-4">
+                    <div className="flex flex-col sm:flex-row gap-4">
+                      <div className="flex-1">
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                          <input
+                            type="text"
+                            placeholder="Search notifications..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="input pl-10"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Filter className="w-5 h-5 text-gray-400" />
+                        <span className="text-sm text-gray-600">
+                          {filteredHistory.length} of{" "}
+                          {notificationHistory.length} notifications
+                        </span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Filter className="w-5 h-5 text-gray-400" />
-                      <span className="text-sm text-gray-600">
-                        {filteredHistory.length} of {notificationHistory.length}{" "}
-                        notifications
-                      </span>
+
+                    {/* Date Filter */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          From Date
+                        </label>
+                        <div className="relative">
+                          <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                          <input
+                            type="date"
+                            value={dateFilter.from}
+                            onChange={(e) =>
+                              setDateFilter({
+                                ...dateFilter,
+                                from: e.target.value,
+                              })
+                            }
+                            className="input pl-10"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          To Date
+                        </label>
+                        <div className="relative">
+                          <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                          <input
+                            type="date"
+                            value={dateFilter.to}
+                            onChange={(e) =>
+                              setDateFilter({
+                                ...dateFilter,
+                                to: e.target.value,
+                              })
+                            }
+                            className="input pl-10"
+                          />
+                        </div>
+                      </div>
                     </div>
+
+                    {(dateFilter.from || dateFilter.to) && (
+                      <div className="flex justify-end">
+                        <button
+                          onClick={() => setDateFilter({ from: "", to: "" })}
+                          className="text-sm text-gray-500 hover:text-gray-700"
+                        >
+                          Clear date filters
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
