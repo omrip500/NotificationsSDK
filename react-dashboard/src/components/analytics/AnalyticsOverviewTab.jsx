@@ -17,7 +17,14 @@ import {
   Area,
   RadialBarChart,
   RadialBar,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
+  ComposedChart,
 } from "recharts";
+import { ResponsiveHeatMap } from "@nivo/heatmap";
 import {
   Bell,
   Users,
@@ -335,37 +342,75 @@ function AnalyticsOverviewTab({ appId }) {
             </div>
           </div>
           <div className="card-body">
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={[
-                    {
-                      name: "Male",
-                      value: data?.genderDistribution?.male || 45,
-                      color: "#3b82f6",
-                    },
-                    {
-                      name: "Female",
-                      value: data?.genderDistribution?.female || 55,
-                      color: "#ef4444",
-                    },
-                  ]}
-                  dataKey="value"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  innerRadius={40}
-                  paddingAngle={5}
-                  label={({ name, percent }) =>
-                    `${name} ${(percent * 100).toFixed(0)}%`
-                  }
-                >
-                  <Cell fill="#3b82f6" />
-                  <Cell fill="#ef4444" />
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+            {data?.genderDistribution &&
+            (data.genderDistribution.male > 0 ||
+              data.genderDistribution.female > 0) ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={[
+                      {
+                        name: "Male",
+                        value: data.genderDistribution.male || 0,
+                        color: "#3b82f6",
+                      },
+                      {
+                        name: "Female",
+                        value: data.genderDistribution.female || 0,
+                        color: "#ef4444",
+                      },
+                      {
+                        name: "Unknown",
+                        value: data.genderDistribution.unknown || 0,
+                        color: "#6b7280",
+                      },
+                    ].filter((item) => item.value > 0)}
+                    dataKey="value"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    innerRadius={40}
+                    paddingAngle={5}
+                    label={({ name, percent }) =>
+                      `${name} ${(percent * 100).toFixed(0)}%`
+                    }
+                  >
+                    {[
+                      {
+                        name: "Male",
+                        value: data.genderDistribution.male || 0,
+                        color: "#3b82f6",
+                      },
+                      {
+                        name: "Female",
+                        value: data.genderDistribution.female || 0,
+                        color: "#ef4444",
+                      },
+                      {
+                        name: "Unknown",
+                        value: data.genderDistribution.unknown || 0,
+                        color: "#6b7280",
+                      },
+                    ]
+                      .filter((item) => item.value > 0)
+                      .map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-64 text-gray-500">
+                <div className="text-center">
+                  <Users className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <p>No gender data available</p>
+                  <p className="text-xs mt-1">
+                    Users haven't provided gender information
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </motion.div>
 
@@ -514,6 +559,265 @@ function AnalyticsOverviewTab({ appId }) {
                 <div className="text-center">
                   <Activity className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                   <p>No monthly data available</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </motion.div>
+
+        {/* Weekday Distribution */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+          className="card"
+        >
+          <div className="card-header">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-primary-600" />
+              <h3 className="text-lg font-semibold text-gray-900">
+                Day of Week Distribution
+              </h3>
+            </div>
+          </div>
+          <div className="card-body">
+            {data?.weekdayDistribution &&
+            data.weekdayDistribution.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <RadialBarChart
+                  cx="50%"
+                  cy="50%"
+                  innerRadius="20%"
+                  outerRadius="90%"
+                  data={data.weekdayDistribution}
+                >
+                  <RadialBar
+                    dataKey="count"
+                    cornerRadius={10}
+                    fill="#8884d8"
+                    name="Notifications"
+                  />
+                  <Tooltip />
+                  <Legend />
+                </RadialBarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-64 text-gray-500">
+                <div className="text-center">
+                  <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <p>No weekday data available</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </motion.div>
+
+        {/* Platform Distribution */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.9 }}
+          className="card"
+        >
+          <div className="card-header">
+            <div className="flex items-center gap-2">
+              <Target className="w-5 h-5 text-primary-600" />
+              <h3 className="text-lg font-semibold text-gray-900">
+                Platform Distribution
+              </h3>
+            </div>
+          </div>
+          <div className="card-body">
+            {data?.platformDistribution &&
+            Object.keys(data.platformDistribution).length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={Object.entries(data.platformDistribution).map(
+                      ([platform, count]) => ({
+                        name: platform === "unknown" ? "Unknown" : platform,
+                        value: count,
+                      })
+                    )}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    label={({ name, percent }) =>
+                      `${name} ${(percent * 100).toFixed(0)}%`
+                    }
+                  >
+                    {Object.entries(data.platformDistribution).map(
+                      (entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                        />
+                      )
+                    )}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-64 text-gray-500">
+                <div className="text-center">
+                  <Target className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <p>No platform data available</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Full Width Charts */}
+      <div className="space-y-6">
+        {/* Engagement Heatmap */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.0 }}
+          className="card"
+        >
+          <div className="card-header">
+            <div className="flex items-center gap-2">
+              <Activity className="w-5 h-5 text-primary-600" />
+              <h3 className="text-lg font-semibold text-gray-900">
+                Notification Activity Heatmap
+              </h3>
+              <p className="text-sm text-gray-600 ml-auto">
+                Hour vs Day of Week
+              </p>
+            </div>
+          </div>
+          <div className="card-body">
+            {data?.heatmapData && data.heatmapData.length > 0 ? (
+              <div style={{ height: "400px" }}>
+                <ResponsiveHeatMap
+                  data={data.heatmapData.reduce((acc, item) => {
+                    const dayIndex = item.dayOfWeek - 1;
+                    if (!acc[dayIndex]) {
+                      acc[dayIndex] = {
+                        id: item.day,
+                        data: Array.from({ length: 24 }, (_, hour) => ({
+                          x: hour.toString().padStart(2, "0"),
+                          y: 0,
+                        })),
+                      };
+                    }
+                    acc[dayIndex].data[item.hour].y = item.count;
+                    return acc;
+                  }, [])}
+                  margin={{ top: 60, right: 90, bottom: 60, left: 90 }}
+                  valueFormat=">-.0f"
+                  axisTop={{
+                    tickSize: 5,
+                    tickPadding: 5,
+                    tickRotation: -90,
+                    legend: "Hour of Day",
+                    legendOffset: 46,
+                  }}
+                  axisLeft={{
+                    tickSize: 5,
+                    tickPadding: 5,
+                    tickRotation: 0,
+                    legend: "Day of Week",
+                    legendPosition: "middle",
+                    legendOffset: -72,
+                  }}
+                  colors={{
+                    type: "diverging",
+                    scheme: "blue_green",
+                    divergeAt: 0.5,
+                    minValue: 0,
+                    maxValue: Math.max(...data.heatmapData.map((d) => d.count)),
+                  }}
+                  emptyColor="#eeeeee"
+                  legends={[
+                    {
+                      anchor: "bottom",
+                      translateX: 0,
+                      translateY: 30,
+                      length: 400,
+                      thickness: 8,
+                      direction: "row",
+                      tickPosition: "after",
+                      tickSize: 3,
+                      tickSpacing: 4,
+                      tickOverlap: false,
+                      title: "Notifications Count →",
+                      titleAlign: "start",
+                      titleOffset: 4,
+                    },
+                  ]}
+                />
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-64 text-gray-500">
+                <div className="text-center">
+                  <Activity className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <p>No heatmap data available</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </motion.div>
+
+        {/* User Engagement Distribution */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.1 }}
+          className="card"
+        >
+          <div className="card-header">
+            <div className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-primary-600" />
+              <h3 className="text-lg font-semibold text-gray-900">
+                User Engagement Distribution
+              </h3>
+              <p className="text-sm text-gray-600 ml-auto">
+                Notifications per user
+              </p>
+            </div>
+          </div>
+          <div className="card-body">
+            {data?.engagementStats && data.engagementStats.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <ComposedChart data={data.engagementStats}>
+                  <XAxis dataKey="range" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "white",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "8px",
+                      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                    }}
+                  />
+                  <Bar
+                    dataKey="count"
+                    fill="#8b5cf6"
+                    radius={[4, 4, 0, 0]}
+                    name="Users"
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="count"
+                    stroke="#ef4444"
+                    strokeWidth={3}
+                    dot={{ fill: "#ef4444", strokeWidth: 2, r: 4 }}
+                    name="Trend"
+                  />
+                </ComposedChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-64 text-gray-500">
+                <div className="text-center">
+                  <Users className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <p>No engagement data available</p>
                 </div>
               </div>
             )}

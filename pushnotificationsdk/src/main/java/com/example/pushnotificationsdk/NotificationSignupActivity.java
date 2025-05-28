@@ -206,20 +206,59 @@ public class NotificationSignupActivity extends AppCompatActivity {
                     currentUser.getLng()
             );
 
-            if (isUpdate) {
-                PushNotificationManager.getInstance(this)
-                        .updateUserInfo("6825f0b2f5d70b84cf230fbf", userInfo);
-                Toast.makeText(this, "Notification preferences updated!", Toast.LENGTH_SHORT).show();
+            // If location-based notifications are requested, ask for permissions
+            if (locationBased) {
+                requestLocationPermissionsAndRegister(userInfo);
             } else {
-                PushNotificationManager.getInstance(this)
-                        .registerToServer("6825f0b2f5d70b84cf230fbf", userInfo);
-                Toast.makeText(this, "Notifications enabled!", Toast.LENGTH_SHORT).show();
+                // Register without location tracking
+                completeRegistration(userInfo);
             }
 
-            finish();
         } catch (Exception e) {
             Toast.makeText(this, "Please select at least one notification type", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void requestLocationPermissionsAndRegister(UserInfo userInfo) {
+        PushNotificationManager manager = PushNotificationManager.getInstance(this);
+
+        manager.requestLocationPermissions(this, new LocationManager.LocationPermissionCallback() {
+            @Override
+            public void onPermissionGranted() {
+                Toast.makeText(NotificationSignupActivity.this, "Location permissions granted!", Toast.LENGTH_SHORT).show();
+                completeRegistration(userInfo);
+            }
+
+            @Override
+            public void onPermissionDenied() {
+                Toast.makeText(NotificationSignupActivity.this, "Location permissions denied. Continuing without location-based notifications.", Toast.LENGTH_LONG).show();
+                completeRegistration(userInfo);
+            }
+        });
+    }
+
+    private void completeRegistration(UserInfo userInfo) {
+        if (isUpdate) {
+            PushNotificationManager.getInstance(this)
+                    .updateUserInfo("6825f0b2f5d70b84cf230fbf", userInfo);
+            Toast.makeText(this, "Notification preferences updated!", Toast.LENGTH_SHORT).show();
+        } else {
+            PushNotificationManager.getInstance(this)
+                    .registerToServer("6825f0b2f5d70b84cf230fbf", userInfo);
+            Toast.makeText(this, "Notifications enabled!", Toast.LENGTH_SHORT).show();
+        }
+
+        finish();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        // Forward permission results to LocationManager
+        PushNotificationManager.getInstance(this)
+                .getLocationManager()
+                .onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
     @Override
