@@ -32,9 +32,9 @@ public class SDKConfiguration {
     private void initializeDefaults() {
         // Default interests
         availableInterests = new ArrayList<>();
-        availableInterests.add(new InterestOption("sports", "Sports", "Sports news and updates"));
-        availableInterests.add(new InterestOption("politics", "Politics", "Political news and updates"));
-        availableInterests.add(new InterestOption("technology", "Technology", "Tech news and updates"));
+        availableInterests.add(new InterestOption("breaking_news", "Breaking News", "Important news alerts", true));
+        availableInterests.add(new InterestOption("sports", "Sports", "Sports scores and updates"));
+        availableInterests.add(new InterestOption("weather", "Weather", "Weather alerts and forecasts"));
 
         // Default gender options
         genderOptions = new String[]{"Male", "Female", "Other"};
@@ -44,8 +44,8 @@ public class SDKConfiguration {
         showGenderField = true;
 
         // Default titles
-        signupTitle = "Join Notifications";
-        signupSubtitle = "Personalize your notification experience";
+        signupTitle = "Enable Notifications";
+        signupSubtitle = "Choose what notifications you'd like to receive";
     }
 
     // Builder pattern for easy configuration

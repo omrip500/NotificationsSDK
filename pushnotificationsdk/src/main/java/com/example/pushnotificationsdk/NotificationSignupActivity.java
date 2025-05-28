@@ -113,10 +113,39 @@ public class NotificationSignupActivity extends AppCompatActivity {
             checkBox.setChecked(interest.isDefault());
             checkBox.setTextSize(16);
             checkBox.setTextColor(getResources().getColor(android.R.color.black));
-            checkBox.setPadding(8, 8, 8, 8);
+            checkBox.setPadding(16, 12, 16, 12);
+
+            // Add icon based on interest type
+            int iconRes = getIconForInterest(interest.getId());
+            if (iconRes != 0) {
+                checkBox.setCompoundDrawablesWithIntrinsicBounds(iconRes, 0, 0, 0);
+                checkBox.setCompoundDrawablePadding(16);
+            }
+
+            // Add description as subtitle if available
+            if (!interest.getDescription().isEmpty()) {
+                checkBox.setText(interest.getDisplayName() + "\n" + interest.getDescription());
+            }
 
             interestCheckboxes.add(checkBox);
             interestsContainer.addView(checkBox);
+        }
+    }
+
+    private int getIconForInterest(String interestId) {
+        switch (interestId) {
+            case "breaking_news":
+                return R.drawable.ic_breaking_news;
+            case "sports":
+                return R.drawable.ic_sports;
+            case "weather":
+                return R.drawable.ic_weather;
+            case "technology":
+                return R.drawable.ic_tech;
+            case "entertainment":
+                return R.drawable.ic_entertainment;
+            default:
+                return R.drawable.ic_notifications;
         }
     }
 
