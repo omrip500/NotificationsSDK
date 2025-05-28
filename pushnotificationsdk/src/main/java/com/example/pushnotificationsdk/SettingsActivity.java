@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -20,7 +21,8 @@ import retrofit2.Response;
 public class SettingsActivity extends AppCompatActivity {
 
     private TextView textUserId, textGender, textAge, textInterests;
-    private Button updateButton, unregisterButton, backButton;
+    private Button updateButton, unregisterButton;
+    private ImageButton backButton;
 
     private UserInfo currentUserInfo; // ✅ מידע שמור
 
