@@ -3,16 +3,16 @@
     <string name="app_name">PushNotificationSDK</string>
 
     <!-- Screen Titles -->
-    <string name="title_signup">Join Notifications</string>
+    <string name="title_signup">Enable Notifications</string>
     <string name="title_settings">Notification Settings</string>
     <string name="title_history">Notification History</string>
 
     <!-- Signup Screen -->
-    <string name="subtitle_signup">Personalize your notification experience</string>
+    <string name="subtitle_signup">Choose what notifications you\'d like to receive</string>
     <string name="hint_age">Age</string>
     <string name="label_gender">Gender</string>
-    <string name="label_interests">Interests</string>
-    <string name="button_join_now">Join Now</string>
+    <string name="label_interests">Notification Types</string>
+    <string name="button_join_now">Enable Notifications</string>
 
     <!-- Settings Screen -->
     <string name="section_profile">Profile Information</string>
@@ -29,10 +29,12 @@
     <string name="empty_state_title">No notifications yet</string>
     <string name="empty_state_subtitle">Your notifications will appear here</string>
 
-    <!-- Interests -->
+    <!-- Notification Types -->
+    <string name="interest_breaking_news">Breaking News</string>
     <string name="interest_sports">Sports</string>
-    <string name="interest_politics">Politics</string>
+    <string name="interest_weather">Weather</string>
     <string name="interest_technology">Technology</string>
+    <string name="interest_entertainment">Entertainment</string>
 
     <!-- Content Descriptions -->
     <string name="cd_back">Back</string>
