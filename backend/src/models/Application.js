@@ -14,6 +14,11 @@ const applicationSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    clientId: {
+      type: String,
+      required: true,
+      index: true, // אינדקס לחיפוש מהיר
+    },
     interests: {
       type: [String],
       default: [],

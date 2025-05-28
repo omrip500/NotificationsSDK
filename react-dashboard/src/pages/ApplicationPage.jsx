@@ -8,13 +8,13 @@ import {
   User,
   Users,
   Search,
-  X,
   Calendar,
   Filter,
   Trash2,
   Eye,
   Clock,
   MapPin,
+  Settings,
 } from "lucide-react";
 import api from "../services/api";
 import SegmentManager from "../components/segments/SegmentManager";
@@ -22,6 +22,7 @@ import SegmentForm from "../components/segments/SegmentForm";
 import StatisticsTab from "../components/analytics/StatisticsTab";
 import ScheduledNotificationsTab from "../components/scheduled/ScheduledNotificationsTab";
 import InteractiveMapTab from "../components/map/InteractiveMapTab";
+import ServiceAccountManager from "../components/ServiceAccountManager";
 
 function ApplicationPage() {
   const { appId } = useParams();
@@ -248,9 +249,21 @@ function ApplicationPage() {
       });
       setSelectedSegmentId("");
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Failed to send/schedule notification."
-      );
+      const errorMessage =
+        err.response?.data?.message || "Failed to send/schedule notification.";
+
+      // הודעות שגיאה מיוחדות עבור service account
+      if (
+        errorMessage.includes("Service account not found") ||
+        errorMessage.includes("ClientId is required") ||
+        errorMessage.includes("Please upload your Firebase service account")
+      ) {
+        setError(
+          `${errorMessage}\n\n⚠️ Please go to the "Firebase Settings" tab to upload your service account JSON file.`
+        );
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
@@ -308,7 +321,21 @@ function ApplicationPage() {
         [token]: { title: "", body: "", sendAt: "" },
       }));
     } catch (err) {
-      alert("Failed to send notification");
+      const errorMessage =
+        err.response?.data?.message || "Failed to send notification";
+
+      // הודעות שגיאה מיוחדות עבור service account
+      if (
+        errorMessage.includes("Service account not found") ||
+        errorMessage.includes("ClientId is required") ||
+        errorMessage.includes("Please upload your Firebase service account")
+      ) {
+        alert(
+          `${errorMessage}\n\nPlease go to the "Firebase Settings" tab to upload your service account JSON file.`
+        );
+      } else {
+        alert(errorMessage);
+      }
       console.error(err);
     }
   };
@@ -370,6 +397,7 @@ function ApplicationPage() {
                 { id: "history", label: "Sent Notifications", icon: History },
                 { id: "individual", label: "Send to Individual", icon: User },
                 { id: "segments", label: "Manage Segments", icon: Users },
+                { id: "firebase", label: "Firebase Settings", icon: Settings },
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -1076,6 +1104,16 @@ function ApplicationPage() {
                   setSegments(res.data || []);
                 }}
               />
+            </motion.div>
+          )}
+
+          {activeTab === "firebase" && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-6"
+            >
+              <ServiceAccountManager appId={appId} />
             </motion.div>
           )}
         </div>
