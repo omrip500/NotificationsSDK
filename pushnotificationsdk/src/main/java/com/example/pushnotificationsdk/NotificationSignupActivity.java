@@ -24,7 +24,7 @@ public class NotificationSignupActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notification_signup);
 
-        Button backButton = findViewById(R.id.button_back);
+        ImageButton backButton = findViewById(R.id.button_back);
         backButton.setOnClickListener(v -> finish());
 
 
