@@ -17,11 +17,6 @@ import {
   Area,
   RadialBarChart,
   RadialBar,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  Radar,
   ComposedChart,
 } from "recharts";
 import { ResponsiveHeatMap } from "@nivo/heatmap";
