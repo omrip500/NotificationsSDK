@@ -16,3 +16,5 @@ local.properties
 backend/src/config/*.json
 backend/.env
 .env
+node_modules/
+backend/node_modules/
