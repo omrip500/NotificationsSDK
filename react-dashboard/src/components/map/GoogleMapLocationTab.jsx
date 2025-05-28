@@ -1,180 +1,217 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MapPin,
   Users,
   Send,
   RotateCcw,
-  Eye,
-  EyeOff,
-  Target,
   AlertCircle,
   CheckCircle,
-  Map,
+  Square,
+  Trash2,
   Navigation,
+  Target,
 } from "lucide-react";
 import api from "../../services/api";
 
-function SimpleLocationTab({ appId }) {
+function GoogleMapLocationTab({ appId }) {
   const [devices, setDevices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedArea, setSelectedArea] = useState(null);
-  const [showUsers, setShowUsers] = useState(true);
   const [notification, setNotification] = useState({
     title: "",
     body: "",
   });
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState(null);
-  const [cityNames, setCityNames] = useState({});
-  const [areasWithCityNames, setAreasWithCityNames] = useState([]);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [drawingRectangle, setDrawingRectangle] = useState(null);
 
-  // Function to get city name from coordinates using reverse geocoding
-  const getCityName = async (lat, lng) => {
-    const key = `${lat.toFixed(3)},${lng.toFixed(3)}`;
-
-    // Check if we already have this city name cached
-    if (cityNames[key]) {
-      return cityNames[key];
-    }
-
-    try {
-      // Using OpenStreetMap Nominatim API (free)
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10&addressdetails=1`
-      );
-      const data = await response.json();
-
-      let cityName = "Unknown Location";
-
-      if (data && data.address) {
-        // Try to get city name from various fields
-        cityName =
-          data.address.city ||
-          data.address.town ||
-          data.address.village ||
-          data.address.municipality ||
-          data.address.county ||
-          data.display_name?.split(",")[0] ||
-          "Unknown Location";
-      }
-
-      // Cache the result
-      setCityNames((prev) => ({
-        ...prev,
-        [key]: cityName,
-      }));
-
-      return cityName;
-    } catch (error) {
-      console.error("Error getting city name:", error);
-      return "Unknown Location";
-    }
-  };
-
-  // Generate dynamic areas based on actual user locations
-  const generateAreasFromUsers = () => {
-    const usersWithLocation = devices.filter(
-      (device) =>
-        device.userInfo?.location?.lat && device.userInfo?.location?.lng
-    );
-
-    if (usersWithLocation.length === 0) return [];
-
-    // Group users by approximate location (0.1 degree radius ≈ 11km)
-    const locationGroups = {};
-
-    usersWithLocation.forEach((device) => {
-      const lat = device.userInfo.location.lat;
-      const lng = device.userInfo.location.lng;
-
-      // Round to create location clusters
-      const clusterLat = Math.round(lat * 10) / 10;
-      const clusterLng = Math.round(lng * 10) / 10;
-      const key = `${clusterLat},${clusterLng}`;
-
-      if (!locationGroups[key]) {
-        locationGroups[key] = {
-          users: [],
-          centerLat: clusterLat,
-          centerLng: clusterLng,
-        };
-      }
-      locationGroups[key].users.push(device);
-    });
-
-    // Convert groups to areas (only groups with 1+ users)
-    return Object.entries(locationGroups)
-      .filter(([_, group]) => group.users.length >= 1) // Show areas with at least 1 user
-      .map(([key, group], index) => {
-        const radius = 0.05; // ~5.5km radius
-        return {
-          name: `Loading... (${group.users.length} users)`, // Temporary name
-          bounds: {
-            north: group.centerLat + radius,
-            south: group.centerLat - radius,
-            east: group.centerLng + radius,
-            west: group.centerLng - radius,
-          },
-          userCount: group.users.length,
-          center: {
-            lat: group.centerLat,
-            lng: group.centerLng,
-          },
-          key: key, // Add key for identification
-        };
-      })
-      .sort((a, b) => b.userCount - a.userCount); // Sort by user count
-  };
-
-  const dynamicAreas = generateAreasFromUsers();
+  const mapRef = useRef(null);
+  const googleMapRef = useRef(null);
+  const rectangleRef = useRef(null);
 
   useEffect(() => {
     fetchDevices();
-  }, [appId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [appId]);
 
-  // Load city names for all areas
   useEffect(() => {
-    const loadCityNames = async () => {
-      const updatedAreas = [];
+    // Load Google Maps script
+    if (!window.google) {
+      const script = document.createElement("script");
+      script.src = `https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=drawing`;
+      script.async = true;
+      script.defer = true;
+      script.onload = initializeMap;
+      document.head.appendChild(script);
+    } else {
+      initializeMap();
+    }
+  }, [devices]);
 
-      for (let i = 0; i < dynamicAreas.length; i++) {
-        const area = dynamicAreas[i];
-        const key = area.key;
-        let cityName = cityNames[key];
+  const initializeMap = () => {
+    if (!mapRef.current || devices.length === 0) return;
 
-        if (!cityName) {
-          // Add delay between requests to respect rate limits
-          if (i > 0) {
-            await new Promise((resolve) => setTimeout(resolve, 1000)); // 1 second delay
-          }
-          cityName = await getCityName(area.center.lat, area.center.lng);
-        }
+    // Find center point from all devices with location
+    const devicesWithLocation = devices.filter(
+      (d) => d.userInfo?.location?.lat && d.userInfo?.location?.lng
+    );
 
-        updatedAreas.push({
-          ...area,
-          name: `${cityName} (${area.userCount} users)`,
-          cityName: cityName,
-        });
+    if (devicesWithLocation.length === 0) return;
 
-        // Update state progressively so user sees results as they load
-        setAreasWithCityNames([...updatedAreas]);
-      }
+    const center = {
+      lat:
+        devicesWithLocation.reduce(
+          (sum, d) => sum + d.userInfo.location.lat,
+          0
+        ) / devicesWithLocation.length,
+      lng:
+        devicesWithLocation.reduce(
+          (sum, d) => sum + d.userInfo.location.lng,
+          0
+        ) / devicesWithLocation.length,
     };
 
-    if (dynamicAreas.length > 0) {
-      // Start with loading state
-      const loadingAreas = dynamicAreas.map((area) => ({
-        ...area,
-        name: `Loading... (${area.userCount} users)`,
-      }));
-      setAreasWithCityNames(loadingAreas);
+    // Initialize map
+    const map = new window.google.maps.Map(mapRef.current, {
+      zoom: 10,
+      center: center,
+      mapTypeId: "roadmap",
+    });
 
-      loadCityNames();
+    googleMapRef.current = map;
+
+    // Add markers for each device
+    devicesWithLocation.forEach((device, index) => {
+      const marker = new window.google.maps.Marker({
+        position: {
+          lat: device.userInfo.location.lat,
+          lng: device.userInfo.location.lng,
+        },
+        map: map,
+        title: `User ${device.userInfo?.userId || index + 1}`,
+        icon: {
+          url:
+            "data:image/svg+xml;charset=UTF-8," +
+            encodeURIComponent(`
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="10" cy="10" r="8" fill="#3B82F6" stroke="white" stroke-width="2"/>
+              <circle cx="10" cy="10" r="3" fill="white"/>
+            </svg>
+          `),
+          scaledSize: new window.google.maps.Size(20, 20),
+        },
+      });
+
+      // Add info window
+      const infoWindow = new window.google.maps.InfoWindow({
+        content: `
+          <div style="padding: 8px;">
+            <h4 style="margin: 0 0 4px 0; font-weight: bold;">User ${
+              device.userInfo?.userId || "Unknown"
+            }</h4>
+            <p style="margin: 0; font-size: 12px; color: #666;">
+              ${device.userInfo.location.lat.toFixed(
+                4
+              )}, ${device.userInfo.location.lng.toFixed(4)}
+            </p>
+          </div>
+        `,
+      });
+
+      marker.addListener("click", () => {
+        infoWindow.open(map, marker);
+      });
+    });
+
+    // Add click listener for drawing rectangles
+    map.addListener("click", (event) => {
+      if (isDrawing) {
+        handleMapClick(event);
+      }
+    });
+  };
+
+  const handleMapClick = (event) => {
+    if (!isDrawing) return;
+
+    const clickedLat = event.latLng.lat();
+    const clickedLng = event.latLng.lng();
+
+    if (!drawingRectangle) {
+      // First click - start drawing
+      setDrawingRectangle({
+        startLat: clickedLat,
+        startLng: clickedLng,
+        endLat: clickedLat,
+        endLng: clickedLng,
+      });
     } else {
-      setAreasWithCityNames([]);
+      // Second click - finish drawing
+      const bounds = {
+        north: Math.max(drawingRectangle.startLat, clickedLat),
+        south: Math.min(drawingRectangle.startLat, clickedLat),
+        east: Math.max(drawingRectangle.startLng, clickedLng),
+        west: Math.min(drawingRectangle.startLng, clickedLng),
+      };
+
+      const devicesInArea = getDevicesInArea(bounds);
+
+      setSelectedArea({
+        bounds,
+        name: `Selected Area (${devicesInArea.length} users)`,
+        userCount: devicesInArea.length,
+      });
+
+      // Draw rectangle on map
+      if (rectangleRef.current) {
+        rectangleRef.current.setMap(null);
+      }
+
+      const rectangle = new window.google.maps.Rectangle({
+        bounds: new window.google.maps.LatLngBounds(
+          { lat: bounds.south, lng: bounds.west },
+          { lat: bounds.north, lng: bounds.east }
+        ),
+        editable: false,
+        draggable: false,
+        fillColor: "#3B82F6",
+        fillOpacity: 0.2,
+        strokeColor: "#3B82F6",
+        strokeOpacity: 0.8,
+        strokeWeight: 2,
+      });
+
+      rectangle.setMap(googleMapRef.current);
+      rectangleRef.current = rectangle;
+
+      setIsDrawing(false);
+      setDrawingRectangle(null);
     }
-  }, [dynamicAreas]); // eslint-disable-line react-hooks/exhaustive-deps
+  };
+
+  const startDrawing = () => {
+    setIsDrawing(true);
+    setDrawingRectangle(null);
+    setSelectedArea(null);
+
+    // Clear existing rectangle
+    if (rectangleRef.current) {
+      rectangleRef.current.setMap(null);
+      rectangleRef.current = null;
+    }
+  };
+
+  const clearSelection = () => {
+    setSelectedArea(null);
+    setIsDrawing(false);
+    setDrawingRectangle(null);
+
+    if (rectangleRef.current) {
+      rectangleRef.current.setMap(null);
+      rectangleRef.current = null;
+    }
+  };
 
   const fetchDevices = async () => {
     try {
@@ -248,7 +285,7 @@ function SimpleLocationTab({ appId }) {
 
       // Reset form
       setNotification({ title: "", body: "" });
-      setSelectedArea(null);
+      clearSelection();
     } catch (err) {
       console.error("❌ Location notification error:", err);
       console.error("Error response:", err.response?.data);
@@ -298,25 +335,10 @@ function SimpleLocationTab({ appId }) {
               Location-Based Notifications
             </h2>
             <p className="text-gray-600">
-              Send notifications to users in specific geographic areas
+              Draw an area on the map to send notifications to users in that
+              region
             </p>
           </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowUsers(!showUsers)}
-            className={`btn-secondary ${
-              showUsers ? "bg-primary-100 text-primary-700" : ""
-            }`}
-          >
-            {showUsers ? (
-              <EyeOff className="w-4 h-4" />
-            ) : (
-              <Eye className="w-4 h-4" />
-            )}
-            {showUsers ? "Hide Users" : "Show Users"}
-          </button>
         </div>
       </div>
 
@@ -365,66 +387,49 @@ function SimpleLocationTab({ appId }) {
         </div>
       </div>
 
-      {/* Area Selection */}
+      {/* Map and Controls */}
       <div className="card">
         <div className="card-header">
-          <h3 className="text-lg font-semibold text-gray-900">
-            Select Target Area
-          </h3>
-        </div>
-        <div className="card-body">
-          {areasWithCityNames.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {areasWithCityNames.map((area, index) => (
-                <motion.button
-                  key={area.name}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setSelectedArea(area)}
-                  className={`p-4 border-2 rounded-lg text-left transition-all ${
-                    selectedArea?.name === area.name
-                      ? "border-primary-500 bg-primary-50"
-                      : "border-gray-200 hover:border-gray-300"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <Map className="w-5 h-5 text-primary-600" />
-                    <div>
-                      <h4 className="font-medium text-gray-900">
-                        {area.name.includes("Loading...") ? (
-                          <div className="flex items-center gap-2">
-                            <div className="w-4 h-4 border-2 border-primary-600 border-t-transparent rounded-full animate-spin" />
-                            Loading location...
-                          </div>
-                        ) : (
-                          area.name
-                        )}
-                      </h4>
-                      <p className="text-sm text-gray-600">
-                        {area.userCount} users in this area
-                      </p>
-                      {!area.name.includes("Loading...") && (
-                        <p className="text-xs text-gray-500">
-                          Center: {area.center.lat.toFixed(3)},{" "}
-                          {area.center.lng.toFixed(3)}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </motion.button>
-              ))}
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-gray-900">
+              Interactive Map
+            </h3>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={startDrawing}
+                disabled={isDrawing}
+                className={`btn-primary ${
+                  isDrawing ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+              >
+                <Square className="w-4 h-4" />
+                {isDrawing ? "Click on map to draw area" : "Draw Area"}
+              </button>
+              {selectedArea && (
+                <button onClick={clearSelection} className="btn-secondary">
+                  <Trash2 className="w-4 h-4" />
+                  Clear
+                </button>
+              )}
             </div>
-          ) : (
-            <div className="text-center py-8">
-              <MapPin className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-              <h4 className="text-lg font-medium text-gray-900 mb-2">
-                No Location Data
-              </h4>
-              <p className="text-gray-600">
-                No users have location data available for targeting.
-              </p>
-            </div>
+          </div>
+          {isDrawing && (
+            <p className="text-sm text-blue-600 mt-2">
+              Click two points on the map to create a rectangular area
+            </p>
           )}
+          {selectedArea && (
+            <p className="text-sm text-green-600 mt-2">
+              Selected area contains {selectedArea.userCount} users
+            </p>
+          )}
+        </div>
+        <div className="card-body p-0">
+          <div
+            ref={mapRef}
+            className="w-full h-96 rounded-lg"
+            style={{ minHeight: "400px" }}
+          />
         </div>
       </div>
 
@@ -437,7 +442,7 @@ function SimpleLocationTab({ appId }) {
         >
           <div className="card-header">
             <h3 className="text-lg font-semibold text-gray-900">
-              Send Notification to {selectedArea.name}
+              Send Notification to Selected Area
             </h3>
             <p className="text-sm text-gray-600">
               {devicesInSelectedArea.length} users will receive this
@@ -476,10 +481,7 @@ function SimpleLocationTab({ appId }) {
             </div>
 
             <div className="flex items-center justify-between pt-4">
-              <button
-                onClick={() => setSelectedArea(null)}
-                className="btn-secondary"
-              >
+              <button onClick={clearSelection} className="btn-secondary">
                 <RotateCcw className="w-4 h-4" />
                 Cancel
               </button>
@@ -553,48 +555,8 @@ function SimpleLocationTab({ appId }) {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Users List */}
-      {showUsers && selectedArea && devicesInSelectedArea.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: "auto" }}
-          className="card"
-        >
-          <div className="card-header">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Users in {selectedArea.name}
-            </h3>
-          </div>
-          <div className="card-body">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {devicesInSelectedArea.slice(0, 12).map((device, index) => (
-                <div key={index} className="p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-primary-600" />
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">
-                        User {device.userInfo?.userId || "Unknown"}
-                      </p>
-                      <p className="text-xs text-gray-600">
-                        {device.userInfo?.location?.lat?.toFixed(4)},{" "}
-                        {device.userInfo?.location?.lng?.toFixed(4)}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            {devicesInSelectedArea.length > 12 && (
-              <p className="text-sm text-gray-600 mt-4 text-center">
-                And {devicesInSelectedArea.length - 12} more users...
-              </p>
-            )}
-          </div>
-        </motion.div>
-      )}
     </motion.div>
   );
 }
 
-export default SimpleLocationTab;
+export default GoogleMapLocationTab;
