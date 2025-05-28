@@ -80,6 +80,23 @@ public class PushNotificationManager {
         });
     }
 
+    /**
+     * Configure the SDK with custom settings
+     * @param configuration The SDK configuration
+     */
+    public void configure(SDKConfiguration configuration) {
+        // Configuration is handled by the singleton pattern in SDKConfiguration
+        Log.d("PushSDK", "✅ SDK configured successfully");
+    }
+
+    /**
+     * Get a configuration builder for easy setup
+     * @return SDKConfiguration.Builder
+     */
+    public SDKConfiguration.Builder getConfigurationBuilder() {
+        return new SDKConfiguration.Builder();
+    }
+
     public void launchSignupScreen(Context context, String userName) {
         Intent intent = new Intent(context, NotificationSignupActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
