@@ -37,6 +37,9 @@ dependencies {
     implementation(libs.monitor)
     implementation(libs.ext.junit)
     implementation(libs.material)
-    testImplementation ("junit:junit:4.13.2")
 
+    // Google Play Services Location for location tracking
+    implementation("com.google.android.gms:play-services-location:21.0.1")
+
+    testImplementation ("junit:junit:4.13.2")
 }

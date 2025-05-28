@@ -177,4 +177,34 @@
   .bg-error-100 {
     background-color: #fee2e2;
   }
+
+  /* Line clamp utility */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Leaflet map fixes */
+  .leaflet-container {
+    height: 100%;
+    width: 100%;
+    border-radius: 0.5rem;
+  }
+
+  .leaflet-popup-content-wrapper {
+    border-radius: 0.5rem;
+  }
+
+  .leaflet-popup-tip {
+    background: white;
+  }
 }

@@ -124,6 +124,97 @@ export const getOverviewStats = async (req, res) => {
       { $sort: { "_id.year": 1, "_id.month": 1 } },
     ]);
 
+    // 10. פילוח לפי יום בשבוע
+    const weekdayDistribution = await NotificationLog.aggregate([
+      { $match: { appId: new mongoose.Types.ObjectId(appId) } },
+      {
+        $group: {
+          _id: { $dayOfWeek: "$sentAt" },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    // 11. פילוח לפי פלטפורמה (אם יש)
+    const platformDistribution = await Device.aggregate([
+      { $match: { appId: new mongoose.Types.ObjectId(appId) } },
+      {
+        $group: {
+          _id: "$userInfo.platform",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    // 12. סטטיסטיקות engagement - התראות לפי משתמש
+    const engagementStats = await Device.aggregate([
+      { $match: { appId: new mongoose.Types.ObjectId(appId) } },
+      {
+        $lookup: {
+          from: "notificationlogs",
+          localField: "token",
+          foreignField: "token",
+          as: "notifications",
+        },
+      },
+      {
+        $project: {
+          userId: "$userInfo.userId",
+          notificationCount: { $size: "$notifications" },
+        },
+      },
+      {
+        $bucket: {
+          groupBy: "$notificationCount",
+          boundaries: [0, 1, 5, 10, 25, 50, 100],
+          default: "100+",
+          output: {
+            count: { $sum: 1 },
+          },
+        },
+      },
+    ]);
+
+    // 13. Top interests (מעודכן)
+    const topInterests = await Device.aggregate([
+      { $match: { appId: new mongoose.Types.ObjectId(appId) } },
+      { $unwind: "$userInfo.interests" },
+      {
+        $group: {
+          _id: "$userInfo.interests",
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { count: -1 } },
+      { $limit: 10 },
+    ]);
+
+    // 14. התראות לפי שעה ויום בשבוע (heatmap data)
+    const heatmapData = await NotificationLog.aggregate([
+      { $match: { appId: new mongoose.Types.ObjectId(appId) } },
+      {
+        $group: {
+          _id: {
+            hour: { $hour: "$sentAt" },
+            dayOfWeek: { $dayOfWeek: "$sentAt" },
+          },
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    // Days of week mapping
+    const dayNames = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
+
     res.json({
       perDay: perDay.map((d) => ({ date: d._id, count: d.count })),
       genderDistribution,
@@ -140,12 +231,38 @@ export const getOverviewStats = async (req, res) => {
         count: a.count,
       })),
       typeDistribution: typeDistribution.reduce((acc, t) => {
-        acc[t._id] = t.count;
+        acc[t._id || "unknown"] = t.count;
         return acc;
       }, {}),
       monthlyStats: monthlyStats.map((m) => ({
         month: `${m._id.year}-${m._id.month.toString().padStart(2, "0")}`,
         count: m.count,
+      })),
+      weekdayDistribution: weekdayDistribution.map((w) => ({
+        day: dayNames[w._id - 1] || "Unknown",
+        dayNumber: w._id,
+        count: w.count,
+      })),
+      platformDistribution: platformDistribution.reduce((acc, p) => {
+        acc[p._id || "unknown"] = p.count;
+        return acc;
+      }, {}),
+      engagementStats: engagementStats.map((e) => ({
+        range:
+          e._id === "100+"
+            ? "100+"
+            : `${e._id}-${e._id + (e._id < 100 ? 4 : 0)}`,
+        count: e.count,
+      })),
+      topInterests: topInterests.map((i) => ({
+        name: i._id,
+        count: i.count,
+      })),
+      heatmapData: heatmapData.map((h) => ({
+        hour: h._id.hour,
+        dayOfWeek: h._id.dayOfWeek,
+        day: dayNames[h._id.dayOfWeek - 1] || "Unknown",
+        count: h.count,
       })),
     });
   } catch (err) {

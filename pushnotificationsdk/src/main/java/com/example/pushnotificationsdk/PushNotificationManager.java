@@ -15,9 +15,11 @@ public class PushNotificationManager {
     private static PushNotificationManager instance;
     private final Context context;
     private UserInfo currentUser;
+    private LocationManager locationManager;
 
     private PushNotificationManager(Context context) {
         this.context = context.getApplicationContext();
+        this.locationManager = new LocationManager(context);
     }
 
     public static synchronized PushNotificationManager getInstance(Context context) {
@@ -137,6 +139,64 @@ public class PushNotificationManager {
         launchNotificationSetupScreen(context);
     }
 
+    /**
+     * Get the location manager instance
+     * @return LocationManager instance
+     */
+    public LocationManager getLocationManager() {
+        return locationManager;
+    }
+
+    /**
+     * Request location permissions and start tracking
+     * @param activity The activity to request permissions from
+     * @param callback Callback for permission results
+     */
+    public void requestLocationPermissions(android.app.Activity activity, LocationManager.LocationPermissionCallback callback) {
+        locationManager.requestLocationPermissions(activity, new LocationManager.LocationPermissionCallback() {
+            @Override
+            public void onPermissionGranted() {
+                Log.d("PushSDK", "✅ Location permissions granted - starting location tracking");
+                locationManager.startLocationTracking();
+                callback.onPermissionGranted();
+            }
+
+            @Override
+            public void onPermissionDenied() {
+                Log.w("PushSDK", "⚠️ Location permissions denied");
+                callback.onPermissionDenied();
+            }
+        });
+    }
+
+    /**
+     * Check if location permissions are granted
+     * @return true if permissions are granted
+     */
+    public boolean hasLocationPermissions() {
+        return locationManager.hasLocationPermissions();
+    }
+
+    /**
+     * Start location tracking (if permissions are granted)
+     */
+    public void startLocationTracking() {
+        if (hasLocationPermissions()) {
+            locationManager.startLocationTracking();
+            Log.d("PushSDK", "✅ Location tracking started");
+        } else {
+            Log.w("PushSDK", "⚠️ Cannot start location tracking - permissions not granted");
+        }
+    }
+
+    /**
+     * Stop location tracking
+     */
+    public void stopLocationTracking() {
+        locationManager.stopLocationTracking();
+        Log.d("PushSDK", "🛑 Location tracking stopped");
+    }
+
     public void launchNotificationHistoryScreen(Context context) {
         Intent intent = new Intent(context, NotificationHistoryActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -209,13 +269,34 @@ public class PushNotificationManager {
         });
     }
 
+    /**
+     * Update user location in the database
+     * @param token Device token
+     * @param userInfo Updated user info with new location
+     */
+    public void updateUserLocation(String token, UserInfo userInfo) {
+        PushApiService apiService = ApiClient.getService();
+        UpdateDeviceRequest request = new UpdateDeviceRequest(token, userInfo);
+        Call<Void> call = apiService.updateDeviceInfo(request);
 
+        call.enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    Log.d("PushSDK", "✅ Location updated in database");
+                    // Update current user with new location
+                    currentUser = userInfo;
+                } else {
+                    Log.e("PushSDK", "❌ Failed to update location: " + response.code());
+                }
+            }
 
-
-
-
-
-
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Log.e("PushSDK", "❌ Network error updating location", t);
+            }
+        });
+    }
 
     // Callback interface for receiving the token
     public interface OnTokenReceivedListener {

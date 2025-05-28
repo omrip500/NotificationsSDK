@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "@nivo/calendar": "^0.99.0",
+    "@nivo/heatmap": "^0.99.0",
+    "@nivo/radar": "^0.99.0"
+  }
+}

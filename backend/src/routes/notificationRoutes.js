@@ -9,6 +9,7 @@ import {
   updateScheduledNotification,
   deleteScheduledNotification,
   sendToSpecificTokens,
+  sendNotificationByLocation,
   getDailyNotificationStats,
 } from "../controllers/notificationController.js";
 import authenticateApiKey from "../middlewares/authenticateApiKey.js";
@@ -17,6 +18,7 @@ import authenticate from "../middlewares/authMiddleware.js";
 const router = express.Router();
 
 router.post("/send", authenticateApiKey, sendNotification);
+router.post("/send-by-location", authenticate, sendNotificationByLocation);
 router.post("/schedule", authenticate, scheduleNotification);
 router.get("/scheduled/:appId", authenticate, getScheduledNotifications);
 router.put("/scheduled/:id", authenticate, updateScheduledNotification);
