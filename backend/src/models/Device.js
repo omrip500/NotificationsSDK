@@ -17,6 +17,7 @@ const deviceSchema = new mongoose.Schema(
         lat: Number,
         lng: Number,
       },
+      lastLocationUpdate: { type: Date, default: Date.now }, // 🆕 זמן עדכון מיקום אחרון
     },
   },
   { timestamps: true }

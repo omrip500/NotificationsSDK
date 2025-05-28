@@ -74,6 +74,35 @@ export const getDeviceByToken = async (req, res) => {
   }
 };
 
+export const getDevicesWithLocation = async (req, res) => {
+  const { appId } = req.params;
+
+  try {
+    const devices = await Device.find({
+      appId,
+      "userInfo.location.lat": { $exists: true, $ne: null },
+      "userInfo.location.lng": { $exists: true, $ne: null },
+    });
+
+    const devicesWithLocation = devices.map((device) => ({
+      _id: device._id,
+      token: device.token,
+      userInfo: device.userInfo,
+      location: device.userInfo.location,
+    }));
+
+    res.status(200).json(devicesWithLocation);
+  } catch (err) {
+    console.error("❌ Error fetching devices with location:", err);
+    res
+      .status(500)
+      .json({
+        message: "Failed to fetch devices with location",
+        error: err.message,
+      });
+  }
+};
+
 export const updateDeviceInfo = async (req, res) => {
   const { token, userInfo } = req.body;
 
@@ -95,6 +124,41 @@ export const updateDeviceInfo = async (req, res) => {
     res.status(200).json({ message: "Device updated", device: updated });
   } catch (err) {
     res.status(500).json({ message: "Failed to update", error: err.message });
+  }
+};
+
+// New endpoint specifically for location updates (more efficient)
+export const updateDeviceLocation = async (req, res) => {
+  const { token, lat, lng } = req.body;
+
+  if (!token || lat === undefined || lng === undefined) {
+    return res.status(400).json({ message: "Missing token, lat, or lng" });
+  }
+
+  try {
+    const updated = await Device.findOneAndUpdate(
+      { token },
+      {
+        "userInfo.location.lat": lat,
+        "userInfo.location.lng": lng,
+        "userInfo.lastLocationUpdate": new Date(),
+        updatedAt: new Date()
+      },
+      { new: true }
+    );
+
+    if (!updated) {
+      return res.status(404).json({ message: "Device not found" });
+    }
+
+    console.log(`📍 Location updated for device ${token}: ${lat}, ${lng}`);
+    res.status(200).json({
+      message: "Location updated successfully",
+      location: { lat, lng }
+    });
+  } catch (err) {
+    console.error("❌ Error updating device location:", err);
+    res.status(500).json({ message: "Failed to update location", error: err.message });
   }
 };
 

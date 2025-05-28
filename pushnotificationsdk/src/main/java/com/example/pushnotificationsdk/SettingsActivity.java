@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -20,7 +21,8 @@ import retrofit2.Response;
 public class SettingsActivity extends AppCompatActivity {
 
     private TextView textUserId, textGender, textAge, textInterests;
-    private Button updateButton, unregisterButton, backButton;
+    private Button updateButton, unregisterButton;
+    private ImageButton backButton;
 
     private UserInfo currentUserInfo; // ✅ מידע שמור
 
@@ -74,10 +76,10 @@ public class SettingsActivity extends AppCompatActivity {
                             UserInfo info = response.body().getUserInfo();
                             currentUserInfo = info; // ✅ שמור מידע
 
-                            textUserId.setText("User ID: " + info.getUserId());
-                            textGender.setText("Gender: " + info.getGender());
-                            textAge.setText("Age: " + info.getAge());
-                            textInterests.setText("Interests: " + String.join(", ", info.getInterests()));
+                            textUserId.setText(info.getUserId());
+                            textGender.setText(info.getGender());
+                            textAge.setText(String.valueOf(info.getAge()));
+                            textInterests.setText(String.join(", ", info.getInterests()));
                         } else {
                             showDefaultValues();
                         }
@@ -98,10 +100,10 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void showDefaultValues() {
-        textUserId.setText("User ID: -");
-        textGender.setText("Gender: -");
-        textAge.setText("Age: -");
-        textInterests.setText("Interests: -");
+        textUserId.setText("-");
+        textGender.setText("-");
+        textAge.setText("-");
+        textInterests.setText("-");
     }
 
     @Override

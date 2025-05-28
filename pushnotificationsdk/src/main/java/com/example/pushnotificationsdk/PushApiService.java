@@ -23,6 +23,9 @@ public interface PushApiService {
     @PUT("/api/devices/update")
     Call<Void> updateDeviceInfo(@Body UpdateDeviceRequest request);
 
+    @PUT("/api/devices/update-location")
+    Call<Void> updateDeviceLocation(@Body UpdateLocationRequest request);
+
     @DELETE("/api/devices/unregister/{token}")
     Call<Void> unregisterDevice(@Path("token") String token);
 

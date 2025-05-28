@@ -14,9 +14,12 @@ public class PushNotificationManager {
 
     private static PushNotificationManager instance;
     private final Context context;
+    private UserInfo currentUser;
+    private LocationManager locationManager;
 
     private PushNotificationManager(Context context) {
         this.context = context.getApplicationContext();
+        this.locationManager = new LocationManager(context);
     }
 
     public static synchronized PushNotificationManager getInstance(Context context) {
@@ -80,11 +83,118 @@ public class PushNotificationManager {
         });
     }
 
-    public void launchSignupScreen(Context context, String userName) {
+    /**
+     * Configure the SDK with custom settings
+     * @param configuration The SDK configuration
+     */
+    public void configure(SDKConfiguration configuration) {
+        // Configuration is handled by the singleton pattern in SDKConfiguration
+        Log.d("PushSDK", "✅ SDK configured successfully");
+    }
+
+    /**
+     * Get a configuration builder for easy setup
+     * @return SDKConfiguration.Builder
+     */
+    public SDKConfiguration.Builder getConfigurationBuilder() {
+        return new SDKConfiguration.Builder();
+    }
+
+    /**
+     * Set the current user information for the SDK
+     * This should be called by the client app when a user is logged in
+     * @param userInfo The user information (without interests - those will be selected in the setup screen)
+     */
+    public void setCurrentUser(UserInfo userInfo) {
+        this.currentUser = userInfo;
+        Log.d("PushSDK", "✅ Current user set: " + userInfo.getUserId());
+    }
+
+    /**
+     * Get the current user information
+     * @return Current user info or null if not set
+     */
+    public UserInfo getCurrentUser() {
+        return currentUser;
+    }
+
+    /**
+     * Launch the notification setup screen
+     * The current user must be set before calling this method
+     * @param context The context to launch from
+     */
+    public void launchNotificationSetupScreen(Context context) {
+        if (currentUser == null) {
+            Log.e("PushSDK", "❌ Current user not set. Call setCurrentUser() first.");
+            return;
+        }
+
         Intent intent = new Intent(context, NotificationSignupActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent.putExtra("user_name", userName); // 👈 העברת השם
         context.startActivity(intent);
+    }
+
+    @Deprecated
+    public void launchSignupScreen(Context context, String userName) {
+        launchNotificationSetupScreen(context);
+    }
+
+    /**
+     * Get the location manager instance
+     * @return LocationManager instance
+     */
+    public LocationManager getLocationManager() {
+        return locationManager;
+    }
+
+    /**
+     * Request location permissions and start tracking
+     * @param activity The activity to request permissions from
+     * @param callback Callback for permission results
+     */
+    public void requestLocationPermissions(android.app.Activity activity, LocationManager.LocationPermissionCallback callback) {
+        locationManager.requestLocationPermissions(activity, new LocationManager.LocationPermissionCallback() {
+            @Override
+            public void onPermissionGranted() {
+                Log.d("PushSDK", "✅ Location permissions granted - starting location tracking");
+                locationManager.startLocationTracking();
+                callback.onPermissionGranted();
+            }
+
+            @Override
+            public void onPermissionDenied() {
+                Log.w("PushSDK", "⚠️ Location permissions denied");
+                callback.onPermissionDenied();
+            }
+        });
+    }
+
+    /**
+     * Check if location permissions are granted
+     * @return true if permissions are granted
+     */
+    public boolean hasLocationPermissions() {
+        return locationManager.hasLocationPermissions();
+    }
+
+    /**
+     * Start location tracking (if permissions are granted)
+     */
+    public void startLocationTracking() {
+        if (hasLocationPermissions()) {
+            locationManager.startLocationTracking();
+            Log.d("PushSDK", "✅ Location tracking started");
+        } else {
+            Log.w("PushSDK", "⚠️ Cannot start location tracking - permissions not granted");
+        }
+    }
+
+    /**
+     * Stop location tracking
+     */
+    public void stopLocationTracking() {
+        locationManager.stopLocationTracking();
+        Log.d("PushSDK", "🛑 Location tracking stopped");
     }
 
     public void launchNotificationHistoryScreen(Context context) {
@@ -159,13 +269,55 @@ public class PushNotificationManager {
         });
     }
 
+    /**
+     * Update user location in the database
+     * @param token Device token
+     * @param userInfo Updated user info with new location
+     */
+    public void updateUserLocation(String token, UserInfo userInfo) {
+        updateUserLocation(token, userInfo.getLat(), userInfo.getLng());
+        // Update current user with new location
+        currentUser = userInfo;
+    }
 
+    /**
+     * Update user location in the database (more efficient - location only)
+     * @param token Device token
+     * @param lat Latitude
+     * @param lng Longitude
+     */
+    public void updateUserLocation(String token, double lat, double lng) {
+        PushApiService apiService = ApiClient.getService();
+        UpdateLocationRequest request = new UpdateLocationRequest(token, lat, lng);
+        Call<Void> call = apiService.updateDeviceLocation(request);
 
+        call.enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    Log.d("PushSDK", "✅ Location updated in database: " + lat + ", " + lng);
+                    // Update current user location if available
+                    if (currentUser != null) {
+                        currentUser = new UserInfo(
+                                currentUser.getUserId(),
+                                currentUser.getGender(),
+                                currentUser.getAge(),
+                                currentUser.getInterests(),
+                                lat,
+                                lng
+                        );
+                    }
+                } else {
+                    Log.e("PushSDK", "❌ Failed to update location: " + response.code());
+                }
+            }
 
-
-
-
-
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Log.e("PushSDK", "❌ Network error updating location", t);
+            }
+        });
+    }
 
     // Callback interface for receiving the token
     public interface OnTokenReceivedListener {
