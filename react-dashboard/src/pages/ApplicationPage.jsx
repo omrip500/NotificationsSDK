@@ -14,11 +14,14 @@ import {
   Trash2,
   Eye,
   Clock,
+  MapPin,
 } from "lucide-react";
 import api from "../services/api";
 import SegmentManager from "../components/segments/SegmentManager";
 import SegmentForm from "../components/segments/SegmentForm";
 import StatisticsTab from "../components/analytics/StatisticsTab";
+import ScheduledNotificationsTab from "../components/scheduled/ScheduledNotificationsTab";
+import LocationBasedNotificationTab from "../components/map/LocationBasedNotificationTab";
 
 function ApplicationPage() {
   const { appId } = useParams();
@@ -361,6 +364,8 @@ function ApplicationPage() {
             <nav className="-mb-px flex space-x-8">
               {[
                 { id: "send", label: "Send Notification", icon: Send },
+                { id: "location", label: "Location-Based", icon: MapPin },
+                { id: "scheduled", label: "Scheduled", icon: Clock },
                 { id: "stats", label: "Statistics", icon: BarChart3 },
                 { id: "history", label: "Sent Notifications", icon: History },
                 { id: "individual", label: "Send to Individual", icon: User },
@@ -663,6 +668,14 @@ function ApplicationPage() {
                 </div>
               </form>
             </motion.div>
+          )}
+
+          {activeTab === "location" && (
+            <LocationBasedNotificationTab appId={appId} />
+          )}
+
+          {activeTab === "scheduled" && (
+            <ScheduledNotificationsTab appId={appId} />
           )}
 
           {activeTab === "stats" && <StatisticsTab appId={appId} />}

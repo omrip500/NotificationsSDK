@@ -3,6 +3,7 @@ import {
   registerDeviceToken,
   getDevicesByAppId,
   getDeviceByToken,
+  getDevicesWithLocation,
   updateDeviceInfo,
   unregisterDevice,
 } from "../controllers/deviceController.js";
@@ -13,6 +14,7 @@ const router = express.Router();
 router.post("/register", registerDeviceToken);
 
 router.get("/app/:appId", authenticate, getDevicesByAppId);
+router.get("/app/:appId/with-location", authenticate, getDevicesWithLocation);
 
 router.get("/me/:token", getDeviceByToken);
 
