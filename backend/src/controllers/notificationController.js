@@ -124,12 +124,15 @@ export const scheduleNotification = async (req, res) => {
   }
 };
 
-// 🔸 קבלת כל ההתראות המתוזמנות לאפליקציה
+// 🔸 קבלת כל ההתראות המתוזמנות לאפליקציה (רק pending)
 export const getScheduledNotifications = async (req, res) => {
   const { appId } = req.params;
 
   try {
-    const list = await ScheduledNotification.find({ appId }).sort({
+    const list = await ScheduledNotification.find({
+      appId,
+      status: "pending",
+    }).sort({
       sendAt: 1,
     });
     res.status(200).json(list);
@@ -268,6 +271,131 @@ export const getDailyNotificationStats = async (req, res) => {
     console.error("❌ Error fetching daily stats:", err);
     res.status(500).json({
       message: "Failed to fetch stats",
+      error: err.message,
+    });
+  }
+};
+
+// 🔸 עדכון התראה מתוזמנת
+export const updateScheduledNotification = async (req, res) => {
+  const { id } = req.params;
+  const { title, body, sendAt, filters } = req.body;
+
+  try {
+    const notification = await ScheduledNotification.findById(id);
+    if (!notification) {
+      return res
+        .status(404)
+        .json({ message: "Scheduled notification not found" });
+    }
+
+    if (notification.status !== "pending") {
+      return res
+        .status(400)
+        .json({ message: "Cannot update non-pending notification" });
+    }
+
+    const updatedNotification = await ScheduledNotification.findByIdAndUpdate(
+      id,
+      { title, body, sendAt: new Date(sendAt), filters },
+      { new: true }
+    );
+
+    res.json(updatedNotification);
+  } catch (err) {
+    console.error("❌ Error updating scheduled notification:", err);
+    res
+      .status(500)
+      .json({ message: "Failed to update scheduled notification" });
+  }
+};
+
+// 🔸 מחיקת התראה מתוזמנת
+export const deleteScheduledNotification = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const notification = await ScheduledNotification.findById(id);
+    if (!notification) {
+      return res
+        .status(404)
+        .json({ message: "Scheduled notification not found" });
+    }
+
+    if (notification.status !== "pending") {
+      return res
+        .status(400)
+        .json({ message: "Cannot delete non-pending notification" });
+    }
+
+    await ScheduledNotification.findByIdAndDelete(id);
+    res.json({ message: "Scheduled notification deleted successfully" });
+  } catch (err) {
+    console.error("❌ Error deleting scheduled notification:", err);
+    res
+      .status(500)
+      .json({ message: "Failed to delete scheduled notification" });
+  }
+};
+
+// 🗺️ שליחת התראות לפי מיקום גיאוגרפי
+export const sendNotificationByLocation = async (req, res) => {
+  const { appId, title, body, bounds } = req.body;
+
+  if (!appId || !title || !body || !bounds) {
+    return res.status(400).json({ message: "Missing required fields" });
+  }
+
+  const { north, south, east, west } = bounds;
+
+  try {
+    // מציאת כל המכשירים באזור הגיאוגרפי
+    const devices = await Device.find({
+      appId,
+      "userInfo.location.lat": { $gte: south, $lte: north },
+      "userInfo.location.lng": { $gte: west, $lte: east },
+    });
+
+    if (devices.length === 0) {
+      return res.status(200).json({
+        message: "No devices found in the specified area",
+        devicesFound: 0,
+        successCount: 0,
+      });
+    }
+
+    const tokens = devices.map((device) => device.token);
+
+    // שליחת ההתראה
+    const message = {
+      notification: { title, body },
+      tokens,
+    };
+
+    const response = await admin.messaging().sendEachForMulticast(message);
+
+    // שמירת לוגים
+    const logs = tokens.map((token) => ({
+      token,
+      appId,
+      title,
+      body,
+      type: "location-based",
+      filters: { location: bounds },
+    }));
+    await NotificationLog.insertMany(logs);
+
+    res.status(200).json({
+      message: `Notification sent to ${response.successCount} devices in the specified area`,
+      devicesFound: devices.length,
+      successCount: response.successCount,
+      failureCount: response.failureCount,
+      bounds,
+    });
+  } catch (err) {
+    console.error("❌ Error sending location-based notification:", err);
+    res.status(500).json({
+      message: "Failed to send location-based notification",
       error: err.message,
     });
   }

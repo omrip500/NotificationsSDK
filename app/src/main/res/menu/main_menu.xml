@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- Categories submenu -->
+    <item
+        android:id="@+id/menu_categories"
+        android:title="Categories"
+        app:showAsAction="never">
+        <menu>
+            <item
+                android:id="@+id/action_all_news"
+                android:title="📰 All News" />
+            <item
+                android:id="@+id/action_breaking"
+                android:title="🔴 Breaking News" />
+            <item
+                android:id="@+id/action_sports"
+                android:title="🏈 Sports" />
+            <item
+                android:id="@+id/action_technology"
+                android:title="💻 Technology" />
+            <item
+                android:id="@+id/action_weather"
+                android:title="☁️ Weather" />
+            <item
+                android:id="@+id/action_entertainment"
+                android:title="🎬 Entertainment" />
+        </menu>
+    </item>
+
+    <!-- Notifications -->
+    <item
+        android:id="@+id/action_notifications"
+        android:title="🔔 Notifications"
+        app:showAsAction="never" />
+
+    <!-- History -->
+    <item
+        android:id="@+id/action_history"
+        android:title="📋 History"
+        app:showAsAction="never" />
+
+</menu>
