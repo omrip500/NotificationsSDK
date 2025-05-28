@@ -275,17 +275,38 @@ public class PushNotificationManager {
      * @param userInfo Updated user info with new location
      */
     public void updateUserLocation(String token, UserInfo userInfo) {
+        updateUserLocation(token, userInfo.getLat(), userInfo.getLng());
+        // Update current user with new location
+        currentUser = userInfo;
+    }
+
+    /**
+     * Update user location in the database (more efficient - location only)
+     * @param token Device token
+     * @param lat Latitude
+     * @param lng Longitude
+     */
+    public void updateUserLocation(String token, double lat, double lng) {
         PushApiService apiService = ApiClient.getService();
-        UpdateDeviceRequest request = new UpdateDeviceRequest(token, userInfo);
-        Call<Void> call = apiService.updateDeviceInfo(request);
+        UpdateLocationRequest request = new UpdateLocationRequest(token, lat, lng);
+        Call<Void> call = apiService.updateDeviceLocation(request);
 
         call.enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
                 if (response.isSuccessful()) {
-                    Log.d("PushSDK", "✅ Location updated in database");
-                    // Update current user with new location
-                    currentUser = userInfo;
+                    Log.d("PushSDK", "✅ Location updated in database: " + lat + ", " + lng);
+                    // Update current user location if available
+                    if (currentUser != null) {
+                        currentUser = new UserInfo(
+                                currentUser.getUserId(),
+                                currentUser.getGender(),
+                                currentUser.getAge(),
+                                currentUser.getInterests(),
+                                lat,
+                                lng
+                        );
+                    }
                 } else {
                     Log.e("PushSDK", "❌ Failed to update location: " + response.code());
                 }
