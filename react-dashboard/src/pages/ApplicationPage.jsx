@@ -1,10 +1,24 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { motion } from "framer-motion";
+import {
+  Send,
+  BarChart3,
+  History,
+  User,
+  Users,
+  Search,
+  X,
+  Calendar,
+  Filter,
+  Trash2,
+  Eye,
+  Clock,
+} from "lucide-react";
 import api from "../services/api";
 import SegmentManager from "../components/segments/SegmentManager";
 import SegmentForm from "../components/segments/SegmentForm";
 import StatisticsTab from "../components/analytics/StatisticsTab";
-import "./ApplicationPage.css";
 
 function ApplicationPage() {
   const { appId } = useParams();
@@ -37,6 +51,10 @@ function ApplicationPage() {
 
   const [segments, setSegments] = useState([]);
   const [selectedSegmentId, setSelectedSegmentId] = useState("");
+
+  // History search and filter states
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredHistory, setFilteredHistory] = useState([]);
 
   useEffect(() => {
     const fetchInterests = async () => {
@@ -88,6 +106,20 @@ function ApplicationPage() {
       fetchHistory();
     }
   }, [activeTab, appId]);
+
+  // Filter history based on search term
+  useEffect(() => {
+    if (!searchTerm) {
+      setFilteredHistory(notificationHistory);
+    } else {
+      const filtered = notificationHistory.filter(
+        (log) =>
+          log.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          log.body.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredHistory(filtered);
+    }
+  }, [notificationHistory, searchTerm]);
 
   useEffect(() => {
     const fetchSegments = async () => {
@@ -244,350 +276,594 @@ function ApplicationPage() {
     }
   };
 
+  const handleDeleteNotification = async (notificationId) => {
+    if (!window.confirm("Are you sure you want to delete this notification?")) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      await api.delete(`/notifications/${notificationId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      // Refresh the history
+      const res = await api.get(`/notifications/history/app/${appId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setNotificationHistory(res.data || []);
+    } catch (err) {
+      alert("Failed to delete notification");
+      console.error(err);
+    }
+  };
+
   return (
-    <div className="app-page-container">
-      <h2>Manage Application: {appId}</h2>
-      <div className="tabs">
-        <button
-          className={activeTab === "send" ? "active" : ""}
-          onClick={() => setActiveTab("send")}
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
         >
-          Send Notification
-        </button>
-        <button
-          className={activeTab === "stats" ? "active" : ""}
-          onClick={() => setActiveTab("stats")}
-        >
-          Statistics
-        </button>
-        <button
-          className={activeTab === "history" ? "active" : ""}
-          onClick={() => setActiveTab("history")}
-        >
-          Sent Notifications
-        </button>
-        <button
-          className={activeTab === "individual" ? "active" : ""}
-          onClick={() => setActiveTab("individual")}
-        >
-          Send to Individual
-        </button>
-        <button
-          className={activeTab === "segments" ? "active" : ""}
-          onClick={() => setActiveTab("segments")}
-        >
-          Manage Segments
-        </button>
-      </div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Application Management
+          </h1>
+          <p className="text-gray-600">App ID: {appId}</p>
+        </motion.div>
 
-      <div className="tab-content">
-        {activeTab === "send" && (
-          <form className="send-form" onSubmit={handleSendNotification}>
-            <input
-              type="text"
-              placeholder="Notification Title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
-            />
-            <textarea
-              placeholder="Notification Body"
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              required
-            />
-            <label>
-              Send At (optional):
-              <input
-                type="datetime-local"
-                value={sendAt}
-                onChange={(e) => setSendAt(e.target.value)}
-              />
-            </label>
-
-            {segments.length > 0 && (
-              <label>
-                Choose Saved Segment:
-                <select
-                  value={selectedSegmentId}
-                  onChange={(e) => setSelectedSegmentId(e.target.value)}
+        {/* Tabs */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mb-8"
+        >
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8">
+              {[
+                { id: "send", label: "Send Notification", icon: Send },
+                { id: "stats", label: "Statistics", icon: BarChart3 },
+                { id: "history", label: "Sent Notifications", icon: History },
+                { id: "individual", label: "Send to Individual", icon: User },
+                { id: "segments", label: "Manage Segments", icon: Users },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`group inline-flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                    activeTab === tab.id
+                      ? "border-primary-500 text-primary-600"
+                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  }`}
                 >
-                  <option value="">-- None --</option>
-                  {segments.map((seg) => (
-                    <option key={seg._id} value={seg._id}>
-                      {seg.name}
-                    </option>
-                  ))}
-                </select>
+                  <tab.icon className="w-5 h-5" />
+                  {tab.label}
+                </button>
+              ))}
+            </nav>
+          </div>
+        </motion.div>
+
+        <div className="tab-content">
+          {activeTab === "send" && (
+            <form className="send-form" onSubmit={handleSendNotification}>
+              <input
+                type="text"
+                placeholder="Notification Title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                required
+              />
+              <textarea
+                placeholder="Notification Body"
+                value={body}
+                onChange={(e) => setBody(e.target.value)}
+                required
+              />
+              <label>
+                Send At (optional):
+                <input
+                  type="datetime-local"
+                  value={sendAt}
+                  onChange={(e) => setSendAt(e.target.value)}
+                />
               </label>
-            )}
 
-            {!selectedSegmentId && (
-              <>
-                <hr />
-                <h4>Optional Filters</h4>
-                <div className="filter-checkboxes">
-                  {Object.keys(showFilter).map((filter) => (
-                    <label key={filter}>
-                      <span>
-                        {filter.charAt(0).toUpperCase() + filter.slice(1)}
-                      </span>
-                      <input
-                        type="checkbox"
-                        checked={showFilter[filter]}
-                        onChange={() => toggleFilter(filter)}
-                      />
+              {segments.length > 0 && (
+                <label>
+                  Choose Saved Segment:
+                  <select
+                    value={selectedSegmentId}
+                    onChange={(e) => setSelectedSegmentId(e.target.value)}
+                  >
+                    <option value="">-- None --</option>
+                    {segments.map((seg) => (
+                      <option key={seg._id} value={seg._id}>
+                        {seg.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+
+              {!selectedSegmentId && (
+                <>
+                  <hr />
+                  <h4>Optional Filters</h4>
+                  <div className="filter-checkboxes">
+                    {Object.keys(showFilter).map((filter) => (
+                      <label key={filter}>
+                        <span>
+                          {filter.charAt(0).toUpperCase() + filter.slice(1)}
+                        </span>
+                        <input
+                          type="checkbox"
+                          checked={showFilter[filter]}
+                          onChange={() => toggleFilter(filter)}
+                        />
+                      </label>
+                    ))}
+                  </div>
+
+                  {showFilter.gender && (
+                    <label>
+                      Gender:
+                      <select
+                        value={gender}
+                        onChange={(e) => setGender(e.target.value)}
+                      >
+                        <option value="">Any</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                      </select>
                     </label>
+                  )}
+
+                  {showFilter.age && (
+                    <>
+                      <label>
+                        Age Min:
+                        <input
+                          type="number"
+                          value={ageMin}
+                          onChange={(e) => setAgeMin(e.target.value)}
+                        />
+                      </label>
+                      <label>
+                        Age Max:
+                        <input
+                          type="number"
+                          value={ageMax}
+                          onChange={(e) => setAgeMax(e.target.value)}
+                        />
+                      </label>
+                    </>
+                  )}
+
+                  {showFilter.interests && (
+                    <div className="checkbox-list">
+                      <span>Interests:</span>
+                      {availableInterests.length === 0 ? (
+                        <p>Loading...</p>
+                      ) : (
+                        availableInterests.map((interest) => (
+                          <label key={interest} className="checkbox-item">
+                            <input
+                              type="checkbox"
+                              value={interest}
+                              checked={interests.includes(interest)}
+                              onChange={() => handleInterestToggle(interest)}
+                            />
+                            {interest}
+                          </label>
+                        ))
+                      )}
+                    </div>
+                  )}
+
+                  {showFilter.location && (
+                    <label>
+                      Location:
+                      <div className="location-inputs">
+                        <input
+                          type="number"
+                          placeholder="Latitude"
+                          step="0.0001"
+                          value={location.lat}
+                          onChange={(e) =>
+                            setLocation({ ...location, lat: e.target.value })
+                          }
+                        />
+                        <input
+                          type="number"
+                          placeholder="Longitude"
+                          step="0.0001"
+                          value={location.lng}
+                          onChange={(e) =>
+                            setLocation({ ...location, lng: e.target.value })
+                          }
+                        />
+                        <input
+                          type="number"
+                          placeholder="Radius (km)"
+                          step="0.1"
+                          value={location.radiusKm}
+                          onChange={(e) =>
+                            setLocation({
+                              ...location,
+                              radiusKm: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                    </label>
+                  )}
+                </>
+              )}
+
+              <button type="submit" disabled={loading}>
+                {loading
+                  ? "Sending..."
+                  : sendAt
+                  ? "Schedule Notification"
+                  : "Send Notification"}
+              </button>
+
+              {message && <p className="success">{message}</p>}
+              {error && <p className="error">{error}</p>}
+            </form>
+          )}
+
+          {activeTab === "stats" && <StatisticsTab appId={appId} />}
+
+          {activeTab === "history" && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-6"
+            >
+              {/* Search and Filter Bar */}
+              <div className="card">
+                <div className="card-body">
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="flex-1">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                        <input
+                          type="text"
+                          placeholder="Search notifications..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="input pl-10"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Filter className="w-5 h-5 text-gray-400" />
+                      <span className="text-sm text-gray-600">
+                        {filteredHistory.length} of {notificationHistory.length}{" "}
+                        notifications
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Notifications List */}
+              {filteredHistory.length === 0 ? (
+                <div className="text-center py-12">
+                  <History className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    {notificationHistory.length === 0
+                      ? "No notifications sent yet"
+                      : "No notifications match your search"}
+                  </h3>
+                  <p className="text-gray-600">
+                    {notificationHistory.length === 0
+                      ? "Notifications you send will appear here"
+                      : "Try adjusting your search terms"}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {filteredHistory.map((log, index) => (
+                    <motion.div
+                      key={log._id || index}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="card group hover:shadow-medium transition-all duration-300"
+                    >
+                      <div className="card-body">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className="p-2 bg-primary-100 rounded-lg">
+                                <Send className="w-4 h-4 text-primary-600" />
+                              </div>
+                              <div>
+                                <h3 className="font-semibold text-gray-900">
+                                  {log.title}
+                                </h3>
+                                <div className="flex items-center gap-2 text-sm text-gray-500">
+                                  <Clock className="w-4 h-4" />
+                                  {new Date(log.sentAt).toLocaleString()}
+                                </div>
+                              </div>
+                            </div>
+
+                            <p className="text-gray-700 mb-4">{log.body}</p>
+
+                            <div className="flex flex-wrap gap-2">
+                              <span
+                                className={`badge ${
+                                  log.type === "broadcast"
+                                    ? "badge-primary"
+                                    : "badge-success"
+                                }`}
+                              >
+                                {log.type}
+                              </span>
+
+                              {log.type === "broadcast" &&
+                                log.filters &&
+                                Object.keys(log.filters).length > 0 && (
+                                  <div className="flex flex-wrap gap-1">
+                                    {Object.entries(log.filters).map(
+                                      ([key, val]) => (
+                                        <span
+                                          key={key}
+                                          className="badge badge-warning"
+                                        >
+                                          {key}:{" "}
+                                          {Array.isArray(val)
+                                            ? val.join(", ")
+                                            : val.toString()}
+                                        </span>
+                                      )
+                                    )}
+                                  </div>
+                                )}
+
+                              {log.type === "individual" && log.token && (
+                                <span className="badge badge-success">
+                                  Individual: {log.token.substring(0, 8)}...
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 ml-4">
+                            <button
+                              onClick={() => {
+                                /* Add view details functionality */
+                              }}
+                              className="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                              title="View Details"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteNotification(log._id)}
+                              className="p-2 text-gray-400 hover:text-error-600 hover:bg-error-50 rounded-lg transition-colors"
+                              title="Delete Notification"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
                   ))}
                 </div>
+              )}
+            </motion.div>
+          )}
 
-                {showFilter.gender && (
-                  <label>
-                    Gender:
-                    <select
-                      value={gender}
-                      onChange={(e) => setGender(e.target.value)}
-                    >
-                      <option value="">Any</option>
-                      <option value="male">Male</option>
-                      <option value="female">Female</option>
-                    </select>
-                  </label>
-                )}
-
-                {showFilter.age && (
-                  <>
-                    <label>
-                      Age Min:
-                      <input
-                        type="number"
-                        value={ageMin}
-                        onChange={(e) => setAgeMin(e.target.value)}
-                      />
-                    </label>
-                    <label>
-                      Age Max:
-                      <input
-                        type="number"
-                        value={ageMax}
-                        onChange={(e) => setAgeMax(e.target.value)}
-                      />
-                    </label>
-                  </>
-                )}
-
-                {showFilter.interests && (
-                  <div className="checkbox-list">
-                    <span>Interests:</span>
-                    {availableInterests.length === 0 ? (
-                      <p>Loading...</p>
-                    ) : (
-                      availableInterests.map((interest) => (
-                        <label key={interest} className="checkbox-item">
-                          <input
-                            type="checkbox"
-                            value={interest}
-                            checked={interests.includes(interest)}
-                            onChange={() => handleInterestToggle(interest)}
-                          />
-                          {interest}
-                        </label>
-                      ))
-                    )}
-                  </div>
-                )}
-
-                {showFilter.location && (
-                  <label>
-                    Location:
-                    <div className="location-inputs">
-                      <input
-                        type="number"
-                        placeholder="Latitude"
-                        step="0.0001"
-                        value={location.lat}
-                        onChange={(e) =>
-                          setLocation({ ...location, lat: e.target.value })
-                        }
-                      />
-                      <input
-                        type="number"
-                        placeholder="Longitude"
-                        step="0.0001"
-                        value={location.lng}
-                        onChange={(e) =>
-                          setLocation({ ...location, lng: e.target.value })
-                        }
-                      />
-                      <input
-                        type="number"
-                        placeholder="Radius (km)"
-                        step="0.1"
-                        value={location.radiusKm}
-                        onChange={(e) =>
-                          setLocation({
-                            ...location,
-                            radiusKm: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                  </label>
-                )}
-              </>
-            )}
-
-            <button type="submit" disabled={loading}>
-              {loading
-                ? "Sending..."
-                : sendAt
-                ? "Schedule Notification"
-                : "Send Notification"}
-            </button>
-
-            {message && <p className="success">{message}</p>}
-            {error && <p className="error">{error}</p>}
-          </form>
-        )}
-
-        {activeTab === "stats" && <StatisticsTab appId={appId} />}
-
-        {activeTab === "history" && (
-          <div className="history-list">
-            {notificationHistory.length === 0 ? (
-              <p>No notifications found.</p>
-            ) : (
-              notificationHistory.map((log, index) => (
-                <div key={index} className="notification-log">
-                  <div className="log-header">
-                    <span className="log-title">{log.title}</span>
-                    <span className="log-time">
-                      {new Date(log.sentAt).toLocaleString()}
-                    </span>
-                  </div>
-                  <p className="log-body">{log.body}</p>
-                  <div className="log-meta">
-                    <p>
-                      <strong>Type:</strong> {log.type}
-                    </p>
-                    {log.type === "broadcast" && log.filters && (
-                      <div>
-                        <strong>Filters:</strong>
-                        <ul>
-                          {Object.entries(log.filters).map(([key, val]) => (
-                            <li key={key}>
-                              {key}:{" "}
-                              {Array.isArray(val)
-                                ? val.join(", ")
-                                : val.toString()}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    {log.type === "individual" && (
-                      <p>
-                        <strong>Target Token:</strong> {log.token}
-                      </p>
-                    )}
-                  </div>
+          {activeTab === "individual" && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-6"
+            >
+              {devices.length === 0 ? (
+                <div className="text-center py-12">
+                  <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    No devices found
+                  </h3>
+                  <p className="text-gray-600">
+                    No registered devices for this application
+                  </p>
                 </div>
-              ))
-            )}
-          </div>
-        )}
+              ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {devices.map((device, index) => {
+                    const msg = individualMessage[device.token] || {};
+                    return (
+                      <motion.div
+                        key={device._id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="card"
+                      >
+                        <div className="card-header">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-primary-100 rounded-lg">
+                              <User className="w-5 h-5 text-primary-600" />
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-gray-900">
+                                User: {device.userInfo?.userId || "Unknown"}
+                              </h3>
+                              <p className="text-sm text-gray-600">
+                                Device: {device.token.substring(0, 12)}...
+                              </p>
+                            </div>
+                          </div>
+                        </div>
 
-        {activeTab === "individual" && (
-          <div className="device-list">
-            {devices.length === 0 ? (
-              <p>No devices found.</p>
-            ) : (
-              devices.map((device) => {
-                const msg = individualMessage[device.token] || {};
-                return (
-                  <div key={device._id} className="device-card">
-                    <p>
-                      <strong>User ID:</strong> {device.userInfo?.userId}
-                    </p>
-                    <p>
-                      <strong>Gender:</strong> {device.userInfo?.gender}
-                    </p>
-                    <p>
-                      <strong>Age:</strong> {device.userInfo?.age}
-                    </p>
-                    <p>
-                      <strong>Interests:</strong>{" "}
-                      {device.userInfo?.interests?.join(", ")}
-                    </p>
+                        <div className="card-body space-y-4">
+                          {/* User Info */}
+                          <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                            <div>
+                              <span className="text-sm font-medium text-gray-700">
+                                Gender:
+                              </span>
+                              <p className="text-sm text-gray-900">
+                                {device.userInfo?.gender || "N/A"}
+                              </p>
+                            </div>
+                            <div>
+                              <span className="text-sm font-medium text-gray-700">
+                                Age:
+                              </span>
+                              <p className="text-sm text-gray-900">
+                                {device.userInfo?.age || "N/A"}
+                              </p>
+                            </div>
+                            <div className="col-span-2">
+                              <span className="text-sm font-medium text-gray-700">
+                                Interests:
+                              </span>
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {device.userInfo?.interests?.length > 0 ? (
+                                  device.userInfo.interests.map(
+                                    (interest, idx) => (
+                                      <span
+                                        key={idx}
+                                        className="badge badge-primary"
+                                      >
+                                        {interest}
+                                      </span>
+                                    )
+                                  )
+                                ) : (
+                                  <span className="text-sm text-gray-500">
+                                    No interests
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
 
-                    <input
-                      type="text"
-                      placeholder="Notification Title"
-                      value={msg.title || ""}
-                      onChange={(e) =>
-                        handleIndividualChange(
-                          device.token,
-                          "title",
-                          e.target.value
-                        )
-                      }
-                    />
-                    <textarea
-                      placeholder="Notification Body"
-                      value={msg.body || ""}
-                      onChange={(e) =>
-                        handleIndividualChange(
-                          device.token,
-                          "body",
-                          e.target.value
-                        )
-                      }
-                    />
-                    <input
-                      type="datetime-local"
-                      value={msg.sendAt || ""}
-                      onChange={(e) =>
-                        handleIndividualChange(
-                          device.token,
-                          "sendAt",
-                          e.target.value
-                        )
-                      }
-                    />
-                    <button onClick={() => handleSendToUser(device.token)}>
-                      Send Notification
-                    </button>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        )}
+                          {/* Notification Form */}
+                          <div className="space-y-4">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Notification Title
+                              </label>
+                              <input
+                                type="text"
+                                placeholder="Enter notification title"
+                                value={msg.title || ""}
+                                onChange={(e) =>
+                                  handleIndividualChange(
+                                    device.token,
+                                    "title",
+                                    e.target.value
+                                  )
+                                }
+                                className="input"
+                              />
+                            </div>
 
-        {activeTab === "segments" && (
-          <div>
-            <SegmentForm
-              appId={appId}
-              onSegmentCreated={async () => {
-                const token = localStorage.getItem("token");
-                const res = await api.get(`/segments/${appId}`, {
-                  headers: { Authorization: `Bearer ${token}` },
-                });
-                setSegments(res.data || []);
-              }}
-            />
-            <SegmentManager
-              appId={appId}
-              onSegmentsChange={async () => {
-                const token = localStorage.getItem("token");
-                const res = await api.get(`/segments/${appId}`, {
-                  headers: { Authorization: `Bearer ${token}` },
-                });
-                setSegments(res.data || []);
-              }}
-            />
-          </div>
-        )}
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Notification Body
+                              </label>
+                              <textarea
+                                placeholder="Enter notification message"
+                                value={msg.body || ""}
+                                onChange={(e) =>
+                                  handleIndividualChange(
+                                    device.token,
+                                    "body",
+                                    e.target.value
+                                  )
+                                }
+                                className="textarea"
+                                rows={3}
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Schedule (Optional)
+                              </label>
+                              <div className="relative">
+                                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                                <input
+                                  type="datetime-local"
+                                  value={msg.sendAt || ""}
+                                  onChange={(e) =>
+                                    handleIndividualChange(
+                                      device.token,
+                                      "sendAt",
+                                      e.target.value
+                                    )
+                                  }
+                                  className="input pl-10"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="card-footer">
+                          <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => handleSendToUser(device.token)}
+                            className="btn-primary w-full flex items-center justify-center gap-2"
+                            disabled={!msg.title || !msg.body}
+                          >
+                            <Send className="w-4 h-4" />
+                            {msg.sendAt && new Date(msg.sendAt) > new Date()
+                              ? "Schedule Notification"
+                              : "Send Notification"}
+                          </motion.button>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {activeTab === "segments" && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-6"
+            >
+              <SegmentForm
+                appId={appId}
+                onSegmentCreated={async () => {
+                  const token = localStorage.getItem("token");
+                  const res = await api.get(`/segments/${appId}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                  });
+                  setSegments(res.data || []);
+                }}
+              />
+              <SegmentManager
+                appId={appId}
+                onSegmentsChange={async () => {
+                  const token = localStorage.getItem("token");
+                  const res = await api.get(`/segments/${appId}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                  });
+                  setSegments(res.data || []);
+                }}
+              />
+            </motion.div>
+          )}
+        </div>
       </div>
     </div>
   );
