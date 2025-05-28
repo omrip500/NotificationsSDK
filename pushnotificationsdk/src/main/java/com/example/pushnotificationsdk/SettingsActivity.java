@@ -74,10 +74,10 @@ public class SettingsActivity extends AppCompatActivity {
                             UserInfo info = response.body().getUserInfo();
                             currentUserInfo = info; // ✅ שמור מידע
 
-                            textUserId.setText("User ID: " + info.getUserId());
-                            textGender.setText("Gender: " + info.getGender());
-                            textAge.setText("Age: " + info.getAge());
-                            textInterests.setText("Interests: " + String.join(", ", info.getInterests()));
+                            textUserId.setText(info.getUserId());
+                            textGender.setText(info.getGender());
+                            textAge.setText(String.valueOf(info.getAge()));
+                            textInterests.setText(String.join(", ", info.getInterests()));
                         } else {
                             showDefaultValues();
                         }
@@ -98,10 +98,10 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void showDefaultValues() {
-        textUserId.setText("User ID: -");
-        textGender.setText("Gender: -");
-        textAge.setText("Age: -");
-        textInterests.setText("Interests: -");
+        textUserId.setText("-");
+        textGender.setText("-");
+        textAge.setText("-");
+        textInterests.setText("-");
     }
 
     @Override
