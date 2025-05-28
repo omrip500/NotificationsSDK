@@ -32,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
 
                 // 👇 שימוש בפונקציה החדשה:
                 List<String> interests = Arrays.asList("sports", "politics");
-                UserInfo user = new UserInfo("omripeer", "male", 26, interests, 32.0853, 34.7818); // ת"א
+                UserInfo user = new UserInfo("omripeer", "male", 24, interests, 32.0853, 34.7818); // ת"א
                 notificationManager.registerToServer(token, "6825f0b2f5d70b84cf230fbf", user);
             }
 
