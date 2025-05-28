@@ -58,6 +58,14 @@ function ScheduledNotificationsTab({ appId }) {
   const filterNotifications = () => {
     let filtered = scheduledNotifications;
 
+    // Filter only pending notifications that haven't been sent yet
+    filtered = filtered.filter((notification) => {
+      return (
+        notification.status === "pending" &&
+        new Date(notification.sendAt) > new Date()
+      );
+    });
+
     // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(
@@ -72,7 +80,9 @@ function ScheduledNotificationsTab({ appId }) {
       filtered = filtered.filter((notification) => {
         const sendDate = new Date(notification.sendAt);
         const fromDate = dateFilter.from ? new Date(dateFilter.from) : null;
-        const toDate = dateFilter.to ? new Date(dateFilter.to + "T23:59:59") : null;
+        const toDate = dateFilter.to
+          ? new Date(dateFilter.to + "T23:59:59")
+          : null;
 
         if (fromDate && sendDate < fromDate) return false;
         if (toDate && sendDate > toDate) return false;
@@ -113,7 +123,11 @@ function ScheduledNotificationsTab({ appId }) {
   };
 
   const handleDelete = async (notificationId) => {
-    if (!window.confirm("Are you sure you want to delete this scheduled notification?")) {
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this scheduled notification?"
+      )
+    ) {
       return;
     }
 
@@ -165,6 +179,26 @@ function ScheduledNotificationsTab({ appId }) {
     });
   };
 
+  const getTimeUntilSend = (sendAt) => {
+    const now = new Date();
+    const sendTime = new Date(sendAt);
+    const diffMs = sendTime - now;
+
+    if (diffMs <= 0) return "Past due";
+
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMinutes / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffDays > 0) {
+      return `${diffDays} day${diffDays > 1 ? "s" : ""} left`;
+    } else if (diffHours > 0) {
+      return `${diffHours} hour${diffHours > 1 ? "s" : ""} left`;
+    } else {
+      return `${diffMinutes} minute${diffMinutes > 1 ? "s" : ""} left`;
+    }
+  };
+
   const getFiltersDescription = (filters) => {
     if (!filters || Object.keys(filters).length === 0) {
       return "All users";
@@ -176,7 +210,11 @@ function ScheduledNotificationsTab({ appId }) {
       descriptions.push(`Age: ${filters.ageMin || 0}-${filters.ageMax || "∞"}`);
     }
     if (filters.interests && filters.interests.length > 0) {
-      descriptions.push(`Interests: ${filters.interests.slice(0, 2).join(", ")}${filters.interests.length > 2 ? "..." : ""}`);
+      descriptions.push(
+        `Interests: ${filters.interests.slice(0, 2).join(", ")}${
+          filters.interests.length > 2 ? "..." : ""
+        }`
+      );
     }
     if (filters.location) {
       descriptions.push("Location-based");
@@ -190,7 +228,9 @@ function ScheduledNotificationsTab({ appId }) {
       <div className="flex items-center justify-center h-64">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-gray-600">Loading scheduled notifications...</span>
+          <span className="text-gray-600">
+            Loading scheduled notifications...
+          </span>
         </div>
       </div>
     );
@@ -239,8 +279,8 @@ function ScheduledNotificationsTab({ appId }) {
               <div className="flex items-center gap-2">
                 <Filter className="w-5 h-5 text-gray-400" />
                 <span className="text-sm text-gray-600">
-                  {filteredNotifications.length} of {scheduledNotifications.length}{" "}
-                  notifications
+                  {filteredNotifications.length} of{" "}
+                  {scheduledNotifications.length} notifications
                 </span>
               </div>
             </div>
@@ -302,12 +342,18 @@ function ScheduledNotificationsTab({ appId }) {
           <h3 className="text-lg font-medium text-gray-900 mb-2">
             {scheduledNotifications.length === 0
               ? "No scheduled notifications"
-              : "No notifications match your search"}
+              : filteredNotifications.length === 0 &&
+                scheduledNotifications.length > 0
+              ? "No notifications match your search"
+              : "No pending notifications"}
           </h3>
           <p className="text-gray-600">
             {scheduledNotifications.length === 0
               ? "Schedule notifications to see them here"
-              : "Try adjusting your search terms or date filters"}
+              : filteredNotifications.length === 0 &&
+                scheduledNotifications.length > 0
+              ? "Try adjusting your search terms or date filters"
+              : "All scheduled notifications have been sent or are in the past"}
           </p>
         </div>
       ) : (
@@ -328,23 +374,34 @@ function ScheduledNotificationsTab({ appId }) {
                       <h4 className="text-lg font-semibold text-gray-900 truncate">
                         {notification.title}
                       </h4>
-                      <span className={`badge ${getStatusColor(notification.status)}`}>
+                      <span
+                        className={`badge ${getStatusColor(
+                          notification.status
+                        )}`}
+                      >
                         {notification.status}
                       </span>
                     </div>
-                    
+
                     <p className="text-gray-600 mb-3 line-clamp-2">
                       {notification.body}
                     </p>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4 text-gray-400" />
                         <span className="text-gray-600">
                           {formatDateTime(notification.sendAt)}
                         </span>
                       </div>
-                      
+
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-primary-500" />
+                        <span className="text-primary-600 font-medium">
+                          {getTimeUntilSend(notification.sendAt)}
+                        </span>
+                      </div>
+
                       <div className="flex items-center gap-2">
                         <Target className="w-4 h-4 text-gray-400" />
                         <span className="text-gray-600 truncate">
@@ -355,7 +412,10 @@ function ScheduledNotificationsTab({ appId }) {
                       <div className="flex items-center gap-2">
                         <Users className="w-4 h-4 text-gray-400" />
                         <span className="text-gray-600">
-                          Created {new Date(notification.createdAt).toLocaleDateString()}
+                          Created{" "}
+                          {new Date(
+                            notification.createdAt
+                          ).toLocaleDateString()}
                         </span>
                       </div>
                     </div>
@@ -373,7 +433,7 @@ function ScheduledNotificationsTab({ appId }) {
                       >
                         <Edit3 className="w-4 h-4" />
                       </motion.button>
-                      
+
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
@@ -414,7 +474,7 @@ function ScheduledNotificationsTab({ appId }) {
                   Edit Scheduled Notification
                 </h3>
               </div>
-              
+
               <div className="card-body space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">

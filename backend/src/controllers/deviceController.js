@@ -74,6 +74,35 @@ export const getDeviceByToken = async (req, res) => {
   }
 };
 
+export const getDevicesWithLocation = async (req, res) => {
+  const { appId } = req.params;
+
+  try {
+    const devices = await Device.find({
+      appId,
+      "userInfo.location.lat": { $exists: true, $ne: null },
+      "userInfo.location.lng": { $exists: true, $ne: null },
+    });
+
+    const devicesWithLocation = devices.map((device) => ({
+      _id: device._id,
+      token: device.token,
+      userInfo: device.userInfo,
+      location: device.userInfo.location,
+    }));
+
+    res.status(200).json(devicesWithLocation);
+  } catch (err) {
+    console.error("❌ Error fetching devices with location:", err);
+    res
+      .status(500)
+      .json({
+        message: "Failed to fetch devices with location",
+        error: err.message,
+      });
+  }
+};
+
 export const updateDeviceInfo = async (req, res) => {
   const { token, userInfo } = req.body;
 
