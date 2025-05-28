@@ -14,6 +14,7 @@ public class PushNotificationManager {
 
     private static PushNotificationManager instance;
     private final Context context;
+    private UserInfo currentUser;
 
     private PushNotificationManager(Context context) {
         this.context = context.getApplicationContext();
@@ -97,11 +98,43 @@ public class PushNotificationManager {
         return new SDKConfiguration.Builder();
     }
 
-    public void launchSignupScreen(Context context, String userName) {
+    /**
+     * Set the current user information for the SDK
+     * This should be called by the client app when a user is logged in
+     * @param userInfo The user information (without interests - those will be selected in the setup screen)
+     */
+    public void setCurrentUser(UserInfo userInfo) {
+        this.currentUser = userInfo;
+        Log.d("PushSDK", "✅ Current user set: " + userInfo.getUserId());
+    }
+
+    /**
+     * Get the current user information
+     * @return Current user info or null if not set
+     */
+    public UserInfo getCurrentUser() {
+        return currentUser;
+    }
+
+    /**
+     * Launch the notification setup screen
+     * The current user must be set before calling this method
+     * @param context The context to launch from
+     */
+    public void launchNotificationSetupScreen(Context context) {
+        if (currentUser == null) {
+            Log.e("PushSDK", "❌ Current user not set. Call setCurrentUser() first.");
+            return;
+        }
+
         Intent intent = new Intent(context, NotificationSignupActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent.putExtra("user_name", userName); // 👈 העברת השם
         context.startActivity(intent);
+    }
+
+    @Deprecated
+    public void launchSignupScreen(Context context, String userName) {
+        launchNotificationSetupScreen(context);
     }
 
     public void launchNotificationHistoryScreen(Context context) {

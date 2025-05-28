@@ -18,10 +18,5 @@
         android:text="View Notification History"
         android:layout_marginTop="16dp" />
 
-    <Button
-        android:id="@+id/settings_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Notification Settings"
-        android:layout_marginTop="16dp" />
+
 </LinearLayout>

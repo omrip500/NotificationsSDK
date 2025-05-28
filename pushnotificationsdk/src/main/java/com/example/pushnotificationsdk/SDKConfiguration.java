@@ -14,6 +14,7 @@ public class SDKConfiguration {
     private String[] genderOptions;
     private boolean showAgeField;
     private boolean showGenderField;
+    private boolean showLocationBasedNotifications;
     private String signupTitle;
     private String signupSubtitle;
 
@@ -40,8 +41,9 @@ public class SDKConfiguration {
         genderOptions = new String[]{"Male", "Female", "Other"};
 
         // Default field visibility
-        showAgeField = true;
-        showGenderField = true;
+        showAgeField = false;
+        showGenderField = false;
+        showLocationBasedNotifications = true;
 
         // Default titles
         signupTitle = "Enable Notifications";
@@ -94,6 +96,11 @@ public class SDKConfiguration {
             return this;
         }
 
+        public Builder showLocationBasedNotifications(boolean show) {
+            config.showLocationBasedNotifications = show;
+            return this;
+        }
+
         public SDKConfiguration build() {
             return config;
         }
@@ -122,6 +129,10 @@ public class SDKConfiguration {
 
     public String getSignupSubtitle() {
         return signupSubtitle;
+    }
+
+    public boolean isShowLocationBasedNotifications() {
+        return showLocationBasedNotifications;
     }
 
     // Reset to defaults

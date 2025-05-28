@@ -62,11 +62,91 @@ export const getOverviewStats = async (req, res) => {
       appId: new mongoose.Types.ObjectId(appId),
     });
 
+    // 5. פילוח לפי שעות
+    const hourlyDistribution = await NotificationLog.aggregate([
+      { $match: { appId: new mongoose.Types.ObjectId(appId) } },
+      {
+        $group: {
+          _id: { $hour: "$sentAt" },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    // 6. פילוח לפי גיל
+    const ageDistribution = await Device.aggregate([
+      { $match: { appId: new mongoose.Types.ObjectId(appId) } },
+      {
+        $bucket: {
+          groupBy: "$userInfo.age",
+          boundaries: [0, 18, 25, 35, 45, 55, 65, 100],
+          default: "Unknown",
+          output: {
+            count: { $sum: 1 },
+          },
+        },
+      },
+    ]);
+
+    // 7. פילוח לפי סוג התראה
+    const typeDistribution = await NotificationLog.aggregate([
+      { $match: { appId: new mongoose.Types.ObjectId(appId) } },
+      {
+        $group: {
+          _id: "$type",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    // 8. סטטיסטיקות כלליות
+    const totalDevices = await Device.countDocuments({
+      appId: new mongoose.Types.ObjectId(appId),
+    });
+
+    const uniqueUsers = await Device.distinct("userInfo.userId", {
+      appId: new mongoose.Types.ObjectId(appId),
+    });
+
+    // 9. התראות לפי חודש
+    const monthlyStats = await NotificationLog.aggregate([
+      { $match: { appId: new mongoose.Types.ObjectId(appId) } },
+      {
+        $group: {
+          _id: {
+            year: { $year: "$sentAt" },
+            month: { $month: "$sentAt" },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { "_id.year": 1, "_id.month": 1 } },
+    ]);
+
     res.json({
       perDay: perDay.map((d) => ({ date: d._id, count: d.count })),
       genderDistribution,
       interests,
       total,
+      totalDevices,
+      totalUsers: uniqueUsers.length,
+      hourlyDistribution: hourlyDistribution.map((h) => ({
+        hour: h._id.toString().padStart(2, "0"),
+        count: h.count,
+      })),
+      ageDistribution: ageDistribution.map((a) => ({
+        range: a._id === "Unknown" ? "Unknown" : `${a._id}-${a._id + 10}`,
+        count: a.count,
+      })),
+      typeDistribution: typeDistribution.reduce((acc, t) => {
+        acc[t._id] = t.count;
+        return acc;
+      }, {}),
+      monthlyStats: monthlyStats.map((m) => ({
+        month: `${m._id.year}-${m._id.month.toString().padStart(2, "0")}`,
+        count: m.count,
+      })),
     });
   } catch (err) {
     console.error("Error getting overview stats:", err);

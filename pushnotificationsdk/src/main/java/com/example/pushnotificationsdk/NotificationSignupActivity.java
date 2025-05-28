@@ -12,24 +12,30 @@ import java.util.List;
 
 public class NotificationSignupActivity extends AppCompatActivity {
 
-    private EditText ageInput;
-    private Spinner genderSpinner;
     private LinearLayout interestsContainer;
     private Button registerButton;
     private TextView titleText, subtitleText;
     private List<CheckBox> interestCheckboxes;
+    private CheckBox locationBasedCheckbox;
 
-    private String userName;
     private boolean isUpdate = false;
     private SDKConfiguration config;
+    private UserInfo currentUser;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_notification_signup);
 
-        // Get configuration
+        // Get configuration and current user
         config = SDKConfiguration.getInstance();
+        currentUser = PushNotificationManager.getInstance(this).getCurrentUser();
+
+        if (currentUser == null) {
+            Toast.makeText(this, "User not set. Please contact app developer.", Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
 
         // Initialize views
         initializeViews();
@@ -50,19 +56,12 @@ public class NotificationSignupActivity extends AppCompatActivity {
 
         titleText = findViewById(R.id.text_title);
         subtitleText = findViewById(R.id.text_subtitle);
-        ageInput = findViewById(R.id.age_input);
-        genderSpinner = findViewById(R.id.gender_spinner);
         interestsContainer = findViewById(R.id.interests_container);
         registerButton = findViewById(R.id.register_button);
         interestCheckboxes = new ArrayList<>();
     }
 
     private void setupUserData() {
-        userName = getIntent().getStringExtra("user_name");
-        if (userName == null || userName.isEmpty()) {
-            userName = "anonymous";
-        }
-
         String mode = getIntent().getStringExtra("mode");
         isUpdate = mode != null && mode.equals("update");
     }
@@ -72,37 +71,52 @@ public class NotificationSignupActivity extends AppCompatActivity {
         titleText.setText(config.getSignupTitle());
         subtitleText.setText(config.getSignupSubtitle());
 
-        // Setup age field visibility
+        // Hide age and gender fields (they're not needed anymore)
         View ageLayout = findViewById(R.id.age_input_layout);
         if (ageLayout != null) {
-            ageLayout.setVisibility(config.isShowAgeField() ? View.VISIBLE : View.GONE);
+            ageLayout.setVisibility(View.GONE);
         }
 
-        // Setup gender field visibility and options
         View genderLayout = findViewById(R.id.gender_layout);
         if (genderLayout != null) {
-            genderLayout.setVisibility(config.isShowGenderField() ? View.VISIBLE : View.GONE);
+            genderLayout.setVisibility(View.GONE);
         }
 
-        if (config.isShowGenderField()) {
-            setupGenderSpinner();
-        }
+        // Setup location-based notifications
+        setupLocationBasedNotifications();
 
         // Setup dynamic interests
         setupInterests();
     }
 
-    private void setupGenderSpinner() {
-        String[] genderOptions = config.getGenderOptions();
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_item, genderOptions);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        genderSpinner.setAdapter(adapter);
+    private void setupLocationBasedNotifications() {
+        if (!config.isShowLocationBasedNotifications()) {
+            return;
+        }
+
+        // Add location-based checkbox at the beginning of interests container
+        locationBasedCheckbox = new CheckBox(this);
+        locationBasedCheckbox.setText("Receive location-based notifications");
+        locationBasedCheckbox.setTextSize(16);
+        locationBasedCheckbox.setTextColor(getResources().getColor(android.R.color.black));
+        locationBasedCheckbox.setPadding(16, 12, 16, 12);
+        locationBasedCheckbox.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_location, 0, 0, 0);
+        locationBasedCheckbox.setCompoundDrawablePadding(16);
+
+        // Add some spacing
+        View spacer = new View(this);
+        spacer.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, 24));
+
+        interestsContainer.addView(locationBasedCheckbox);
+        interestsContainer.addView(spacer);
     }
 
     private void setupInterests() {
-        // Clear existing checkboxes
-        interestsContainer.removeAllViews();
+        // Setup location-based notifications first
+        setupLocationBasedNotifications();
+
+        // Clear existing interest checkboxes
         interestCheckboxes.clear();
 
         List<InterestOption> interests = config.getAvailableInterests();
@@ -156,23 +170,7 @@ public class NotificationSignupActivity extends AppCompatActivity {
     private void loadExistingData() {
         // אם במצב עדכון – נמלא את השדות
         if (isUpdate) {
-            String genderExtra = getIntent().getStringExtra("gender");
-            int ageExtra = getIntent().getIntExtra("age", -1);
             ArrayList<String> interestsExtra = getIntent().getStringArrayListExtra("interests");
-
-            if (genderExtra != null && config.isShowGenderField()) {
-                String[] genderArray = config.getGenderOptions();
-                for (int i = 0; i < genderArray.length; i++) {
-                    if (genderArray[i].toLowerCase().equals(genderExtra)) {
-                        genderSpinner.setSelection(i);
-                        break;
-                    }
-                }
-            }
-
-            if (ageExtra != -1 && config.isShowAgeField()) {
-                ageInput.setText(String.valueOf(ageExtra));
-            }
 
             if (interestsExtra != null) {
                 for (CheckBox checkBox : interestCheckboxes) {
@@ -187,19 +185,6 @@ public class NotificationSignupActivity extends AppCompatActivity {
 
     private void handleRegistration() {
         try {
-            String gender = "";
-            int age = 0;
-
-            // Get gender if field is visible
-            if (config.isShowGenderField() && genderSpinner.getSelectedItem() != null) {
-                gender = genderSpinner.getSelectedItem().toString().toLowerCase();
-            }
-
-            // Get age if field is visible
-            if (config.isShowAgeField() && !ageInput.getText().toString().trim().isEmpty()) {
-                age = Integer.parseInt(ageInput.getText().toString().trim());
-            }
-
             // Get selected interests
             List<String> interests = new ArrayList<>();
             for (CheckBox checkBox : interestCheckboxes) {
@@ -208,21 +193,32 @@ public class NotificationSignupActivity extends AppCompatActivity {
                 }
             }
 
-            UserInfo userInfo = new UserInfo(userName, gender, age, interests, 32.0853, 34.7818);
+            // Check if location-based notifications are enabled
+            boolean locationBased = locationBasedCheckbox != null && locationBasedCheckbox.isChecked();
+
+            // Create updated user info with current user data + selected interests
+            UserInfo userInfo = new UserInfo(
+                    currentUser.getUserId(),
+                    currentUser.getGender(),
+                    currentUser.getAge(),
+                    interests,
+                    currentUser.getLat(),
+                    currentUser.getLng()
+            );
 
             if (isUpdate) {
                 PushNotificationManager.getInstance(this)
                         .updateUserInfo("6825f0b2f5d70b84cf230fbf", userInfo);
-                Toast.makeText(this, "Details updated!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Notification preferences updated!", Toast.LENGTH_SHORT).show();
             } else {
                 PushNotificationManager.getInstance(this)
                         .registerToServer("6825f0b2f5d70b84cf230fbf", userInfo);
-                Toast.makeText(this, "Registered!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Notifications enabled!", Toast.LENGTH_SHORT).show();
             }
 
             finish();
         } catch (Exception e) {
-            Toast.makeText(this, "Please fill all required fields", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Please select at least one notification type", Toast.LENGTH_SHORT).show();
         }
     }
 
