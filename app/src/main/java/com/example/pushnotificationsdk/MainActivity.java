@@ -9,7 +9,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.pushnotificationsdk.PushNotificationManager;
 import com.example.pushnotificationsdk.SDKConfiguration;
 import com.example.pushnotificationsdk.InterestOption;
+import com.example.pushnotificationsdk.UserInfo;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -29,10 +31,10 @@ public class MainActivity extends AppCompatActivity {
         // Initializing Firebase Messaging
         notificationManager.initialize();
 
-        // כפתור פתיחת מסך Signup (באמצעות SDK)
+        // כפתור פתיחת מסך Setup Notifications (באמצעות SDK)
         Button signupButton = findViewById(R.id.signup_button);
         signupButton.setOnClickListener(v -> {
-            PushNotificationManager.getInstance(this).launchSignupScreen(this, "Omri Peer");
+            PushNotificationManager.getInstance(this).launchNotificationSetupScreen(this);
         });
 
         // כפתור פתיחת מסך היסטוריה (באמצעות SDK)
@@ -41,10 +43,7 @@ public class MainActivity extends AppCompatActivity {
             PushNotificationManager.getInstance(this).launchNotificationHistoryScreen(this);
         });
 
-        Button settingsButton = findViewById(R.id.settings_button);
-        settingsButton.setOnClickListener(v -> {
-            notificationManager.launchSettingsScreen(this);
-        });
+
     }
 
     private void configureSDK() {
@@ -59,13 +58,16 @@ public class MainActivity extends AppCompatActivity {
                 .addInterest(new InterestOption("weather", "Weather", "Weather alerts and daily forecasts"))
                 .addInterest(new InterestOption("technology", "Technology", "Tech news and product launches"))
                 .addInterest(new InterestOption("entertainment", "Entertainment", "Movies, TV shows and celebrity news"))
-                .setGenderOptions(new String[]{"Male", "Female", "Other", "Prefer not to say"})
-                .showAgeField(true)
-                .showGenderField(true)
+                .showLocationBasedNotifications(true)
                 .build();
 
         manager.configure(config);
 
-        Log.d("MainActivity", "✅ SDK configured with custom settings");
+        // Set current user (this would normally come from your app's user management)
+        List<String> emptyInterests = new ArrayList<>(); // Interests will be selected in setup screen
+        UserInfo currentUser = new UserInfo("omripeer", "male", 24, emptyInterests, 32.0853, 34.7818);
+        manager.setCurrentUser(currentUser);
+
+        Log.d("MainActivity", "✅ SDK configured with custom settings and user set");
     }
 }
