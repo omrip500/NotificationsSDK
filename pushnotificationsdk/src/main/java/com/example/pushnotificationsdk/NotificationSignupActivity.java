@@ -90,10 +90,6 @@ public class NotificationSignupActivity extends AppCompatActivity {
     }
 
     private void setupLocationBasedNotifications() {
-        if (!config.isShowLocationBasedNotifications()) {
-            return;
-        }
-
         // Add location-based checkbox at the beginning of interests container
         locationBasedCheckbox = new CheckBox(this);
         locationBasedCheckbox.setText("Receive location-based notifications");
@@ -113,11 +109,14 @@ public class NotificationSignupActivity extends AppCompatActivity {
     }
 
     private void setupInterests() {
-        // Setup location-based notifications first
-        setupLocationBasedNotifications();
-
-        // Clear existing interest checkboxes
+        // Clear existing checkboxes and container
         interestCheckboxes.clear();
+        interestsContainer.removeAllViews();
+
+        // Setup location-based notifications first if enabled
+        if (config.isShowLocationBasedNotifications()) {
+            setupLocationBasedNotifications();
+        }
 
         List<InterestOption> interests = config.getAvailableInterests();
         for (InterestOption interest : interests) {

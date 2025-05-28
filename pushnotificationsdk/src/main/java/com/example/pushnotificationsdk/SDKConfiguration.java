@@ -56,6 +56,8 @@ public class SDKConfiguration {
 
         public Builder() {
             config = SDKConfiguration.getInstance();
+            // Clear existing interests to avoid duplicates
+            config.availableInterests = new ArrayList<>();
         }
 
         public Builder setInterests(List<InterestOption> interests) {

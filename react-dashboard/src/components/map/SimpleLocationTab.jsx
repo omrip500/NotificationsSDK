@@ -26,41 +26,142 @@ function SimpleLocationTab({ appId }) {
   });
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState(null);
+  const [cityNames, setCityNames] = useState({});
+  const [areasWithCityNames, setAreasWithCityNames] = useState([]);
 
-  // Predefined areas in Israel for demo
-  const predefinedAreas = [
-    {
-      name: "Tel Aviv Center",
-      bounds: {
-        north: 32.0853,
-        south: 32.0553,
-        east: 34.7818,
-        west: 34.7518,
-      },
-    },
-    {
-      name: "Jerusalem Center",
-      bounds: {
-        north: 31.7857,
-        south: 31.7557,
-        east: 35.2007,
-        west: 35.1707,
-      },
-    },
-    {
-      name: "Haifa Center",
-      bounds: {
-        north: 32.8157,
-        south: 32.7857,
-        east: 35.0007,
-        west: 34.9707,
-      },
-    },
-  ];
+  // Function to get city name from coordinates using reverse geocoding
+  const getCityName = async (lat, lng) => {
+    const key = `${lat.toFixed(3)},${lng.toFixed(3)}`;
+
+    // Check if we already have this city name cached
+    if (cityNames[key]) {
+      return cityNames[key];
+    }
+
+    try {
+      // Using OpenStreetMap Nominatim API (free)
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10&addressdetails=1`
+      );
+      const data = await response.json();
+
+      let cityName = "Unknown Location";
+
+      if (data && data.address) {
+        // Try to get city name from various fields
+        cityName =
+          data.address.city ||
+          data.address.town ||
+          data.address.village ||
+          data.address.municipality ||
+          data.address.county ||
+          data.display_name?.split(",")[0] ||
+          "Unknown Location";
+      }
+
+      // Cache the result
+      setCityNames((prev) => ({
+        ...prev,
+        [key]: cityName,
+      }));
+
+      return cityName;
+    } catch (error) {
+      console.error("Error getting city name:", error);
+      return "Unknown Location";
+    }
+  };
+
+  // Generate dynamic areas based on actual user locations
+  const generateAreasFromUsers = () => {
+    const usersWithLocation = devices.filter(
+      (device) =>
+        device.userInfo?.location?.lat && device.userInfo?.location?.lng
+    );
+
+    if (usersWithLocation.length === 0) return [];
+
+    // Group users by approximate location (0.1 degree radius ≈ 11km)
+    const locationGroups = {};
+
+    usersWithLocation.forEach((device) => {
+      const lat = device.userInfo.location.lat;
+      const lng = device.userInfo.location.lng;
+
+      // Round to create location clusters
+      const clusterLat = Math.round(lat * 10) / 10;
+      const clusterLng = Math.round(lng * 10) / 10;
+      const key = `${clusterLat},${clusterLng}`;
+
+      if (!locationGroups[key]) {
+        locationGroups[key] = {
+          users: [],
+          centerLat: clusterLat,
+          centerLng: clusterLng,
+        };
+      }
+      locationGroups[key].users.push(device);
+    });
+
+    // Convert groups to areas (only groups with 1+ users)
+    return Object.entries(locationGroups)
+      .filter(([_, group]) => group.users.length >= 1) // Show areas with at least 1 user
+      .map(([key, group], index) => {
+        const radius = 0.05; // ~5.5km radius
+        return {
+          name: `Loading... (${group.users.length} users)`, // Temporary name
+          bounds: {
+            north: group.centerLat + radius,
+            south: group.centerLat - radius,
+            east: group.centerLng + radius,
+            west: group.centerLng - radius,
+          },
+          userCount: group.users.length,
+          center: {
+            lat: group.centerLat,
+            lng: group.centerLng,
+          },
+          key: key, // Add key for identification
+        };
+      })
+      .sort((a, b) => b.userCount - a.userCount); // Sort by user count
+  };
+
+  const dynamicAreas = generateAreasFromUsers();
 
   useEffect(() => {
     fetchDevices();
   }, [appId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Load city names for all areas
+  useEffect(() => {
+    const loadCityNames = async () => {
+      const updatedAreas = [];
+
+      for (const area of dynamicAreas) {
+        const key = area.key;
+        let cityName = cityNames[key];
+
+        if (!cityName) {
+          cityName = await getCityName(area.center.lat, area.center.lng);
+        }
+
+        updatedAreas.push({
+          ...area,
+          name: `${cityName} (${area.userCount} users)`,
+          cityName: cityName,
+        });
+      }
+
+      setAreasWithCityNames(updatedAreas);
+    };
+
+    if (dynamicAreas.length > 0) {
+      loadCityNames();
+    } else {
+      setAreasWithCityNames([]);
+    }
+  }, [dynamicAreas]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchDevices = async () => {
     try {
@@ -103,6 +204,13 @@ function SimpleLocationTab({ appId }) {
 
     try {
       const token = localStorage.getItem("token");
+      console.log("🚀 Sending location-based notification:", {
+        appId,
+        title: notification.title,
+        body: notification.body,
+        bounds: selectedArea.bounds,
+      });
+
       const res = await api.post(
         "/notifications/send-by-location",
         {
@@ -116,20 +224,29 @@ function SimpleLocationTab({ appId }) {
         }
       );
 
+      console.log("✅ Location notification response:", res.data);
+
       setResult({
         success: true,
-        message: res.data.message,
-        devicesFound: res.data.devicesFound,
-        successCount: res.data.successCount,
+        message: res.data.message || "Notification sent successfully!",
+        devicesFound: res.data.devicesFound || 0,
+        successCount: res.data.successCount || 0,
       });
 
       // Reset form
       setNotification({ title: "", body: "" });
       setSelectedArea(null);
     } catch (err) {
+      console.error("❌ Location notification error:", err);
+      console.error("Error response:", err.response?.data);
+
       setResult({
         success: false,
-        message: err.response?.data?.message || "Failed to send notification",
+        message:
+          err.response?.data?.message ||
+          err.message ||
+          "Failed to send notification",
+        error: err.response?.data?.error || "Unknown error",
       });
     } finally {
       setSending(false);
@@ -243,31 +360,47 @@ function SimpleLocationTab({ appId }) {
           </h3>
         </div>
         <div className="card-body">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {predefinedAreas.map((area, index) => (
-              <motion.button
-                key={area.name}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => setSelectedArea(area)}
-                className={`p-4 border-2 rounded-lg text-left transition-all ${
-                  selectedArea?.name === area.name
-                    ? "border-primary-500 bg-primary-50"
-                    : "border-gray-200 hover:border-gray-300"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <Map className="w-5 h-5 text-primary-600" />
-                  <div>
-                    <h4 className="font-medium text-gray-900">{area.name}</h4>
-                    <p className="text-sm text-gray-600">
-                      {getDevicesInArea(area.bounds).length} users in area
-                    </p>
+          {dynamicAreas.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {dynamicAreas.map((area, index) => (
+                <motion.button
+                  key={area.name}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setSelectedArea(area)}
+                  className={`p-4 border-2 rounded-lg text-left transition-all ${
+                    selectedArea?.name === area.name
+                      ? "border-primary-500 bg-primary-50"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Map className="w-5 h-5 text-primary-600" />
+                    <div>
+                      <h4 className="font-medium text-gray-900">{area.name}</h4>
+                      <p className="text-sm text-gray-600">
+                        {area.userCount} users in this area
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Center: {area.center.lat.toFixed(3)},{" "}
+                        {area.center.lng.toFixed(3)}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </motion.button>
-            ))}
-          </div>
+                </motion.button>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <MapPin className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+              <h4 className="text-lg font-medium text-gray-900 mb-2">
+                No Location Data
+              </h4>
+              <p className="text-gray-600">
+                No users have location data available for targeting.
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -383,6 +516,11 @@ function SimpleLocationTab({ appId }) {
                     <p className="text-xs text-success-600 mt-1">
                       Found {result.devicesFound} devices, sent to{" "}
                       {result.successCount} successfully
+                    </p>
+                  )}
+                  {!result.success && result.error && (
+                    <p className="text-xs text-error-600 mt-1">
+                      Error details: {result.error}
                     </p>
                   )}
                 </div>
