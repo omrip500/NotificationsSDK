@@ -32,15 +32,31 @@ public class PushNotificationManager {
     // Initializing Firebase Messaging
     public void initialize() {
         FirebaseMessaging.getInstance().setAutoInitEnabled(true);
+        Log.d("PushSDK", "🚀 SDK initialized");
+
+        // Test server connection
+        testServerConnection();
+    }
+
+    private void testServerConnection() {
+        Log.d("PushSDK", "🌐 Testing server connection...");
+        // We'll test the connection when we actually register a device
+        // For now, just log that we're ready to connect
+        Log.d("PushSDK", "🔧 Server connection will be tested during device registration");
     }
 
     // Getting Firebase token for later use
     public void getToken(OnTokenReceivedListener listener) {
+        Log.d("PushSDK", "🔄 Requesting FCM token...");
         FirebaseMessaging.getInstance().getToken()
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful() && task.getResult() != null) {
-                        listener.onTokenReceived(task.getResult());
+                        String token = task.getResult();
+                        Log.d("PushSDK", "✅ FCM Token received: " + token.substring(0, Math.min(20, token.length())) + "...");
+                        Log.d("PushSDK", "📱 Full token: " + token);
+                        listener.onTokenReceived(token);
                     } else {
+                        Log.e("PushSDK", "❌ Failed to get FCM token", task.getException());
                         listener.onTokenFailed(task.getException());
                     }
                 });
@@ -63,6 +79,11 @@ public class PushNotificationManager {
 
     // גרסה 2 – מלאה: מקבלת את ה־token ישירות
     public void registerToServer(String token, String appId, UserInfo userInfo) {
+        Log.d("PushSDK", "🚀 Registering device to server...");
+        Log.d("PushSDK", "📱 Token: " + token.substring(0, Math.min(20, token.length())) + "...");
+        Log.d("PushSDK", "👤 User: " + userInfo.getUserId());
+        Log.d("PushSDK", "🎯 Interests: " + userInfo.getInterests());
+
         RegisterDeviceRequest request = new RegisterDeviceRequest(token, appId, userInfo);
         PushApiService service = ApiClient.getService();
 
@@ -70,15 +91,23 @@ public class PushNotificationManager {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
                 if (response.isSuccessful()) {
-                    Log.d("PushSDK", "✅ Device registered successfully");
+                    Log.d("PushSDK", "✅ Device registered successfully to server");
+                    Log.d("PushSDK", "🎉 Ready to receive notifications!");
                 } else {
-                    Log.e("PushSDK", "❌ Server error: " + response.code());
+                    Log.e("PushSDK", "❌ Server registration failed with code: " + response.code());
+                    try {
+                        String errorBody = response.errorBody() != null ? response.errorBody().string() : "No error body";
+                        Log.e("PushSDK", "❌ Error details: " + errorBody);
+                    } catch (Exception e) {
+                        Log.e("PushSDK", "❌ Could not read error body", e);
+                    }
                 }
             }
 
             @Override
             public void onFailure(Call<Void> call, Throwable t) {
-                Log.e("PushSDK", "❌ Network failure", t);
+                Log.e("PushSDK", "❌ Network failure during registration", t);
+                Log.e("PushSDK", "🌐 Check internet connection and server availability");
             }
         });
     }

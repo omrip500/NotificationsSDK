@@ -25,7 +25,8 @@ public class PushNotificationService extends FirebaseMessagingService {
     @Override
     public void onNewToken(@NonNull String token) {
         super.onNewToken(token);
-        Log.d(TAG, "Refreshed token: " + token);
+        Log.d(TAG, "🔄 FCM Token refreshed: " + token.substring(0, Math.min(20, token.length())) + "...");
+        Log.d(TAG, "📱 Full new token: " + token);
         // Here you can send the token to the server if needed
     }
 
@@ -33,23 +34,33 @@ public class PushNotificationService extends FirebaseMessagingService {
     public void onMessageReceived(@NonNull RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage);
 
-        Log.d(TAG, "Message received from: " + remoteMessage.getFrom());
+        Log.d(TAG, "🔔 NOTIFICATION RECEIVED!");
+        Log.d(TAG, "📤 From: " + remoteMessage.getFrom());
+        Log.d(TAG, "🕒 Timestamp: " + System.currentTimeMillis());
+        Log.d(TAG, "📦 Data payload size: " + remoteMessage.getData().size());
 
         // If there is a Notification message (not just Data)
         if (remoteMessage.getNotification() != null) {
             String title = remoteMessage.getNotification().getTitle();
             String body = remoteMessage.getNotification().getBody();
+            Log.d(TAG, "📝 Notification Title: " + title);
+            Log.d(TAG, "📄 Notification Body: " + body);
             showNotification(title, body);
         }
         // If there is Data (message without Notification)
         else if (!remoteMessage.getData().isEmpty()) {
             String title = remoteMessage.getData().get("title");
             String body = remoteMessage.getData().get("body");
+            Log.d(TAG, "📦 Data Title: " + title);
+            Log.d(TAG, "📦 Data Body: " + body);
             showNotification(title, body);
+        } else {
+            Log.w(TAG, "⚠️ Received message without notification or data payload");
         }
     }
 
     private void showNotification(String title, String body) {
+        Log.d(TAG, "🔔 Showing notification: " + title);
         createNotificationChannel();
 
         // Intent to open the app when the user clicks on the notification
@@ -70,16 +81,13 @@ public class PushNotificationService extends FirebaseMessagingService {
         // Displaying the notification
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
+            Log.e(TAG, "❌ POST_NOTIFICATIONS permission not granted!");
             return;
         }
-        notificationManager.notify((int) System.currentTimeMillis(), builder.build());  // Unique ID to avoid conflicts with other notifications
+
+        int notificationId = (int) System.currentTimeMillis();
+        notificationManager.notify(notificationId, builder.build());
+        Log.d(TAG, "✅ Notification displayed with ID: " + notificationId);
     }
 
     private void createNotificationChannel() {
