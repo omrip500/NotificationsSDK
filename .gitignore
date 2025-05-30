@@ -14,7 +14,10 @@
 .cxx
 local.properties
 backend/src/config/*.json
+<<<<<<< HEAD
 backend/.env
 .env
 node_modules/
 backend/node_modules/
+=======
+>>>>>>> c832a14641b4b08bf4ba339aa6a6f53d34d733b1
