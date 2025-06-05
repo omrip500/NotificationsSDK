@@ -1,7 +1,6 @@
 import cron from "node-cron";
 import ScheduledNotification from "../models/ScheduledNotification.js";
 import Device from "../models/Device.js";
-import admin from "../config/firebaseAdmin.js";
 import { sendNotificationForClient } from "../config/firebaseAppManager.js";
 
 // helper לחישוב מרחק בין 2 נקודות

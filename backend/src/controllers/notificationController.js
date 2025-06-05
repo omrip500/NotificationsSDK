@@ -1,4 +1,3 @@
-import admin from "../config/firebaseAdmin.js";
 import { sendNotificationForClient } from "../config/firebaseAppManager.js";
 import Device from "../models/Device.js";
 import ScheduledNotification from "../models/ScheduledNotification.js";
