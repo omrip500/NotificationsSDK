@@ -238,12 +238,12 @@ public class NotificationSignupActivity extends AppCompatActivity {
 
     private void completeRegistration(UserInfo userInfo) {
         if (isUpdate) {
-            PushNotificationManager.getInstance(this)
-                    .updateUserInfo("6825f0b2f5d70b84cf230fbf", userInfo);
+            PushNotificationManager.getInstance()
+                    .updateUser(userInfo);
             Toast.makeText(this, "Notification preferences updated!", Toast.LENGTH_SHORT).show();
         } else {
-            PushNotificationManager.getInstance(this)
-                    .registerToServer("6825f0b2f5d70b84cf230fbf", userInfo);
+            PushNotificationManager.getInstance()
+                    .registerUser(userInfo);
             Toast.makeText(this, "Notifications enabled!", Toast.LENGTH_SHORT).show();
         }
 
@@ -255,7 +255,7 @@ public class NotificationSignupActivity extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
         // Forward permission results to LocationManager
-        PushNotificationManager.getInstance(this)
+        PushNotificationManager.getInstance()
                 .getLocationManager()
                 .onRequestPermissionsResult(requestCode, permissions, grantResults);
     }

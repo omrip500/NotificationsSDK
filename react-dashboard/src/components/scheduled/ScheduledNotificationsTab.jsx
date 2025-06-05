@@ -216,9 +216,6 @@ function ScheduledNotificationsTab({ appId }) {
         }`
       );
     }
-    if (filters.location) {
-      descriptions.push("Location-based");
-    }
 
     return descriptions.join(" • ");
   };

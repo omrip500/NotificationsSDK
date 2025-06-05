@@ -13,7 +13,6 @@ import {
   Trash2,
   Eye,
   Clock,
-  MapPin,
   Settings,
 } from "lucide-react";
 import api from "../services/api";
@@ -21,7 +20,6 @@ import SegmentManager from "../components/segments/SegmentManager";
 import SegmentForm from "../components/segments/SegmentForm";
 import StatisticsTab from "../components/analytics/StatisticsTab";
 import ScheduledNotificationsTab from "../components/scheduled/ScheduledNotificationsTab";
-import InteractiveMapTab from "../components/map/InteractiveMapTab";
 import ServiceAccountManager from "../components/ServiceAccountManager";
 
 function ApplicationPage() {
@@ -40,7 +38,6 @@ function ApplicationPage() {
     gender: false,
     age: false,
     interests: false,
-    location: false,
   });
 
   const [gender, setGender] = useState("");
@@ -48,7 +45,6 @@ function ApplicationPage() {
   const [ageMax, setAgeMax] = useState("");
   const [interests, setInterests] = useState([]);
   const [availableInterests, setAvailableInterests] = useState([]);
-  const [location, setLocation] = useState({ lat: "", lng: "", radiusKm: "" });
 
   const [devices, setDevices] = useState([]);
   const [individualMessage, setIndividualMessage] = useState({});
@@ -202,18 +198,6 @@ function ApplicationPage() {
       }
       if (showFilter.interests && interests.length > 0)
         filters.interests = interests;
-      if (
-        showFilter.location &&
-        location.lat &&
-        location.lng &&
-        location.radiusKm
-      ) {
-        filters.location = {
-          lat: Number(location.lat),
-          lng: Number(location.lng),
-          radiusKm: Number(location.radiusKm),
-        };
-      }
     }
 
     const payload = { appId, title, body, filters };
@@ -240,12 +224,10 @@ function ApplicationPage() {
       setAgeMin("");
       setAgeMax("");
       setInterests([]);
-      setLocation({ lat: "", lng: "", radiusKm: "" });
       setShowFilter({
         gender: false,
         age: false,
         interests: false,
-        location: false,
       });
       setSelectedSegmentId("");
     } catch (err) {
@@ -391,7 +373,6 @@ function ApplicationPage() {
             <nav className="-mb-px flex space-x-8">
               {[
                 { id: "send", label: "Send Notification", icon: Send },
-                { id: "location", label: "Location-Based", icon: MapPin },
                 { id: "scheduled", label: "Scheduled", icon: Clock },
                 { id: "stats", label: "Statistics", icon: BarChart3 },
                 { id: "history", label: "Sent Notifications", icon: History },
@@ -612,55 +593,6 @@ function ApplicationPage() {
                               )}
                             </div>
                           )}
-
-                          {showFilter.location && (
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Location
-                              </label>
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <input
-                                  type="number"
-                                  placeholder="Latitude"
-                                  step="0.0001"
-                                  value={location.lat}
-                                  onChange={(e) =>
-                                    setLocation({
-                                      ...location,
-                                      lat: e.target.value,
-                                    })
-                                  }
-                                  className="input"
-                                />
-                                <input
-                                  type="number"
-                                  placeholder="Longitude"
-                                  step="0.0001"
-                                  value={location.lng}
-                                  onChange={(e) =>
-                                    setLocation({
-                                      ...location,
-                                      lng: e.target.value,
-                                    })
-                                  }
-                                  className="input"
-                                />
-                                <input
-                                  type="number"
-                                  placeholder="Radius (km)"
-                                  step="0.1"
-                                  value={location.radiusKm}
-                                  onChange={(e) =>
-                                    setLocation({
-                                      ...location,
-                                      radiusKm: e.target.value,
-                                    })
-                                  }
-                                  className="input"
-                                />
-                              </div>
-                            </div>
-                          )}
                         </div>
                       </div>
                     </>
@@ -697,8 +629,6 @@ function ApplicationPage() {
               </form>
             </motion.div>
           )}
-
-          {activeTab === "location" && <InteractiveMapTab appId={appId} />}
 
           {activeTab === "scheduled" && (
             <ScheduledNotificationsTab appId={appId} />

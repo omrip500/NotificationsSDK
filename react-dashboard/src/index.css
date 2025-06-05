@@ -192,19 +192,4 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
-
-  /* Leaflet map fixes */
-  .leaflet-container {
-    height: 100%;
-    width: 100%;
-    border-radius: 0.5rem;
-  }
-
-  .leaflet-popup-content-wrapper {
-    border-radius: 0.5rem;
-  }
-
-  .leaflet-popup-tip {
-    background: white;
-  }
 }

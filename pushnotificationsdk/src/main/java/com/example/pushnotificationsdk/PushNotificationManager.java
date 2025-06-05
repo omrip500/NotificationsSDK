@@ -16,26 +16,69 @@ public class PushNotificationManager {
     private final Context context;
     private UserInfo currentUser;
     private LocationManager locationManager;
+    private String appId;
 
-    private PushNotificationManager(Context context) {
+    private PushNotificationManager(Context context, String appId) {
         this.context = context.getApplicationContext();
         this.locationManager = new LocationManager(context);
+        this.appId = appId;
     }
 
-    public static synchronized PushNotificationManager getInstance(Context context) {
+    /**
+     * Initialize the SDK with your app ID
+     * @param context Application context
+     * @param appId Your unique app ID from the dashboard
+     * @return PushNotificationManager instance
+     */
+    public static synchronized PushNotificationManager initialize(Context context, String appId) {
+        if (appId == null || appId.trim().isEmpty()) {
+            throw new IllegalArgumentException("App ID cannot be null or empty");
+        }
+        instance = new PushNotificationManager(context, appId);
+        return instance;
+    }
+
+    /**
+     * Get the current SDK instance (must call initialize first)
+     * @return PushNotificationManager instance
+     * @throws IllegalStateException if SDK was not initialized
+     */
+    public static synchronized PushNotificationManager getInstance() {
         if (instance == null) {
-            instance = new PushNotificationManager(context);
+            throw new IllegalStateException("SDK not initialized. Call PushNotificationManager.initialize(context, appId) first.");
         }
         return instance;
     }
 
-    // Initializing Firebase Messaging
-    public void initialize() {
+    /**
+     * @deprecated Use initialize(Context, String) instead
+     */
+    @Deprecated
+    public static synchronized PushNotificationManager getInstance(Context context) {
+        if (instance == null) {
+            throw new IllegalStateException("SDK not initialized. Call PushNotificationManager.initialize(context, appId) first.");
+        }
+        return instance;
+    }
+
+    /**
+     * Initialize Firebase Messaging and start the SDK
+     * Call this after initialize(context, appId)
+     */
+    public void start() {
         FirebaseMessaging.getInstance().setAutoInitEnabled(true);
-        Log.d("PushSDK", "🚀 SDK initialized");
+        Log.d("PushSDK", "🚀 SDK started with App ID: " + appId);
 
         // Test server connection
         testServerConnection();
+    }
+
+    /**
+     * @deprecated Use start() instead
+     */
+    @Deprecated
+    public void initialize() {
+        start();
     }
 
     private void testServerConnection() {
@@ -62,12 +105,36 @@ public class PushNotificationManager {
                 });
     }
 
-    // גרסה 1 – פשוטה: לא מקבלת token, שולפת לבד
+    /**
+     * @deprecated Use registerUser(UserInfo) instead
+     */
+    @Deprecated
     public void registerToServer(String appId, UserInfo userInfo) {
+        registerUser(userInfo);
+    }
+
+    /**
+     * @deprecated Use registerUser(UserInfo) instead
+     */
+    @Deprecated
+    public void registerToServer(String token, String appId, UserInfo userInfo) {
+        registerToServerInternal(token, userInfo);
+    }
+
+    /**
+     * Register the current user to receive notifications
+     * The user must be set using setCurrentUser() before calling this method
+     */
+    public void registerUser() {
+        if (currentUser == null) {
+            Log.e("PushSDK", "❌ Current user not set. Call setCurrentUser() first.");
+            return;
+        }
+
         getToken(new OnTokenReceivedListener() {
             @Override
             public void onTokenReceived(String token) {
-                registerToServer(token, appId, userInfo);  // ⬅️ קוראת לגרסה השנייה
+                registerToServerInternal(token, currentUser);
             }
 
             @Override
@@ -77,8 +144,44 @@ public class PushNotificationManager {
         });
     }
 
-    // גרסה 2 – מלאה: מקבלת את ה־token ישירות
-    public void registerToServer(String token, String appId, UserInfo userInfo) {
+    /**
+     * Register user with specific UserInfo
+     * @param userInfo User information to register
+     */
+    public void registerUser(UserInfo userInfo) {
+        getToken(new OnTokenReceivedListener() {
+            @Override
+            public void onTokenReceived(String token) {
+                registerToServerInternal(token, userInfo);
+            }
+
+            @Override
+            public void onTokenFailed(Exception e) {
+                Log.e("PushSDK", "❌ Failed to get FCM token", e);
+            }
+        });
+    }
+
+    /**
+     * Update user information on the server
+     * @param userInfo Updated user information
+     */
+    public void updateUser(UserInfo userInfo) {
+        getToken(new OnTokenReceivedListener() {
+            @Override
+            public void onTokenReceived(String token) {
+                updateUserInfoInternal(token, userInfo);
+            }
+
+            @Override
+            public void onTokenFailed(Exception e) {
+                Log.e("PushSDK", "❌ Failed to get FCM token", e);
+            }
+        });
+    }
+
+    // Internal method for server registration
+    private void registerToServerInternal(String token, UserInfo userInfo) {
         Log.d("PushSDK", "🚀 Registering device to server...");
         Log.d("PushSDK", "📱 Token: " + token.substring(0, Math.min(20, token.length())) + "...");
         Log.d("PushSDK", "👤 User: " + userInfo.getUserId());
@@ -108,6 +211,28 @@ public class PushNotificationManager {
             public void onFailure(Call<Void> call, Throwable t) {
                 Log.e("PushSDK", "❌ Network failure during registration", t);
                 Log.e("PushSDK", "🌐 Check internet connection and server availability");
+            }
+        });
+    }
+
+    // Internal method for updating user info
+    private void updateUserInfoInternal(String token, UserInfo userInfo) {
+        PushApiService service = ApiClient.getService();
+        UpdateDeviceRequest request = new UpdateDeviceRequest(token, userInfo);
+
+        service.updateDeviceInfo(request).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    Log.d("PushSDK", "✅ Device info updated successfully");
+                } else {
+                    Log.e("PushSDK", "❌ Update failed: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Log.e("PushSDK", "❌ Network error during update", t);
             }
         });
     }
@@ -238,35 +363,12 @@ public class PushNotificationManager {
         context.startActivity(intent);
     }
 
+    /**
+     * @deprecated Use updateUser(UserInfo) instead
+     */
+    @Deprecated
     public void updateUserInfo(String appId, UserInfo userInfo) {
-        getToken(new OnTokenReceivedListener() {
-            @Override
-            public void onTokenReceived(String token) {
-                PushApiService service = ApiClient.getService();
-                UpdateDeviceRequest request = new UpdateDeviceRequest(token, userInfo);
-
-                service.updateDeviceInfo(request).enqueue(new Callback<Void>() {
-                    @Override
-                    public void onResponse(Call<Void> call, Response<Void> response) {
-                        if (response.isSuccessful()) {
-                            Log.d("PushSDK", "✅ Device info updated successfully");
-                        } else {
-                            Log.e("PushSDK", "❌ Update failed: " + response.code());
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(Call<Void> call, Throwable t) {
-                        Log.e("PushSDK", "❌ Network error during update", t);
-                    }
-                });
-            }
-
-            @Override
-            public void onTokenFailed(Exception e) {
-                Log.e("PushSDK", "❌ Failed to get token for update", e);
-            }
-        });
+        updateUser(userInfo);
     }
 
     public void unregisterDevice() {

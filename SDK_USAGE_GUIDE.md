@@ -168,7 +168,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void initializeSDK() {
         // 1. Initialize with your App ID
-        String appId = "your-app-id-from-dashboard";
+        String appId = "6825f0b2f5d70b84cf230fbf"; // Your app ID from the dashboard
         notificationManager = PushNotificationManager.initialize(this, appId);
 
         // 2. Configure (optional)

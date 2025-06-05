@@ -65,7 +65,7 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void loadUserInfo() {
-        PushNotificationManager.getInstance(this).getToken(new PushNotificationManager.OnTokenReceivedListener() {
+        PushNotificationManager.getInstance().getToken(new PushNotificationManager.OnTokenReceivedListener() {
             @Override
             public void onTokenReceived(String token) {
                 PushApiService service = ApiClient.getService();

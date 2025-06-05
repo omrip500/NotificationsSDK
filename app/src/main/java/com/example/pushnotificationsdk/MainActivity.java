@@ -49,7 +49,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initializeSDK() {
-        notificationManager = PushNotificationManager.getInstance(this);
+        // ✨ Initialize SDK with your App ID ✨
+        String appId = "6825f0b2f5d70b84cf230fbf"; // Your app ID from the dashboard
+        notificationManager = PushNotificationManager.initialize(this, appId);
 
         // Configure SDK with notification types and settings
         configureSDK();
@@ -57,8 +59,8 @@ public class MainActivity extends AppCompatActivity {
         // Set current user (this simulates a logged-in user in your app)
         setCurrentUser();
 
-        // Initialize Firebase Messaging
-        notificationManager.initialize();
+        // Start Firebase Messaging
+        notificationManager.start();
 
         Log.d("MainActivity", "✅ SDK fully initialized and configured");
     }

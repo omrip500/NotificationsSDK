@@ -47,7 +47,7 @@ dependencies {
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
     implementation(project(":pushnotificationsdk"))
-    implementation(libs.firebase.bom)
-    implementation(libs.google.firebase.messaging)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
 
 }
