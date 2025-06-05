@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Mail, Lock, LogIn, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, LogIn, Eye, EyeOff, AlertCircle } from "lucide-react";
 import api from "../services/api";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 
 function LoginPage() {
   const [email, setEmail] = useState("");
@@ -11,6 +11,17 @@ function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const message = location.state?.message;
+  const redirectTo = location.state?.redirectTo || "/dashboard";
+
+  useEffect(() => {
+    // Clear the state after showing the message
+    if (message) {
+      window.history.replaceState({}, document.title);
+    }
+  }, [message]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,7 +35,7 @@ function LoginPage() {
 
       // Success animation before navigation
       await new Promise((resolve) => setTimeout(resolve, 500));
-      navigate("/");
+      navigate(redirectTo);
     } catch (err) {
       setError(err.response?.data?.message || "Login failed");
     } finally {
@@ -67,6 +78,20 @@ function LoginPage() {
         >
           <div className="card-body">
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Dashboard Access Message */}
+              {message && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-lg"
+                >
+                  <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0" />
+                  <p className="text-amber-800 text-sm font-medium">
+                    {message}
+                  </p>
+                </motion.div>
+              )}
+
               {/* Error Alert */}
               {error && (
                 <motion.div

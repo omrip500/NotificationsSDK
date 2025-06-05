@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Bell, User, LogOut, Menu, X, Home } from "lucide-react";
+import { Bell, User, LogOut, Menu, X, BarChart3 } from "lucide-react";
 
 function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -24,7 +24,19 @@ function Navbar() {
     localStorage.removeItem("apiKey");
     setIsLoggedIn(false);
     setUserName("");
-    navigate("/login");
+    navigate("/");
+  };
+
+  const handleDashboardClick = (e) => {
+    if (!isLoggedIn) {
+      e.preventDefault();
+      navigate("/login", {
+        state: {
+          message: "You need to log in to access the dashboard",
+          redirectTo: "/dashboard",
+        },
+      });
+    }
   };
 
   const isAuthPage =
@@ -54,33 +66,33 @@ function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-6">
+            {/* Dashboard Link - Always visible but with different behavior */}
+            <Link
+              to={isLoggedIn ? "/dashboard" : "/login"}
+              onClick={handleDashboardClick}
+              className="flex items-center gap-2 text-gray-600 hover:text-primary-600 transition-colors"
+            >
+              <BarChart3 className="w-4 h-4" />
+              Dashboard
+            </Link>
+
             {isLoggedIn ? (
-              <>
-                <Link
-                  to="/"
-                  className="flex items-center gap-2 text-gray-600 hover:text-primary-600 transition-colors"
-                >
-                  <Home className="w-4 h-4" />
-                  Dashboard
-                </Link>
-
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2 text-gray-700">
-                    <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-                      <User className="w-4 h-4 text-primary-600" />
-                    </div>
-                    <span className="text-sm font-medium">{userName}</span>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 text-gray-700">
+                  <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                    <User className="w-4 h-4 text-primary-600" />
                   </div>
-
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center gap-2 text-gray-600 hover:text-error-600 transition-colors"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    Logout
-                  </button>
+                  <span className="text-sm font-medium">{userName}</span>
                 </div>
-              </>
+
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 text-gray-600 hover:text-error-600 transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Logout
+                </button>
+              </div>
             ) : (
               <div className="flex items-center gap-4">
                 <Link to="/login" className="btn-outline">
@@ -117,17 +129,21 @@ function Navbar() {
             className="md:hidden border-t border-gray-200 py-4"
           >
             <div className="space-y-4">
+              {/* Dashboard Link - Always visible in mobile */}
+              <Link
+                to={isLoggedIn ? "/dashboard" : "/login"}
+                onClick={(e) => {
+                  handleDashboardClick(e);
+                  setIsMenuOpen(false);
+                }}
+                className="flex items-center gap-2 text-gray-600 hover:text-primary-600 transition-colors"
+              >
+                <BarChart3 className="w-4 h-4" />
+                Dashboard
+              </Link>
+
               {isLoggedIn ? (
                 <>
-                  <Link
-                    to="/"
-                    className="flex items-center gap-2 text-gray-600 hover:text-primary-600 transition-colors"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <Home className="w-4 h-4" />
-                    Dashboard
-                  </Link>
-
                   <div className="flex items-center gap-2 text-gray-700 py-2">
                     <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
                       <User className="w-4 h-4 text-primary-600" />
