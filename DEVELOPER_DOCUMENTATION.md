@@ -103,7 +103,7 @@ dependencies {
 
 ### Step 1: Access the Dashboard
 
-1. Navigate to our web dashboard: **[Your Dashboard URL]**
+1. Navigate to our web dashboard: [http://sdk-app-react.s3-website-us-east-1.amazonaws.com/]
 2. Click **"Sign Up"** or **"Create Account"**
 3. Fill in your company/developer information
 4. Verify your email address
