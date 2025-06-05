@@ -82,7 +82,7 @@ public class PushNotificationManager {
     }
 
     private void testServerConnection() {
-        Log.d("PushSDK", "🌐 Testing server connection...");
+        Log.d("PushSDK", "🌐 Testing server connection to: http://54.147.164.209:8000");
         // We'll test the connection when we actually register a device
         // For now, just log that we're ready to connect
         Log.d("PushSDK", "🔧 Server connection will be tested during device registration");
@@ -183,9 +183,11 @@ public class PushNotificationManager {
     // Internal method for server registration
     private void registerToServerInternal(String token, UserInfo userInfo) {
         Log.d("PushSDK", "🚀 Registering device to server...");
+        Log.d("PushSDK", "🌐 Server URL: http://54.147.164.209:8000");
         Log.d("PushSDK", "📱 Token: " + token.substring(0, Math.min(20, token.length())) + "...");
         Log.d("PushSDK", "👤 User: " + userInfo.getUserId());
         Log.d("PushSDK", "🎯 Interests: " + userInfo.getInterests());
+        Log.d("PushSDK", "🆔 App ID: " + appId);
 
         RegisterDeviceRequest request = new RegisterDeviceRequest(token, appId, userInfo);
         PushApiService service = ApiClient.getService();

@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Push Notification SDK - Developer Documentation</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        h2 {
+            color: #34495e;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 5px;
+            margin-top: 30px;
+        }
+        
+        h3 {
+            color: #2980b9;
+            margin-top: 25px;
+        }
+        
+        h4 {
+            color: #8e44ad;
+        }
+        
+        code {
+            background-color: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            color: #e74c3c;
+        }
+        
+        pre {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            padding: 15px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        
+        pre code {
+            background: none;
+            padding: 0;
+            color: #333;
+        }
+        
+        .feature-list {
+            background-color: #e8f5e8;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #27ae60;
+        }
+        
+        .warning {
+            background-color: #fff3cd;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #ffc107;
+            margin: 15px 0;
+        }
+        
+        .info {
+            background-color: #d1ecf1;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #17a2b8;
+            margin: 15px 0;
+        }
+        
+        .step {
+            background-color: #f8f9fa;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border-left: 5px solid #007bff;
+        }
+        
+        .step h4 {
+            margin-top: 0;
+            color: #007bff;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        
+        .toc {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .toc ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        
+        .toc li {
+            margin: 8px 0;
+        }
+        
+        .toc a {
+            text-decoration: none;
+            color: #007bff;
+        }
+        
+        .toc a:hover {
+            text-decoration: underline;
+        }
+        
+        .checkmark {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .api-method {
+            background-color: #f8f9fa;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 3px solid #6c757d;
+        }
+        
+        @media print {
+            body {
+                font-size: 12pt;
+            }
+            
+            h1, h2 {
+                page-break-after: avoid;
+            }
+            
+            pre {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Push Notification SDK - Complete Developer Guide</h1>
+    
+    <div class="toc">
+        <h2>Table of Contents</h2>
+        <ul>
+            <li><a href="#overview">1. Overview</a></li>
+            <li><a href="#prerequisites">2. Prerequisites</a></li>
+            <li><a href="#firebase-setup">3. Firebase Setup</a></li>
+            <li><a href="#web-dashboard-registration">4. Web Dashboard Registration</a></li>
+            <li><a href="#sdk-integration">5. SDK Integration</a></li>
+            <li><a href="#configuration">6. Configuration</a></li>
+            <li><a href="#usage-examples">7. Usage Examples</a></li>
+            <li><a href="#api-reference">8. API Reference</a></li>
+            <li><a href="#troubleshooting">9. Troubleshooting</a></li>
+            <li><a href="#support">10. Support</a></li>
+        </ul>
+    </div>
+
+    <h2 id="overview">Overview</h2>
+    
+    <p>The Push Notification SDK provides a complete solution for integrating push notifications into your Android application. It includes:</p>
+    
+    <div class="feature-list">
+        <ul>
+            <li><strong>Firebase Cloud Messaging (FCM)</strong> integration</li>
+            <li><strong>User preference management</strong> with customizable interests</li>
+            <li><strong>Notification history tracking</strong></li>
+            <li><strong>Real-time user analytics</strong></li>
+            <li><strong>Easy-to-use UI components</strong> for notification setup</li>
+        </ul>
+    </div>
+
+    <h3>Key Features</h3>
+    <ul>
+        <li><span class="checkmark">✅</span> Simple 4-step integration</li>
+        <li><span class="checkmark">✅</span> Customizable notification categories</li>
+        <li><span class="checkmark">✅</span> User preference management</li>
+        <li><span class="checkmark">✅</span> Analytics and reporting</li>
+        <li><span class="checkmark">✅</span> Modern Material Design UI</li>
+    </ul>
+
+    <h2 id="prerequisites">Prerequisites</h2>
+    
+    <p>Before integrating the SDK, ensure you have:</p>
+    
+    <ul>
+        <li><strong>Android Studio</strong> 4.0 or higher</li>
+        <li><strong>Minimum SDK version</strong>: 24 (Android 7.0)</li>
+        <li><strong>Target SDK version</strong>: 35 (Android 15)</li>
+        <li><strong>Java 17</strong> or <strong>Kotlin</strong> support</li>
+        <li><strong>Google Play Services</strong> available on target devices</li>
+    </ul>
+
+    <h2 id="firebase-setup">Firebase Setup</h2>
+    
+    <div class="step">
+        <h4>Step 1: Create Firebase Project</h4>
+        <ol>
+            <li>Go to <a href="https://console.firebase.google.com/">Firebase Console</a></li>
+            <li>Click <strong>"Create a project"</strong> or <strong>"Add project"</strong></li>
+            <li>Enter your project name (e.g., "MyApp Notifications")</li>
+            <li>Choose whether to enable Google Analytics (recommended)</li>
+            <li>Select your Analytics account or create a new one</li>
+            <li>Click <strong>"Create project"</strong></li>
+        </ol>
+    </div>
+
+    <div class="step">
+        <h4>Step 2: Add Android App to Firebase</h4>
+        <ol>
+            <li>In your Firebase project, click <strong>"Add app"</strong> and select <strong>Android</strong></li>
+            <li>Enter your app details:
+                <ul>
+                    <li><strong>Android package name</strong>: Your app's package name (e.g., <code>com.yourcompany.yourapp</code>)</li>
+                    <li><strong>App nickname</strong>: A friendly name for your app</li>
+                    <li><strong>Debug signing certificate SHA-1</strong>: Optional but recommended for development</li>
+                </ul>
+            </li>
+            <li>Click <strong>"Register app"</strong></li>
+        </ol>
+    </div>
+
+    <div class="step">
+        <h4>Step 3: Download Configuration File</h4>
+        <ol>
+            <li>Download the <code>google-services.json</code> file</li>
+            <li>Place it in your app's <code>app/</code> directory (same level as <code>build.gradle</code>)</li>
+        </ol>
+        <div class="warning">
+            <strong>Important:</strong> This file contains your Firebase configuration and should be kept secure
+        </div>
+    </div>
+
+    <div class="step">
+        <h4>Step 4: Add Firebase SDK</h4>
+        <p>Add the following to your <strong>project-level</strong> <code>build.gradle</code> file:</p>
+        <pre><code>buildscript {
+    dependencies {
+        classpath 'com.google.gms:google-services:4.4.0'
+    }
+}</code></pre>
+
+        <p>Add to your <strong>app-level</strong> <code>build.gradle</code> file:</p>
+        <pre><code>plugins {
+    id 'com.google.gms.google-services'
+}
+
+dependencies {
+    implementation platform('com.google.firebase:firebase-bom:33.13.0')
+    implementation 'com.google.firebase:firebase-messaging'
+}</code></pre>
+    </div>
+
+    <h2 id="web-dashboard-registration">Web Dashboard Registration</h2>
+    
+    <div class="step">
+        <h4>Step 1: Access the Dashboard</h4>
+        <ol>
+            <li>Navigate to our web dashboard: <strong>[Your Dashboard URL]</strong></li>
+            <li>Click <strong>"Sign Up"</strong> or <strong>"Create Account"</strong></li>
+            <li>Fill in your company/developer information</li>
+            <li>Verify your email address</li>
+        </ol>
+    </div>
+
+    <div class="step">
+        <h4>Step 2: Create New Application</h4>
+        <ol>
+            <li>After logging in, click <strong>"Create New Application"</strong></li>
+            <li>Fill in the application details:
+                <h5>Application Information:</h5>
+                <ul>
+                    <li><strong>Application Name</strong>: Your app's display name</li>
+                    <li><strong>Platform</strong>: Select "Android"</li>
+                    <li><strong>Interests</strong>: Enter comma-separated categories (e.g., "sports, news, technology")</li>
+                </ul>
+                <h5>Firebase Configuration:</h5>
+                <ul>
+                    <li><strong>Client ID</strong>: Click "Generate" to create a unique identifier</li>
+                    <li><strong>Firebase Service Account JSON</strong>: Upload your Firebase service account key</li>
+                </ul>
+            </li>
+        </ol>
+    </div>
+
+    <div class="step">
+        <h4>Step 3: Generate Firebase Service Account Key</h4>
+        <ol>
+            <li>Go to <a href="https://console.firebase.google.com/">Firebase Console</a></li>
+            <li>Select your project</li>
+            <li>Click the <strong>gear icon</strong> → <strong>"Project settings"</strong></li>
+            <li>Go to <strong>"Service accounts"</strong> tab</li>
+            <li>Click <strong>"Generate new private key"</strong></li>
+            <li>Download the JSON file</li>
+            <li>Upload this file to the dashboard</li>
+        </ol>
+    </div>
+
+    <div class="step">
+        <h4>Step 4: Get Your App ID</h4>
+        <p>After creating the application, you'll receive:</p>
+        <ul>
+            <li><strong>App ID</strong>: A unique identifier (e.g., <code>6825f0b2f5d70b84cf230fbf</code>)</li>
+            <li><strong>API Keys</strong>: For server-side integration</li>
+            <li><strong>Dashboard Access</strong>: To manage notifications and view analytics</li>
+        </ul>
+        <div class="warning">
+            <strong>⚠️ Important:</strong> Save your App ID - you'll need it for SDK initialization.
+        </div>
+    </div>
+
+    <h2 id="sdk-integration">SDK Integration</h2>
+    
+    <div class="step">
+        <h4>Step 1: Add SDK to Your Project</h4>
+        
+        <h5>Option A: AAR File (Recommended)</h5>
+        <ol>
+            <li>Download the <code>pushnotificationsdk-release.aar</code> file</li>
+            <li>Create a <code>libs</code> folder in your app directory if it doesn't exist</li>
+            <li>Copy the AAR file to <code>app/libs/</code></li>
+            <li>Add to your <code>app/build.gradle</code>:</li>
+        </ol>
+
+        <pre><code>dependencies {
+    implementation files('libs/pushnotificationsdk-release.aar')
+    
+    // Required dependencies
+    implementation platform('com.google.firebase:firebase-bom:33.13.0')
+    implementation 'com.google.firebase:firebase-messaging'
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+}</code></pre>
+
+        <h5>Option B: Maven Repository</h5>
+        <pre><code>dependencies {
+    implementation 'com.yourcompany:pushnotificationsdk:1.0.0'
+}</code></pre>
+    </div>
+
+    <div class="step">
+        <h4>Step 2: Add Required Permissions</h4>
+        <p>The SDK automatically includes these permissions, but ensure they're not conflicting:</p>
+        
+        <pre><code>&lt;!-- In your AndroidManifest.xml --&gt;
+&lt;uses-permission android:name="android.permission.INTERNET" /&gt;
+&lt;uses-permission android:name="android.permission.POST_NOTIFICATIONS" /&gt;</code></pre>
+    </div>
+
+    <div class="step">
+        <h4>Step 3: Network Security Configuration</h4>
+        <p>For HTTP connections (if your server doesn't use HTTPS), add to your <code>AndroidManifest.xml</code>:</p>
+        
+        <pre><code>&lt;application
+    android:networkSecurityConfig="@xml/network_security_config"
+    android:usesCleartextTraffic="true"&gt;
+    &lt;!-- Your app content --&gt;
+&lt;/application&gt;</code></pre>
+
+        <p>Create <code>app/src/main/res/xml/network_security_config.xml</code>:</p>
+        
+        <pre><code>&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;network-security-config&gt;
+    &lt;domain-config cleartextTrafficPermitted="true"&gt;
+        &lt;domain includeSubdomains="false"&gt;your-server-domain.com&lt;/domain&gt;
+    &lt;/domain-config&gt;
+&lt;/network-security-config&gt;</code></pre>
+    </div>
+
+    <h2 id="configuration">Configuration</h2>
+    
+    <div class="step">
+        <h4>Basic Setup</h4>
+        <p>In your main activity (usually <code>MainActivity.java</code>):</p>
+        
+        <pre><code>import com.example.pushnotificationsdk.PushNotificationManager;
+import com.example.pushnotificationsdk.UserInfo;
+import com.example.pushnotificationsdk.SDKConfiguration;
+import com.example.pushnotificationsdk.InterestOption;
+
+public class MainActivity extends AppCompatActivity {
+    private PushNotificationManager notificationManager;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        initializeSDK();
+    }
+
+    private void initializeSDK() {
+        // 1. Initialize with your App ID from the dashboard
+        String appId = "YOUR_APP_ID_HERE"; // Replace with your actual App ID
+        notificationManager = PushNotificationManager.initialize(this, appId);
+
+        // 2. Configure notification categories (optional)
+        configureSDK();
+
+        // 3. Set current user information
+        setCurrentUser();
+
+        // 4. Start the SDK
+        notificationManager.start();
+    }
+}</code></pre>
+    </div>
+
+    <div class="info">
+        <strong>Note:</strong> This HTML file contains the beginning of the documentation. You can open it in Microsoft Word and it will automatically convert to a Word document format. You can then save it as a .docx file.
+    </div>
+
+    <p><strong>To convert this to Word:</strong></p>
+    <ol>
+        <li>Open Microsoft Word</li>
+        <li>Go to File → Open</li>
+        <li>Select this HTML file</li>
+        <li>Word will automatically convert it</li>
+        <li>Save as .docx format</li>
+    </ol>
+
+    <div class="warning">
+        <strong>Alternative:</strong> You can also use online converters or Pandoc command line tool:<br>
+        <code>pandoc DEVELOPER_DOCUMENTATION.md -o documentation.docx</code>
+    </div>
+
+</body>
+</html>

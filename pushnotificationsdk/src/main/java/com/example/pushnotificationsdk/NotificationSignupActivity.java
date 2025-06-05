@@ -29,7 +29,7 @@ public class NotificationSignupActivity extends AppCompatActivity {
 
         // Get configuration and current user
         config = SDKConfiguration.getInstance();
-        currentUser = PushNotificationManager.getInstance(this).getCurrentUser();
+        currentUser = PushNotificationManager.getInstance().getCurrentUser();
 
         if (currentUser == null) {
             Toast.makeText(this, "User not set. Please contact app developer.", Toast.LENGTH_LONG).show();

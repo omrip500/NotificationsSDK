@@ -4,7 +4,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ApiClient {
-    private static final String BASE_URL = "https://5aed-109-67-137-39.ngrok-free.app";
+    private static final String BASE_URL = "http://54.147.164.209:8000"; // this is the public IP of the EC2 instance
     private static Retrofit retrofit;
 
     public static PushApiService getService() {

@@ -13,7 +13,9 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
 
-    <application>
+    <application
+        android:usesCleartextTraffic="true"
+        android:networkSecurityConfig="@xml/network_security_config">
         <!-- הוספת ה-Service של Firebase בתוך ה-application -->
         <service
             android:name="com.example.pushnotificationsdk.PushNotificationService"
@@ -31,11 +33,17 @@
             android:foregroundServiceType="location" />
 
         <!-- הוספת Activity למסך ההרשמה של ה-SDK -->
-        <activity android:name="com.example.pushnotificationsdk.NotificationSignupActivity" />
+        <activity
+            android:name="com.example.pushnotificationsdk.NotificationSignupActivity"
+            android:exported="true" />
         <!-- הוספת Activity למסך היסטוריית ההודעות של ה-SDK -->
-        <activity android:name="com.example.pushnotificationsdk.NotificationHistoryActivity" />
+        <activity
+            android:name="com.example.pushnotificationsdk.NotificationHistoryActivity"
+            android:exported="true" />
 
-        <activity android:name="com.example.pushnotificationsdk.SettingsActivity" />
+        <activity
+            android:name="com.example.pushnotificationsdk.SettingsActivity"
+            android:exported="true" />
 
 
     </application>
