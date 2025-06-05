@@ -1,4 +1,4 @@
-name: Deploy Frontend to S3
+name: Deploy React Dashboard to S3
 
 on:
   push:
@@ -12,8 +12,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install dependencies and build
+      - name: Install dependencies and build React app
         run: |
+          cd react-dashboard
           npm install
           npm run build
 
@@ -26,4 +27,4 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: us-east-1
-          SOURCE_DIR: build
+          SOURCE_DIR: react-dashboard/build
