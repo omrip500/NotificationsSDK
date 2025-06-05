@@ -11,7 +11,7 @@ A comprehensive Android SDK for push notifications with Firebase Cloud Messaging
 4. Add Firebase dependencies to your `build.gradle`
 
 ### 2. Register Your App
-1. Sign up at our [Web Dashboard](your-dashboard-url)
+1. Sign up at our [Web Dashboard](http://sdk-app-react.s3-website-us-east-1.amazonaws.com/)
 2. Create a new application
 3. Upload your Firebase service account JSON
 4. Get your unique App ID
