@@ -35,21 +35,21 @@ android {
 }
 
 dependencies {
-    implementation("com.google.firebase:firebase-messaging:23.4.0")
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-    implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("androidx.recyclerview:recyclerview:1.3.2")
+    implementation("com.google.firebase:firebase-messaging:24.1.1")
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+    implementation("androidx.appcompat:appcompat:1.7.0")
+    implementation("androidx.recyclerview:recyclerview:1.4.0")
     implementation("androidx.cardview:cardview:1.0.0")
-    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
-    implementation(libs.monitor)
-    implementation(libs.ext.junit)
-    implementation(libs.material)
+    implementation("androidx.constraintlayout:constraintlayout:2.2.1")
+    implementation("com.google.android.material:material:1.12.0")
 
     // Google Play Services Location for location tracking
-    implementation("com.google.android.gms:play-services-location:21.0.1")
+    implementation("com.google.android.gms:play-services-location:21.3.0")
 
-    testImplementation ("junit:junit:4.13.2")
+    testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
+    androidTestImplementation("androidx.test:monitor:1.7.2")
 }
 
 afterEvaluate {
@@ -57,11 +57,35 @@ afterEvaluate {
         publications {
             register<MavenPublication>("release") {
                 groupId = "com.github.omrip500"
-                artifactId = "pushnotificationsdk"
-                // Version will be determined by Git tag when using JitPack
+                artifactId = "NotificationsSDK"
+                version = findProperty("version")?.toString() ?: "1.0.0"
 
-                afterEvaluate {
-                    from(components["release"])
+                from(components["release"])
+
+                pom {
+                    name.set("Push Notifications SDK")
+                    description.set("Android SDK for push notifications management")
+                    url.set("https://github.com/omrip500/NotificationsSDK")
+
+                    licenses {
+                        license {
+                            name.set("MIT License")
+                            url.set("https://opensource.org/licenses/MIT")
+                        }
+                    }
+
+                    developers {
+                        developer {
+                            id.set("omrip500")
+                            name.set("Omri Peer")
+                        }
+                    }
+
+                    scm {
+                        connection.set("scm:git:git://github.com/omrip500/NotificationsSDK.git")
+                        developerConnection.set("scm:git:ssh://github.com/omrip500/NotificationsSDK.git")
+                        url.set("https://github.com/omrip500/NotificationsSDK")
+                    }
                 }
             }
         }

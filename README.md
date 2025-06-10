@@ -40,7 +40,7 @@ Add to your `app/build.gradle.kts`:
 ```kotlin
 dependencies {
     implementation("com.github.omrip500:NotificationsSDK:v1.0.0")
-    implementation("com.google.firebase:firebase-messaging:23.4.0")
+    implementation("com.google.firebase:firebase-messaging:24.1.1")
 }
 ```
 
