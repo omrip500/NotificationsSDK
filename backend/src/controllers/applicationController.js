@@ -13,15 +13,15 @@ const s3 = new AWS.S3({
 });
 
 /**
- * פונקציה להעלאת service account ל-S3
+ * פונקציה להעלאת service account ל-S3 ויצירת clientId מתוך project_id
  */
 export const uploadServiceAccount = async (req, res) => {
   try {
-    const { serviceAccountData, clientId } = req.body;
+    const { serviceAccountData } = req.body;
 
-    if (!serviceAccountData || !clientId) {
+    if (!serviceAccountData) {
       return res.status(400).json({
-        message: "serviceAccountData and clientId are required",
+        message: "serviceAccountData is required",
       });
     }
 
@@ -64,7 +64,19 @@ export const uploadServiceAccount = async (req, res) => {
       });
     }
 
-    // העלאה ל-S3 עם fallback מקומי
+    // יצירת clientId מתוך project_id
+    const projectId = parsedServiceAccount.project_id;
+    const clientId = `${projectId}-${uuidv4().split("-")[0]}`; // שימוש ב-project_id + חלק מ-uuid
+
+    // בדיקה שה-clientId לא קיים כבר
+    const existingApp = await Application.findOne({ clientId });
+    if (existingApp) {
+      return res.status(400).json({
+        message: `An application with this Firebase project already exists. Project ID: ${projectId}`,
+      });
+    }
+
+    // העלאה ל-S3
     const s3Key = `clients/${clientId}.json`;
     const uploadParams = {
       Bucket: process.env.FIREBASE_SA_BUCKET,
@@ -74,43 +86,22 @@ export const uploadServiceAccount = async (req, res) => {
       ServerSideEncryption: "AES256", // הצפנה
     };
 
-    console.log(`📤 Uploading service account for client: ${clientId}`);
+    console.log(
+      `📤 Uploading service account for client: ${clientId} (project: ${projectId})`
+    );
     const uploadResult = await s3.upload(uploadParams).promise();
 
     res.status(200).json({
       message: "Service account uploaded successfully",
       clientId,
-      s3Location: uploadResult.Location,
       projectId: parsedServiceAccount.project_id,
+      clientEmail: parsedServiceAccount.client_email,
+      s3Location: uploadResult.Location,
     });
   } catch (error) {
     console.error("❌ Error uploading service account:", error);
     res.status(500).json({
       message: "Failed to upload service account",
-      error: error.message,
-    });
-  }
-};
-
-/**
- * פונקציה ליצירת clientId ייחודי
- */
-export const generateClientId = async (req, res) => {
-  try {
-    const clientId = `client-${uuidv4()}`;
-
-    // בדיקה שה-clientId לא קיים כבר
-    const existingApp = await Application.findOne({ clientId });
-    if (existingApp) {
-      // אם קיים, ניצור חדש (סיכוי נמוך מאוד)
-      return generateClientId(req, res);
-    }
-
-    res.status(200).json({ clientId });
-  } catch (error) {
-    console.error("❌ Error generating client ID:", error);
-    res.status(500).json({
-      message: "Failed to generate client ID",
       error: error.message,
     });
   }
@@ -205,6 +196,33 @@ export const getApplicationInterests = async (req, res) => {
     res
       .status(500)
       .json({ message: "Failed to retrieve interests", error: err.message });
+  }
+};
+
+/**
+ * קבלת clientId לפי appId - עבור ה-SDK
+ */
+export const getClientIdByAppId = async (req, res) => {
+  const { appId } = req.params;
+  console.log(`🔍 Getting client ID for app: ${appId}`);
+
+  try {
+    const app = await Application.findById(appId);
+    if (!app) {
+      console.log(`❌ Application not found: ${appId}`);
+      return res.status(404).json({ message: "Application not found" });
+    }
+
+    console.log(`✅ Found app: ${app.name}, clientId: ${app.clientId}`);
+    res.status(200).json({
+      clientId: app.clientId,
+      appId: app._id,
+    });
+  } catch (err) {
+    console.error(`❌ Error getting client ID for app ${appId}:`, err);
+    res
+      .status(500)
+      .json({ message: "Failed to retrieve client ID", error: err.message });
   }
 };
 

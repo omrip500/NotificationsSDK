@@ -2,11 +2,19 @@ import Device from "../models/Device.js";
 
 export const registerDeviceToken = async (req, res) => {
   console.log("📱 Registering device token...");
+  console.log("📝 Request body:", JSON.stringify(req.body, null, 2));
 
   try {
     const { token, appId, clientId, userInfo } = req.body;
 
+    console.log("🔍 Extracted fields:");
+    console.log("   token:", token ? token.substring(0, 10) + "..." : "MISSING");
+    console.log("   appId:", appId || "MISSING");
+    console.log("   clientId:", clientId || "MISSING");
+    console.log("   userInfo:", userInfo ? "Present" : "MISSING");
+
     if (!token || !appId || !clientId || !userInfo) {
+      console.log("❌ Missing required fields!");
       return res.status(400).json({
         message:
           "Missing fields: token, appId, clientId, and userInfo are required",
@@ -47,6 +55,42 @@ export const getDevicesByAppId = async (req, res) => {
     const devices = await Device.find({ appId });
 
     res.status(200).json(devices);
+  } catch (err) {
+    console.error("❌ Error fetching devices:", err);
+    res
+      .status(500)
+      .json({ message: "Failed to fetch devices", error: err.message });
+  }
+};
+
+// Debug endpoint - ללא authentication
+export const getDevicesByAppIdDebug = async (req, res) => {
+  const { appId } = req.params;
+  console.log(`🔍 Debug: Getting devices for app: ${appId}`);
+
+  try {
+    const devices = await Device.find({ appId });
+    console.log(`✅ Found ${devices.length} devices for app ${appId}`);
+
+    // הצגת סיכום של clientIds
+    const clientIdCounts = {};
+    devices.forEach((device) => {
+      const clientId = device.clientId || "no-client-id";
+      clientIdCounts[clientId] = (clientIdCounts[clientId] || 0) + 1;
+    });
+
+    console.log(`📊 Client ID distribution:`, clientIdCounts);
+
+    res.status(200).json({
+      totalDevices: devices.length,
+      clientIdDistribution: clientIdCounts,
+      devices: devices.map((d) => ({
+        token: d.token.substring(0, 20) + "...",
+        clientId: d.clientId,
+        userId: d.userInfo?.userId,
+        createdAt: d.createdAt,
+      })),
+    });
   } catch (err) {
     console.error("❌ Error fetching devices:", err);
     res

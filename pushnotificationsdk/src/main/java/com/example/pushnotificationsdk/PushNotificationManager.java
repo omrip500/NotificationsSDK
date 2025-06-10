@@ -189,17 +189,50 @@ public class PushNotificationManager {
         Log.d("PushSDK", "🎯 Interests: " + userInfo.getInterests());
         Log.d("PushSDK", "🆔 App ID: " + appId);
 
-        RegisterDeviceRequest request = new RegisterDeviceRequest(token, appId, userInfo);
+        // קודם נקבל את ה-clientId מהשרת
         PushApiService service = ApiClient.getService();
-
-        service.registerDevice(request).enqueue(new Callback<Void>() {
+        Log.d("PushSDK", "🔍 Requesting Client ID for App ID: " + appId);
+        service.getClientIdByAppId(appId).enqueue(new Callback<ClientIdResponse>() {
             @Override
-            public void onResponse(Call<Void> call, Response<Void> response) {
-                if (response.isSuccessful()) {
-                    Log.d("PushSDK", "✅ Device registered successfully to server");
-                    Log.d("PushSDK", "🎉 Ready to receive notifications!");
+            public void onResponse(Call<ClientIdResponse> call, Response<ClientIdResponse> response) {
+                Log.d("PushSDK", "📡 Client ID response received. Code: " + response.code());
+                if (response.isSuccessful() && response.body() != null) {
+                    String clientId = response.body().getClientId();
+                    Log.d("PushSDK", "✅ Retrieved Client ID: " + clientId);
+
+                    // עכשיו נרשום את המכשיר עם ה-clientId
+                    Log.d("PushSDK", "📝 Creating RegisterDeviceRequest with:");
+                    Log.d("PushSDK", "   Token: " + token.substring(0, Math.min(10, token.length())) + "...");
+                    Log.d("PushSDK", "   AppId: " + appId);
+                    Log.d("PushSDK", "   ClientId: " + clientId);
+                    Log.d("PushSDK", "   UserInfo: " + (userInfo != null ? userInfo.getUserId() : "null"));
+
+                    RegisterDeviceRequest request = new RegisterDeviceRequest(token, appId, clientId, userInfo);
+                    service.registerDevice(request).enqueue(new Callback<Void>() {
+                        @Override
+                        public void onResponse(Call<Void> call, Response<Void> response) {
+                            if (response.isSuccessful()) {
+                                Log.d("PushSDK", "✅ Device registered successfully to server");
+                                Log.d("PushSDK", "🎉 Ready to receive notifications!");
+                            } else {
+                                Log.e("PushSDK", "❌ Server registration failed with code: " + response.code());
+                                try {
+                                    String errorBody = response.errorBody() != null ? response.errorBody().string() : "No error body";
+                                    Log.e("PushSDK", "❌ Error details: " + errorBody);
+                                } catch (Exception e) {
+                                    Log.e("PushSDK", "❌ Could not read error body", e);
+                                }
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(Call<Void> call, Throwable t) {
+                            Log.e("PushSDK", "❌ Network failure during registration", t);
+                            Log.e("PushSDK", "🌐 Check internet connection and server availability");
+                        }
+                    });
                 } else {
-                    Log.e("PushSDK", "❌ Server registration failed with code: " + response.code());
+                    Log.e("PushSDK", "❌ Failed to get Client ID. Response code: " + response.code());
                     try {
                         String errorBody = response.errorBody() != null ? response.errorBody().string() : "No error body";
                         Log.e("PushSDK", "❌ Error details: " + errorBody);
@@ -210,8 +243,8 @@ public class PushNotificationManager {
             }
 
             @Override
-            public void onFailure(Call<Void> call, Throwable t) {
-                Log.e("PushSDK", "❌ Network failure during registration", t);
+            public void onFailure(Call<ClientIdResponse> call, Throwable t) {
+                Log.e("PushSDK", "❌ Network failure while getting Client ID", t);
                 Log.e("PushSDK", "🌐 Check internet connection and server availability");
             }
         });

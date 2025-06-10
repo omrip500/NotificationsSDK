@@ -1,5 +1,6 @@
 plugins {
     id("com.android.library")
+    id("maven-publish")
 }
 
 android {
@@ -24,6 +25,13 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+            withJavadocJar()
+        }
+    }
 }
 
 dependencies {
@@ -42,4 +50,20 @@ dependencies {
     implementation("com.google.android.gms:play-services-location:21.0.1")
 
     testImplementation ("junit:junit:4.13.2")
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            register<MavenPublication>("release") {
+                groupId = "com.github.omrip500"
+                artifactId = "pushnotificationsdk"
+                version = "1.0.0"
+                
+                afterEvaluate {
+                    from(components["release"])
+                }
+            }
+        }
+    }
 }

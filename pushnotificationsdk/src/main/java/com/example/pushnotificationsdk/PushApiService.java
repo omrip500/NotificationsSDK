@@ -29,6 +29,9 @@ public interface PushApiService {
     @DELETE("/api/devices/unregister/{token}")
     Call<Void> unregisterDevice(@Path("token") String token);
 
+    @GET("/api/applications/{appId}/client-id")
+    Call<ClientIdResponse> getClientIdByAppId(@Path("appId") String appId);
+
     @DELETE("/api/notifications/{id}")
     Call<Void> deleteNotification(@Path("id") String notificationId);
 

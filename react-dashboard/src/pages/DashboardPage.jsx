@@ -41,20 +41,6 @@ function DashboardPage() {
     }
   };
 
-  const generateClientId = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const res = await api.get("/applications/generate-client-id", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setClientId(res.data.clientId);
-    } catch (err) {
-      setError("Failed to generate client ID.");
-    }
-  };
-
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -63,15 +49,15 @@ function DashboardPage() {
         return;
       }
       setServiceAccountFile(file);
+      setError("");
       setUploadStatus("");
+      setClientId(""); // איפוס client ID כשמעלים קובץ חדש
     }
   };
 
   const uploadServiceAccount = async () => {
-    if (!serviceAccountFile || !clientId) {
-      setError(
-        "Please select a service account file and generate a client ID."
-      );
+    if (!serviceAccountFile) {
+      setError("Please select a service account file.");
       return;
     }
 
@@ -80,11 +66,10 @@ function DashboardPage() {
       const fileContent = await serviceAccountFile.text();
       const token = localStorage.getItem("token");
 
-      await api.post(
+      const response = await api.post(
         "/applications/upload-service-account",
         {
           serviceAccountData: fileContent,
-          clientId: clientId,
         },
         {
           headers: {
@@ -93,6 +78,8 @@ function DashboardPage() {
         }
       );
 
+      // שמירת ה-clientId שנוצר אוטומטית מהשרת
+      setClientId(response.data.clientId);
       setUploadStatus("success");
     } catch (err) {
       setUploadStatus("error");
@@ -268,35 +255,17 @@ function DashboardPage() {
                     Firebase Configuration
                   </h4>
 
-                  {/* Client ID Generation */}
+                  {/* Service Account Upload */}
                   <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Client ID
-                      </label>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          placeholder="Generate a unique client ID"
-                          value={clientId}
-                          readOnly
-                          className="input flex-1 bg-gray-50"
-                        />
-                        <button
-                          type="button"
-                          onClick={generateClientId}
-                          className="btn-outline px-4"
-                        >
-                          Generate
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Service Account Upload */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Firebase Service Account JSON
                       </label>
+                      <p className="text-sm text-gray-600 mb-3">
+                        Upload your Firebase service account JSON file. The
+                        Client ID will be generated automatically from your
+                        Firebase project.
+                      </p>
                       <div className="space-y-3">
                         <div className="flex items-center justify-center w-full">
                           <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
@@ -330,27 +299,55 @@ function DashboardPage() {
                           </div>
                         )}
 
-                        {serviceAccountFile &&
-                          clientId &&
-                          uploadStatus !== "success" && (
-                            <button
-                              type="button"
-                              onClick={uploadServiceAccount}
-                              disabled={uploadStatus === "uploading"}
-                              className="btn-primary w-full"
-                            >
-                              {uploadStatus === "uploading"
-                                ? "Uploading..."
-                                : "Upload Service Account"}
-                            </button>
-                          )}
+                        {serviceAccountFile && uploadStatus !== "success" && (
+                          <button
+                            type="button"
+                            onClick={uploadServiceAccount}
+                            disabled={uploadStatus === "uploading"}
+                            className="btn-primary w-full"
+                          >
+                            {uploadStatus === "uploading"
+                              ? "Uploading..."
+                              : "Upload Service Account"}
+                          </button>
+                        )}
 
-                        {uploadStatus === "success" && (
-                          <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg">
-                            <CheckCircle className="w-5 h-5 text-green-600" />
-                            <span className="text-sm text-green-800">
-                              Service account uploaded successfully!
-                            </span>
+                        {uploadStatus === "success" && clientId && (
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg">
+                              <CheckCircle className="w-5 h-5 text-green-600" />
+                              <span className="text-sm text-green-800">
+                                Service account uploaded successfully!
+                              </span>
+                            </div>
+
+                            {/* Generated Client ID Display */}
+                            <div className="p-3 bg-blue-50 rounded-lg">
+                              <label className="block text-sm font-medium text-blue-700 mb-1">
+                                Generated Client ID
+                              </label>
+                              <div className="flex gap-2">
+                                <input
+                                  type="text"
+                                  value={clientId}
+                                  readOnly
+                                  className="input flex-1 bg-white text-sm"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    navigator.clipboard.writeText(clientId)
+                                  }
+                                  className="btn-outline px-3 text-sm"
+                                >
+                                  Copy
+                                </button>
+                              </div>
+                              <p className="text-xs text-blue-600 mt-1">
+                                Use this Client ID in your mobile app
+                                configuration
+                              </p>
+                            </div>
                           </div>
                         )}
 
