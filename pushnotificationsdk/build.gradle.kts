@@ -58,8 +58,8 @@ afterEvaluate {
             register<MavenPublication>("release") {
                 groupId = "com.github.omrip500"
                 artifactId = "pushnotificationsdk"
-                version = "1.0.0"
-                
+                // Version will be determined by Git tag when using JitPack
+
                 afterEvaluate {
                     from(components["release"])
                 }
