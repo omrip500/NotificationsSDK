@@ -1,4 +1,4 @@
 jdk:
   - openjdk17
-before_install:
-  - ./gradlew clean build publishToMavenLocal
+install:
+  - ./gradlew :pushnotificationsdk:publishToMavenLocal
