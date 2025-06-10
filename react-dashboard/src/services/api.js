@@ -1,8 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://54.147.164.209:8000/api",
-  // baseURL: "http://localhost:8000/api",
+  baseURL: "https://api.notificationspanel.com/api",
 });
 
 export default api;
