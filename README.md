@@ -1,5 +1,7 @@
 # Push Notification SDK
 
+[![](https://jitpack.io/v/omrip500/NotificationsSDK.svg)](https://jitpack.io/#omrip500/NotificationsSDK)
+
 A comprehensive Android SDK for push notifications with Firebase Cloud Messaging and user preference management.
 
 ## Quick Start
@@ -18,7 +20,31 @@ A comprehensive Android SDK for push notifications with Firebase Cloud Messaging
 
 ### 3. Add SDK to Your Project
 
-Add to your `app/build.gradle`:
+#### Option A: JitPack (Recommended)
+
+Add JitPack repository to your `settings.gradle.kts`:
+
+```kotlin
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+        maven { url = uri("https://jitpack.io") }
+    }
+}
+```
+
+Add to your `app/build.gradle.kts`:
+
+```kotlin
+dependencies {
+    implementation("com.github.omrip500:NotificationsSDK:v1.0.0")
+    implementation("com.google.firebase:firebase-messaging:23.4.0")
+}
+```
+
+#### Option B: Manual AAR File
 
 ```gradle
 dependencies {
