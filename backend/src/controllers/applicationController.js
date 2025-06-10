@@ -203,6 +203,7 @@ export const getApplicationInterests = async (req, res) => {
  * קבלת clientId לפי appId - עבור ה-SDK
  */
 export const getClientIdByAppId = async (req, res) => {
+  console.log("getClientIdByAppId");
   const { appId } = req.params;
   console.log(`🔍 Getting client ID for app: ${appId}`);
 

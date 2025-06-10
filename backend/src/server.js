@@ -19,6 +19,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// ✅ ברירת מחדל עבור בדיקת בריאות מה-Load Balancer
+app.get("/", (req, res) => {
+  res.status(200).send("OK");
+});
+
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/notifications", notificationRoutes);
