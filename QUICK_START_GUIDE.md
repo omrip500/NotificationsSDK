@@ -5,11 +5,13 @@
 ### Step 1: Firebase Setup (3 minutes)
 
 1. **Create Firebase Project**
+
    - Go to [Firebase Console](https://console.firebase.google.com/)
    - Click "Create a project"
    - Enter project name → Enable Analytics → Create
 
 2. **Add Android App**
+
    - Click "Add app" → Select Android
    - Enter your package name (e.g., `com.yourcompany.yourapp`)
    - Download `google-services.json`
@@ -18,6 +20,7 @@
 3. **Add Firebase to Build Files**
 
    **Project-level `build.gradle`:**
+
    ```gradle
    buildscript {
        dependencies {
@@ -27,11 +30,12 @@
    ```
 
    **App-level `build.gradle`:**
+
    ```gradle
    plugins {
        id 'com.google.gms.google-services'
    }
-   
+
    dependencies {
        implementation platform('com.google.firebase:firebase-bom:33.13.0')
        implementation 'com.google.firebase:firebase-messaging'
@@ -41,10 +45,12 @@
 ### Step 2: Dashboard Registration (2 minutes)
 
 1. **Sign Up**
+
    - Visit: [Your Dashboard URL]
    - Create account → Verify email
 
 2. **Create Application**
+
    - Click "Create New Application"
    - Fill details:
      - **Name**: Your app name
@@ -52,6 +58,7 @@
      - **Interests**: "news,sports,weather" (example)
 
 3. **Upload Firebase Key**
+
    - In Firebase Console: Project Settings → Service Accounts
    - Click "Generate new private key" → Download JSON
    - Upload to dashboard
@@ -62,6 +69,7 @@
 ### Step 3: Add SDK (2 minutes)
 
 1. **Download AAR**
+
    - Download `pushnotificationsdk-release.aar`
    - Create `app/libs/` folder
    - Copy AAR file to `libs/`
@@ -117,16 +125,27 @@ public class MainActivity extends AppCompatActivity {
 
         // 4. Start SDK
         notificationManager.start();
+
+        // 5. Register user with permission handling (RECOMMENDED)
+        notificationManager.requestPermissionsAndRegister(this, null);
     }
 
     // Add this method to show notification setup
     public void onNotificationSetupClick(View view) {
         notificationManager.launchNotificationSetupScreen(this);
     }
+
+    // Handle permission results
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        notificationManager.onNotificationPermissionResult(requestCode, permissions, grantResults);
+    }
 }
 ```
 
 **Add button to your layout:**
+
 ```xml
 <Button
     android:layout_width="wrap_content"
@@ -138,6 +157,7 @@ public class MainActivity extends AppCompatActivity {
 ## ✅ That's It!
 
 Your app now has:
+
 - ✅ Push notification support
 - ✅ User preference management
 - ✅ Beautiful setup UI
@@ -156,7 +176,7 @@ Your app now has:
 → Make sure you call `initialize()` before other SDK methods
 
 **No notifications received?**
-→ Check if POST_NOTIFICATIONS permission is granted (Android 13+)
+→ The SDK automatically requests notification permissions! Check device notification settings.
 
 **Network errors?**
 → Add network security config for HTTP connections

@@ -609,22 +609,27 @@ manager.start();
 
 #### 4. Notifications Not Appearing
 
-**Possible causes**:
+**Good News**: The SDK automatically handles notification permissions for Android 13+!
 
-- POST_NOTIFICATIONS permission not granted (Android 13+)
+**What the SDK does automatically**:
+
+- ✅ Requests POST_NOTIFICATIONS permission during setup
+- ✅ Handles permission results gracefully
+- ✅ Shows appropriate user messages
+
+**Other possible causes**:
+
 - App is in battery optimization
 - Notification channel not created properly
+- Device-specific notification settings
 
-**Solutions**:
+**Manual permission check** (if needed):
 
 ```java
-// Request notification permission (Android 13+)
-if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-    if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
-        != PackageManager.PERMISSION_GRANTED) {
-        ActivityCompat.requestPermissions(this,
-            new String[]{Manifest.permission.POST_NOTIFICATIONS}, 1);
-    }
+// Check if notification permissions are granted
+PushNotificationManager manager = PushNotificationManager.getInstance();
+if (!manager.hasNotificationPermissions()) {
+    Log.w("MyApp", "Notification permissions not granted");
 }
 ```
 

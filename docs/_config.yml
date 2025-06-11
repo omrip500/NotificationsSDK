@@ -1,0 +1,33 @@
+title: Push Notification SDK Documentation
+description: Comprehensive Android SDK for push notifications with Firebase Cloud Messaging
+theme: minima
+markdown: kramdown
+highlighter: rouge
+
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+
+# GitHub Pages settings
+repository: omrip500/NotificationsSDK
+github_username: omrip500
+
+# Navigation
+header_pages:
+  - quick-start.md
+  - setup-guide.md
+  - api-reference.md
+  - usage-examples.md
+  - architecture.md
+  - troubleshooting.md
+
+# SEO
+google_analytics: # Add your Google Analytics ID here if needed
+lang: en
+
+# Social
+social:
+  name: Push Notification SDK
+  links:
+    - https://github.com/omrip500/NotificationsSDK
+    - https://notificationspanel.com

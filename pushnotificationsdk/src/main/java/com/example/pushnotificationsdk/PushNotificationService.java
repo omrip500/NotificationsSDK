@@ -23,10 +23,19 @@ public class PushNotificationService extends FirebaseMessagingService {
     private static final String CHANNEL_ID = "push_notification_channel";
 
     @Override
+    public void onCreate() {
+        super.onCreate();
+        Log.d(TAG, "🚀 PushNotificationService CREATED!");
+        System.out.println("🚀 PushNotificationService CREATED!");
+    }
+
+    @Override
     public void onNewToken(@NonNull String token) {
         super.onNewToken(token);
         Log.d(TAG, "🔄 FCM Token refreshed: " + token.substring(0, Math.min(20, token.length())) + "...");
         Log.d(TAG, "📱 Full new token: " + token);
+        System.out.println("🔄 FCM Token refreshed: " + token);
+        Log.e(TAG, "🔄 FCM Token refreshed: " + token); // גם ברמת ERROR
         // Here you can send the token to the server if needed
     }
 
@@ -35,6 +44,8 @@ public class PushNotificationService extends FirebaseMessagingService {
         super.onMessageReceived(remoteMessage);
 
         Log.d(TAG, "🔔 NOTIFICATION RECEIVED!");
+        System.out.println("🔔 NOTIFICATION RECEIVED!");
+        Log.e(TAG, "🔔 NOTIFICATION RECEIVED!"); // גם ברמת ERROR כדי שיופיע בוודאות
         Log.d(TAG, "📤 From: " + remoteMessage.getFrom());
         Log.d(TAG, "🕒 Timestamp: " + System.currentTimeMillis());
         Log.d(TAG, "📦 Data payload size: " + remoteMessage.getData().size());

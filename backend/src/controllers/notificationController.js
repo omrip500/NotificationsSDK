@@ -88,6 +88,11 @@ export const sendNotification = async (req, res) => {
         console.log(
           `📤 Sending to ${tokens.length} devices for client: ${clientId}`
         );
+        console.log(
+          `🔑 Tokens: ${tokens
+            .map((t) => t.substring(0, 20) + "...")
+            .join(", ")}`
+        );
         const response = await sendNotificationForClient(clientId, message);
 
         totalSuccessCount += response.successCount;

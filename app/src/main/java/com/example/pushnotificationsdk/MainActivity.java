@@ -32,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void initializeSDK() {
         // מזהה ה-App שלך מה-Dashboard
-        String appId = "68481f3a6f6558db1726e9fb";
+        String appId = "6849b32cc94b2490180b8bb4";
         notificationManager = PushNotificationManager.initialize(this, appId);
 
         // קונפיגורציה (סוגי נוטיפיקציות, UI וכו’)
@@ -63,10 +63,30 @@ public class MainActivity extends AppCompatActivity {
         // הפעלת SDK
         notificationManager.start();
 
-        // 🔥 רישום המכשיר למסד הנתונים - זה הצעד שחסר!
-        notificationManager.registerUser();
+        // 🔥 רישום המכשיר למסד הנתונים עם בקשת הרשאות!
+        notificationManager.requestPermissionsAndRegister(this, new PushNotificationManager.NotificationPermissionCallback() {
+            @Override
+            public void onPermissionGranted() {
+                Log.d("MainActivity", "✅ Notification permissions granted and user registered!");
+            }
+
+            @Override
+            public void onPermissionDenied() {
+                Log.w("MainActivity", "⚠️ Notification permissions denied but user registered anyway");
+            }
+        });
 
         Log.d("MainActivity", "✅ Push SDK initialized successfully.");
         Log.d("MainActivity", "🚀 Device registration initiated...");
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        // Forward permission results to the SDK
+        if (notificationManager != null) {
+            notificationManager.onNotificationPermissionResult(requestCode, permissions, grantResults);
+        }
     }
 }

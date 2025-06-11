@@ -205,17 +205,42 @@ public class NotificationSignupActivity extends AppCompatActivity {
                     currentUser.getLng()
             );
 
-            // If location-based notifications are requested, ask for permissions
-            if (locationBased) {
-                requestLocationPermissionsAndRegister(userInfo);
-            } else {
-                // Register without location tracking
-                completeRegistration(userInfo);
-            }
+            // First, always request notification permissions (Android 13+)
+            requestNotificationPermissionsAndContinue(userInfo, locationBased);
 
         } catch (Exception e) {
             Toast.makeText(this, "Please select at least one notification type", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void requestNotificationPermissionsAndContinue(UserInfo userInfo, boolean locationBased) {
+        PushNotificationManager manager = PushNotificationManager.getInstance();
+
+        manager.requestNotificationPermissions(this, new PushNotificationManager.NotificationPermissionCallback() {
+            @Override
+            public void onPermissionGranted() {
+                Toast.makeText(NotificationSignupActivity.this, "Notification permissions granted!", Toast.LENGTH_SHORT).show();
+
+                // Now check if we need location permissions
+                if (locationBased) {
+                    requestLocationPermissionsAndRegister(userInfo);
+                } else {
+                    completeRegistration(userInfo);
+                }
+            }
+
+            @Override
+            public void onPermissionDenied() {
+                Toast.makeText(NotificationSignupActivity.this, "Notification permissions denied. Notifications may not work properly.", Toast.LENGTH_LONG).show();
+
+                // Continue anyway - maybe user will grant permission later
+                if (locationBased) {
+                    requestLocationPermissionsAndRegister(userInfo);
+                } else {
+                    completeRegistration(userInfo);
+                }
+            }
+        });
     }
 
     private void requestLocationPermissionsAndRegister(UserInfo userInfo) {
@@ -254,9 +279,13 @@ public class NotificationSignupActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
-        // Forward permission results to LocationManager
-        PushNotificationManager.getInstance()
-                .getLocationManager()
+        PushNotificationManager manager = PushNotificationManager.getInstance();
+
+        // Handle notification permission results
+        manager.onNotificationPermissionResult(requestCode, permissions, grantResults);
+
+        // Forward location permission results to LocationManager
+        manager.getLocationManager()
                 .onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 

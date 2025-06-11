@@ -1,8 +1,15 @@
 package com.example.pushnotificationsdk;
 
+import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.util.Log;
+
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.google.firebase.messaging.FirebaseMessaging;
 
@@ -15,11 +22,14 @@ import retrofit2.Response;
 
 public class PushNotificationManager {
 
+    private static final int NOTIFICATION_PERMISSION_REQUEST_CODE = 1001;
+
     private static PushNotificationManager instance;
     private final Context context;
     private UserInfo currentUser;
     private LocationManager locationManager;
     private String appId;
+    private NotificationPermissionCallback notificationPermissionCallback;
 
     private PushNotificationManager(Context context, String appId) {
         this.context = context.getApplicationContext();
@@ -127,11 +137,18 @@ public class PushNotificationManager {
     /**
      * Register the current user to receive notifications
      * The user must be set using setCurrentUser() before calling this method
+     * Note: This will check notification permissions and warn if not granted
      */
     public void registerUser() {
         if (currentUser == null) {
             Log.e("PushSDK", "❌ Current user not set. Call setCurrentUser() first.");
             return;
+        }
+
+        // Check notification permissions before registering
+        if (!hasNotificationPermissions()) {
+            Log.w("PushSDK", "⚠️ POST_NOTIFICATIONS permission not granted! Notifications may not appear.");
+            Log.w("PushSDK", "💡 Consider calling requestNotificationPermissions() first or use launchNotificationSetupScreen()");
         }
 
         getToken(new OnTokenReceivedListener() {
@@ -150,8 +167,15 @@ public class PushNotificationManager {
     /**
      * Register user with specific UserInfo
      * @param userInfo User information to register
+     * Note: This will check notification permissions and warn if not granted
      */
     public void registerUser(UserInfo userInfo) {
+        // Check notification permissions before registering
+        if (!hasNotificationPermissions()) {
+            Log.w("PushSDK", "⚠️ POST_NOTIFICATIONS permission not granted! Notifications may not appear.");
+            Log.w("PushSDK", "💡 Consider calling requestNotificationPermissions() first or use launchNotificationSetupScreen()");
+        }
+
         getToken(new OnTokenReceivedListener() {
             @Override
             public void onTokenReceived(String token) {
@@ -163,6 +187,48 @@ public class PushNotificationManager {
                 Log.e("PushSDK", "❌ Failed to get FCM token", e);
             }
         });
+    }
+
+    /**
+     * Request notification permissions and register user automatically
+     * This is the recommended way to register users programmatically
+     * @param activity The activity to request permissions from
+     * @param userInfo User information to register (optional - uses current user if null)
+     * @param callback Callback for registration results
+     */
+    public void requestPermissionsAndRegister(Activity activity, UserInfo userInfo, NotificationPermissionCallback callback) {
+        requestNotificationPermissions(activity, new NotificationPermissionCallback() {
+            @Override
+            public void onPermissionGranted() {
+                Log.d("PushSDK", "✅ Notification permissions granted - proceeding with registration");
+                if (userInfo != null) {
+                    registerUser(userInfo);
+                } else {
+                    registerUser();
+                }
+                if (callback != null) callback.onPermissionGranted();
+            }
+
+            @Override
+            public void onPermissionDenied() {
+                Log.w("PushSDK", "⚠️ Notification permissions denied - registering anyway");
+                if (userInfo != null) {
+                    registerUser(userInfo);
+                } else {
+                    registerUser();
+                }
+                if (callback != null) callback.onPermissionDenied();
+            }
+        });
+    }
+
+    /**
+     * Request notification permissions and register current user automatically
+     * @param activity The activity to request permissions from
+     * @param callback Callback for registration results (optional)
+     */
+    public void requestPermissionsAndRegister(Activity activity, NotificationPermissionCallback callback) {
+        requestPermissionsAndRegister(activity, null, callback);
     }
 
     /**
@@ -379,6 +445,60 @@ public class PushNotificationManager {
     }
 
     /**
+     * Check if notification permissions are granted (Android 13+)
+     * @return true if permissions are granted or not needed (Android < 13)
+     */
+    public boolean hasNotificationPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            return ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+                    == PackageManager.PERMISSION_GRANTED;
+        }
+        return true; // Not needed for older versions
+    }
+
+    /**
+     * Request notification permissions (Android 13+)
+     * @param activity The activity to request permissions from
+     * @param callback Callback for permission results
+     */
+    public void requestNotificationPermissions(Activity activity, NotificationPermissionCallback callback) {
+        this.notificationPermissionCallback = callback;
+
+        if (hasNotificationPermissions()) {
+            Log.d("PushSDK", "✅ Notification permissions already granted");
+            callback.onPermissionGranted();
+        } else {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                Log.d("PushSDK", "🔔 Requesting POST_NOTIFICATIONS permission...");
+                ActivityCompat.requestPermissions(activity,
+                        new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                        NOTIFICATION_PERMISSION_REQUEST_CODE);
+            } else {
+                // For older Android versions, no permission needed
+                Log.d("PushSDK", "✅ Notification permissions not required for this Android version");
+                callback.onPermissionGranted();
+            }
+        }
+    }
+
+    /**
+     * Handle notification permission request results
+     * Call this from your Activity's onRequestPermissionsResult method
+     */
+    public void onNotificationPermissionResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (requestCode == NOTIFICATION_PERMISSION_REQUEST_CODE && notificationPermissionCallback != null) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Log.d("PushSDK", "✅ POST_NOTIFICATIONS permission granted");
+                notificationPermissionCallback.onPermissionGranted();
+            } else {
+                Log.w("PushSDK", "⚠️ POST_NOTIFICATIONS permission denied");
+                notificationPermissionCallback.onPermissionDenied();
+            }
+            notificationPermissionCallback = null; // Clear callback
+        }
+    }
+
+    /**
      * Get the location manager instance
      * @return LocationManager instance
      */
@@ -533,6 +653,12 @@ public class PushNotificationManager {
                 Log.e("PushSDK", "❌ Network error updating location", t);
             }
         });
+    }
+
+    // Callback interface for notification permission results
+    public interface NotificationPermissionCallback {
+        void onPermissionGranted();
+        void onPermissionDenied();
     }
 
     // Callback interface for receiving the token

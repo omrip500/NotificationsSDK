@@ -13,9 +13,9 @@ A comprehensive Android SDK for push notifications with Firebase Cloud Messaging
 4. Add Firebase dependencies to your `build.gradle`
 
 ### 2. Register Your App
-1. Sign up at our [Web Dashboard](http://sdk-app-react.s3-website-us-east-1.amazonaws.com/)
+1. Sign up at [notificationspanel.com](https://notificationspanel.com)
 2. Create a new application
-3. Upload your Firebase service account JSON
+3. Upload your Firebase service account JSON (from Project Settings → Service Accounts → Generate new private key)
 4. Get your unique App ID
 
 ### 3. Add SDK to Your Project
@@ -39,8 +39,19 @@ Add to your `app/build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    implementation("com.github.omrip500:NotificationsSDK:v1.0.2")
+    implementation("com.github.omrip500:NotificationsSDK:v1.1.5")
     implementation("com.google.firebase:firebase-messaging:24.1.1")
+    implementation(platform("com.google.firebase:firebase-bom:33.15.0"))
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+}
+```
+
+Add the Google services plugin to your app's `build.gradle.kts`:
+
+```kotlin
+plugins {
+    id("com.google.gms.google-services")
 }
 ```
 
@@ -67,8 +78,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Initialize Firebase first
+        FirebaseApp.initializeApp(this);
+
         // Initialize SDK
-        String appId = "YOUR_APP_ID_HERE"; // From dashboard
+        String appId = "6849b32cc94b2490180b8bb4"; // Replace with your App ID from dashboard
         notificationManager = PushNotificationManager.initialize(this, appId);
 
         // Configure notification categories
@@ -109,9 +123,18 @@ public class MainActivity extends AppCompatActivity {
 - **Java**: 17+
 - **Google Play Services** required
 
-## Documentation
+## 📚 Documentation
 
-For complete documentation, see [DEVELOPER_DOCUMENTATION.md](DEVELOPER_DOCUMENTATION.md)
+Complete documentation is available in the `docs/` folder:
+
+- **[Quick Start Guide](docs/quick-start.md)** - Get up and running in 5 minutes
+- **[Complete Setup Guide](docs/setup-guide.md)** - Detailed setup instructions
+- **[API Reference](docs/api-reference.md)** - Complete API documentation
+- **[Usage Examples](docs/usage-examples.md)** - Code examples and best practices
+- **[Architecture Overview](docs/architecture.md)** - System architecture and components
+- **[Troubleshooting](docs/troubleshooting.md)** - Common issues and solutions
+
+📖 **[View Full Documentation](docs/README.md)** | 🌐 **[Online Documentation](https://omrip500.github.io/NotificationsSDK/)**
 
 ## API Reference
 
@@ -144,4 +167,4 @@ notificationManager.launchSettingsScreen(Context context)
 
 ## License
 
-© 2024 Your Company Name. All rights reserved.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
