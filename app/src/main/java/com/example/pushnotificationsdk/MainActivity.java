@@ -39,10 +39,8 @@ public class MainActivity extends AppCompatActivity {
         SDKConfiguration config = notificationManager.getConfigurationBuilder()
                 .setSignupTitle("Enable Notifications")
                 .setSignupSubtitle("Choose what notifications you'd like to receive")
-                .addInterest(new InterestOption("breaking_news", "Breaking News", "Important breaking news alerts", true))
-                .addInterest(new InterestOption("sports", "Sports", "Game updates and scores"))
-                .addInterest(new InterestOption("weather", "Weather", "Weather alerts"))
-                .addInterest(new InterestOption("technology", "Technology", "Tech news and trends"))
+                // האינטרסים נטענים אוטומטית מהשרת - לא צריך להגדיר אותם כאן!
+                // המפתח מגדיר את האינטרסים בדשבורד הריאקט, והמשתמש בוחר מתוכם
                 .showLocationBasedNotifications(true) // אם רלוונטי
                 .build();
 

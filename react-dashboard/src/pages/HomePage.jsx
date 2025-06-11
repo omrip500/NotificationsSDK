@@ -208,7 +208,7 @@ function HomePage() {
               <span className="text-xl font-bold">NotifySDK</span>
             </div>
             <div className="text-gray-400 text-sm">
-              © 2024 NotifySDK. All rights reserved.
+              © 2025 NotifySDK. All rights reserved.
             </div>
           </div>
         </div>

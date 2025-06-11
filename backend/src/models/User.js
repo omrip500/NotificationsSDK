@@ -18,11 +18,6 @@ const userSchema = new mongoose.Schema(
       required: true,
       minlength: 6,
     },
-    apiKey: {
-      type: String,
-      required: true,
-      unique: true,
-    },
   },
   { timestamps: true }
 );

@@ -137,6 +137,29 @@ public class SDKConfiguration {
         return showLocationBasedNotifications;
     }
 
+    /**
+     * עדכון האינטרסים הזמינים מהשרת
+     * @param interestIds רשימת מזהי האינטרסים מהשרת
+     */
+    public void setAvailableInterestsFromServer(List<String> interestIds) {
+        if (interestIds == null) return;
+
+        this.availableInterests = new ArrayList<>();
+        for (String interestId : interestIds) {
+            // יצירת InterestOption עם שם ברירת מחדל
+            String displayName = capitalizeFirst(interestId.replace("_", " "));
+            this.availableInterests.add(new InterestOption(interestId, displayName, ""));
+        }
+    }
+
+    /**
+     * הפיכת האות הראשונה לגדולה
+     */
+    private String capitalizeFirst(String str) {
+        if (str == null || str.isEmpty()) return str;
+        return str.substring(0, 1).toUpperCase() + str.substring(1);
+    }
+
     // Reset to defaults
     public void resetToDefaults() {
         initializeDefaults();

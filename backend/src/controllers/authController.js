@@ -1,12 +1,6 @@
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import crypto from "crypto";
-
-// Helper function to generate a unique API key
-const generateApiKey = () => {
-  return crypto.randomBytes(32).toString("hex");
-};
 
 // Register a new user
 export const register = async (req, res) => {
@@ -19,20 +13,17 @@ export const register = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const apiKey = generateApiKey();
 
     const newUser = new User({
       name,
       email,
       password: hashedPassword,
-      apiKey,
     });
 
     await newUser.save();
 
     res.status(201).json({
       message: "User registered successfully",
-      apiKey,
     });
   } catch (error) {
     res
@@ -63,9 +54,29 @@ export const login = async (req, res) => {
     res.status(200).json({
       message: "Login successful",
       token,
-      apiKey: user.apiKey,
     });
   } catch (error) {
     res.status(500).json({ message: "Login failed", error: error.message });
+  }
+};
+
+// Get current user profile
+export const getProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.userId).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      createdAt: user.createdAt,
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Failed to get profile", error: error.message });
   }
 };

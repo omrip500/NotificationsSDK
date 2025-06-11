@@ -144,7 +144,7 @@ function DashboardPage() {
   const handleDeleteApp = async (appId, appName) => {
     if (
       !window.confirm(
-        `האם אתה בטוח שברצונך למחוק את האפליקציה "${appName}"? פעולה זו לא ניתנת לביטול.`
+        `Are you sure you want to delete the application "${appName}"? This action cannot be undone.`
       )
     ) {
       return;

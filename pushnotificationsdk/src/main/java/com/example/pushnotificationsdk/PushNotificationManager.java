@@ -6,6 +6,9 @@ import android.util.Log;
 
 import com.google.firebase.messaging.FirebaseMessaging;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -279,6 +282,9 @@ public class PushNotificationManager {
     public void configure(SDKConfiguration configuration) {
         // Configuration is handled by the singleton pattern in SDKConfiguration
         Log.d("PushSDK", "✅ SDK configured successfully");
+
+        // טעינת האינטרסים מהשרת
+        loadAvailableInterests();
     }
 
     /**
@@ -287,6 +293,42 @@ public class PushNotificationManager {
      */
     public SDKConfiguration.Builder getConfigurationBuilder() {
         return new SDKConfiguration.Builder();
+    }
+
+    /**
+     * טעינת האינטרסים הזמינים מהשרת
+     */
+    private void loadAvailableInterests() {
+        Log.d("PushSDK", "📥 Loading available interests from server...");
+
+        PushApiService service = ApiClient.getService();
+        service.getApplicationInterests(appId).enqueue(new Callback<InterestsResponse>() {
+            @Override
+            public void onResponse(Call<InterestsResponse> call, Response<InterestsResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    List<String> interests = response.body().getInterests();
+                    Log.d("PushSDK", "✅ Successfully loaded interests: " + interests);
+
+                    // עדכון האינטרסים הזמינים ב-SDKConfiguration
+                    SDKConfiguration.getInstance().setAvailableInterestsFromServer(interests);
+                } else {
+                    Log.w("PushSDK", "⚠️ Failed to load interests. Response code: " + response.code());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<InterestsResponse> call, Throwable t) {
+                Log.e("PushSDK", "❌ Error loading interests: " + t.getMessage());
+            }
+        });
+    }
+
+    /**
+     * קבלת האינטרסים הזמינים
+     * @return רשימת האינטרסים הזמינים
+     */
+    public List<InterestOption> getAvailableInterests() {
+        return SDKConfiguration.getInstance().getAvailableInterests();
     }
 
     /**

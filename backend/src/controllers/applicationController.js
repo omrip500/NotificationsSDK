@@ -200,6 +200,40 @@ export const getApplicationInterests = async (req, res) => {
 };
 
 /**
+ * עדכון אינטרסים של אפליקציה - עבור ה-SDK
+ */
+export const updateApplicationInterests = async (req, res) => {
+  const { appId } = req.params;
+  const { interests } = req.body;
+
+  console.log(`🔄 Updating interests for app: ${appId}`);
+  console.log(`📝 New interests:`, interests);
+
+  try {
+    const app = await Application.findById(appId);
+    if (!app) {
+      console.log(`❌ Application not found: ${appId}`);
+      return res.status(404).json({ message: "Application not found" });
+    }
+
+    // עדכון האינטרסים
+    app.interests = interests || [];
+    await app.save();
+
+    console.log(`✅ Successfully updated interests for app: ${app.name}`);
+    res.status(200).json({
+      message: "Interests updated successfully",
+      interests: app.interests,
+    });
+  } catch (err) {
+    console.error(`❌ Error updating interests for app ${appId}:`, err);
+    res
+      .status(500)
+      .json({ message: "Failed to update interests", error: err.message });
+  }
+};
+
+/**
  * קבלת clientId לפי appId - עבור ה-SDK
  */
 export const getClientIdByAppId = async (req, res) => {

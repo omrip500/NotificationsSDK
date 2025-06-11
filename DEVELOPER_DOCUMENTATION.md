@@ -1,6 +1,7 @@
 # Push Notification SDK - Complete Developer Guide
 
 ## Table of Contents
+
 1. [Overview](#overview)
 2. [Prerequisites](#prerequisites)
 3. [Firebase Setup](#firebase-setup)
@@ -25,6 +26,7 @@ The Push Notification SDK provides a complete solution for integrating push noti
 - **Easy-to-use UI components** for notification setup
 
 ### Key Features
+
 - ✅ Simple 4-step integration
 - ✅ Customizable notification categories
 - ✅ User preference management
@@ -60,6 +62,7 @@ Before integrating the SDK, ensure you have:
 
 1. In your Firebase project, click **"Add app"** and select **Android**
 2. Enter your app details:
+
    - **Android package name**: Your app's package name (e.g., `com.yourcompany.yourapp`)
    - **App nickname**: A friendly name for your app
    - **Debug signing certificate SHA-1**: Optional but recommended for development
@@ -114,11 +117,13 @@ dependencies {
 2. Fill in the application details:
 
    **Application Information:**
+
    - **Application Name**: Your app's display name
    - **Platform**: Select "Android"
    - **Interests**: Enter comma-separated categories (e.g., "sports, news, technology")
 
    **Firebase Configuration:**
+
    - **Client ID**: Click "Generate" to create a unique identifier
    - **Firebase Service Account JSON**: Upload your Firebase service account key
 
@@ -135,8 +140,8 @@ dependencies {
 ### Step 4: Get Your App ID
 
 After creating the application, you'll receive:
+
 - **App ID**: A unique identifier (e.g., `6825f0b2f5d70b84cf230fbf`)
-- **API Keys**: For server-side integration
 - **Dashboard Access**: To manage notifications and view analytics
 
 **⚠️ Important**: Save your App ID - you'll need it for SDK initialization.
@@ -148,6 +153,7 @@ After creating the application, you'll receive:
 ### Step 1: Add SDK to Your Project
 
 #### Option A: AAR File (Recommended)
+
 1. Download the `pushnotificationsdk-release.aar` file
 2. Create a `libs` folder in your app directory if it doesn't exist
 3. Copy the AAR file to `app/libs/`
@@ -166,6 +172,7 @@ dependencies {
 ```
 
 #### Option B: Maven Repository
+
 ```gradle
 dependencies {
     implementation 'com.yourcompany:pushnotificationsdk:1.0.0'
@@ -337,8 +344,6 @@ SDKConfiguration config = notificationManager.getConfigurationBuilder()
     .build();
 ```
 
-
-
 ---
 
 ## Usage Examples
@@ -497,8 +502,6 @@ public void launchNotificationHistoryScreen(Context context)
 public void launchSettingsScreen(Context context)
 ```
 
-
-
 #### Utility Methods
 
 ```java
@@ -571,6 +574,7 @@ public class InterestOption {
 ### Common Issues
 
 #### 1. "SDK not initialized" Error
+
 **Problem**: Calling SDK methods before initialization
 **Solution**: Always call `PushNotificationManager.initialize()` first
 
@@ -584,14 +588,17 @@ manager.start();
 ```
 
 #### 2. Firebase Token Not Received
+
 **Problem**: FCM token generation fails
 **Solutions**:
+
 - Ensure `google-services.json` is in the correct location
 - Check internet connection
 - Verify Firebase project configuration
 - Check if Google Play Services is available
 
 #### 3. Network Security Policy Error
+
 **Problem**: HTTP requests blocked on Android 9+
 **Solution**: Add network security configuration
 
@@ -601,12 +608,15 @@ manager.start();
 ```
 
 #### 4. Notifications Not Appearing
+
 **Possible causes**:
+
 - POST_NOTIFICATIONS permission not granted (Android 13+)
 - App is in battery optimization
 - Notification channel not created properly
 
 **Solutions**:
+
 ```java
 // Request notification permission (Android 13+)
 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -618,8 +628,6 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
 }
 ```
 
-
-
 ### Debug Logging
 
 Enable debug logging to troubleshoot issues:
@@ -630,6 +638,7 @@ adb logcat -s PushSDK
 ```
 
 Common log messages:
+
 - `✅ SDK started with App ID: xxx` - Successful initialization
 - `❌ Current user not set` - Need to call setCurrentUser()
 - `🚀 Registering device to server` - User registration in progress
@@ -656,6 +665,7 @@ Common log messages:
 ### Reporting Issues
 
 When reporting issues, please include:
+
 - Android version and device model
 - SDK version
 - App ID
@@ -691,6 +701,7 @@ Before going live, ensure you have:
 ## Changelog
 
 ### Version 1.0.0
+
 - Initial release
 - Firebase Cloud Messaging integration
 - User preference management

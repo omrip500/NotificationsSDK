@@ -1,16 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import {
-  User,
-  Mail,
-  Lock,
-  UserPlus,
-  Eye,
-  EyeOff,
-  Key,
-  Copy,
-  Check,
-} from "lucide-react";
+import { User, Mail, Lock, UserPlus, Eye, EyeOff } from "lucide-react";
 import api from "../services/api";
 import { useNavigate, Link } from "react-router-dom";
 
@@ -21,9 +11,6 @@ function RegisterPage() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [apiKey, setApiKey] = useState("");
-  const [copied, setCopied] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -32,94 +19,23 @@ function RegisterPage() {
     setError(null);
 
     try {
-      const res = await api.post("/auth/register", {
+      await api.post("/auth/register", {
         name,
         email,
         password,
       });
-      setApiKey(res.data.apiKey);
-      setSuccess(true);
+      // Registration successful - redirect to login
+      navigate("/login", {
+        state: {
+          message: "Registration successful! Please log in to continue.",
+        },
+      });
     } catch (err) {
       setError(err.response?.data?.message || "Registration failed");
     } finally {
       setLoading(false);
     }
   };
-
-  const copyApiKey = async () => {
-    try {
-      await navigator.clipboard.writeText(apiKey);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error("Failed to copy API key");
-    }
-  };
-
-  const proceedToLogin = () => {
-    navigate("/login");
-  };
-
-  if (success) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-success-50 via-white to-primary-50 flex items-center justify-center px-4">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-md"
-        >
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-success-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Check className="w-8 h-8 text-white" />
-            </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Registration Successful!
-            </h1>
-            <p className="text-gray-600">
-              Your account has been created successfully
-            </p>
-          </div>
-
-          <div className="card">
-            <div className="card-body">
-              <div className="space-y-6">
-                <div className="alert-success">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Key className="w-5 h-5" />
-                    <span className="font-medium">Your API Key</span>
-                  </div>
-                  <p className="text-sm mb-3">
-                    Please save this API key securely. You'll need it to use the
-                    notification service.
-                  </p>
-                  <div className="flex items-center gap-2 p-3 bg-white rounded-lg border">
-                    <code className="flex-1 text-sm font-mono break-all">
-                      {apiKey}
-                    </code>
-                    <button
-                      onClick={copyApiKey}
-                      className="btn-outline p-2"
-                      title="Copy API Key"
-                    >
-                      {copied ? (
-                        <Check className="w-4 h-4 text-success-600" />
-                      ) : (
-                        <Copy className="w-4 h-4" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                <button onClick={proceedToLogin} className="btn-primary w-full">
-                  Continue to Login
-                </button>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50 flex items-center justify-center px-4">

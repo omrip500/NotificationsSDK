@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Bell, User, LogOut, Menu, X, BarChart3 } from "lucide-react";
+import api from "../services/api";
 
 function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -10,18 +11,42 @@ function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const fetchUserProfile = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const response = await api.get("/auth/profile", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setUserName(response.data.name);
+    } catch (error) {
+      console.error("Failed to fetch user profile:", error);
+      // אם נכשל בקבלת הפרופיל, אולי הטוקן לא תקין
+      if (error.response?.status === 401) {
+        localStorage.removeItem("token");
+        setIsLoggedIn(false);
+        setUserName("");
+      }
+    }
+  };
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
       setIsLoggedIn(true);
-      // You could decode the token to get user info
-      setUserName("User"); // Placeholder
+      fetchUserProfile();
+    } else {
+      setIsLoggedIn(false);
+      setUserName("");
     }
   }, [location]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
-    localStorage.removeItem("apiKey");
     setIsLoggedIn(false);
     setUserName("");
     navigate("/");

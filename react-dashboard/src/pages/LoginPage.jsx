@@ -31,7 +31,6 @@ function LoginPage() {
     try {
       const res = await api.post("/auth/login", { email, password });
       localStorage.setItem("token", res.data.token);
-      localStorage.setItem("apiKey", res.data.apiKey);
 
       // Success animation before navigation
       await new Promise((resolve) => setTimeout(resolve, 500));
