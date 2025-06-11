@@ -32,7 +32,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void initializeSDK() {
         // מזהה ה-App שלך מה-Dashboard
-        String appId = "6841ac6a129f32fb930f3d47";
+        String appId = "68481f3a6f6558db1726e9fb";
         notificationManager = PushNotificationManager.initialize(this, appId);
 
         // קונפיגורציה (סוגי נוטיפיקציות, UI וכו’)
