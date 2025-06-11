@@ -283,8 +283,8 @@ public class PushNotificationManager {
         // Configuration is handled by the singleton pattern in SDKConfiguration
         Log.d("PushSDK", "✅ SDK configured successfully");
 
-        // טעינת האינטרסים מהשרת
-        loadAvailableInterests();
+        // שליחת האינטרסים לשרת
+        updateApplicationInterests(configuration);
     }
 
     /**
@@ -296,39 +296,47 @@ public class PushNotificationManager {
     }
 
     /**
-     * טעינת האינטרסים הזמינים מהשרת
+     * שליחת האינטרסים לשרת לעדכון האפליקציה
+     * @param configuration הקונפיגורציה עם האינטרסים
      */
-    private void loadAvailableInterests() {
-        Log.d("PushSDK", "📥 Loading available interests from server...");
+    private void updateApplicationInterests(SDKConfiguration configuration) {
+        if (configuration == null || configuration.getAvailableInterests() == null) {
+            Log.d("PushSDK", "⚠️ No interests to update");
+            return;
+        }
 
+        // המרת האינטרסים לרשימת מחרוזות
+        List<String> interestIds = new ArrayList<>();
+        for (InterestOption interest : configuration.getAvailableInterests()) {
+            interestIds.add(interest.getId());
+        }
+
+        if (interestIds.isEmpty()) {
+            Log.d("PushSDK", "⚠️ No interests configured");
+            return;
+        }
+
+        Log.d("PushSDK", "📤 Updating application interests: " + interestIds);
+
+        // שליחת האינטרסים לשרת
         PushApiService service = ApiClient.getService();
-        service.getApplicationInterests(appId).enqueue(new Callback<InterestsResponse>() {
-            @Override
-            public void onResponse(Call<InterestsResponse> call, Response<InterestsResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    List<String> interests = response.body().getInterests();
-                    Log.d("PushSDK", "✅ Successfully loaded interests: " + interests);
+        UpdateInterestsRequest request = new UpdateInterestsRequest(interestIds);
 
-                    // עדכון האינטרסים הזמינים ב-SDKConfiguration
-                    SDKConfiguration.getInstance().setAvailableInterestsFromServer(interests);
+        service.updateApplicationInterests(appId, request).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (response.isSuccessful()) {
+                    Log.d("PushSDK", "✅ Successfully updated application interests");
                 } else {
-                    Log.w("PushSDK", "⚠️ Failed to load interests. Response code: " + response.code());
+                    Log.w("PushSDK", "⚠️ Failed to update interests. Response code: " + response.code());
                 }
             }
 
             @Override
-            public void onFailure(Call<InterestsResponse> call, Throwable t) {
-                Log.e("PushSDK", "❌ Error loading interests: " + t.getMessage());
+            public void onFailure(Call<Void> call, Throwable t) {
+                Log.e("PushSDK", "❌ Error updating application interests: " + t.getMessage());
             }
         });
-    }
-
-    /**
-     * קבלת האינטרסים הזמינים
-     * @return רשימת האינטרסים הזמינים
-     */
-    public List<InterestOption> getAvailableInterests() {
-        return SDKConfiguration.getInstance().getAvailableInterests();
     }
 
     /**

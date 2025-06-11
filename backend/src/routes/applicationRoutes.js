@@ -46,25 +46,10 @@ router.get("/debug/all", async (req, res) => {
 router.get("/:appId/client-id", getClientIdByAppId);
 
 router.get("/:appId", authenticate, getApplicationById);
-// קבלת אינטרסים - ללא authentication (עבור SDK)
-router.get("/:appId/interests", getApplicationInterests);
+router.get("/:appId/interests", authenticate, getApplicationInterests);
 
-// עדכון אינטרסים של אפליקציה (עבור SDK - ללא authentication, עבור דשבורד - עם authentication)
-router.put(
-  "/:appId/interests",
-  (req, res, next) => {
-    // בדיקה אם יש Authorization header (דשבורד) או לא (SDK)
-    const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith("Bearer ")) {
-      // אם יש token, נדרוש authentication
-      authenticate(req, res, next);
-    } else {
-      // אם אין token, זה SDK - נמשיך ללא authentication
-      next();
-    }
-  },
-  updateApplicationInterests
-);
+// עדכון אינטרסים של אפליקציה (עבור SDK - ללא authentication)
+router.put("/:appId/interests", updateApplicationInterests);
 
 // ניהול service account
 router.get(

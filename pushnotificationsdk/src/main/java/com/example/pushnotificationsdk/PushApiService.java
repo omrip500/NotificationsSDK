@@ -35,9 +35,6 @@ public interface PushApiService {
     @PUT("/api/applications/{appId}/interests")
     Call<Void> updateApplicationInterests(@Path("appId") String appId, @Body UpdateInterestsRequest request);
 
-    @GET("/api/applications/{appId}/interests")
-    Call<InterestsResponse> getApplicationInterests(@Path("appId") String appId);
-
     @DELETE("/api/notifications/{id}")
     Call<Void> deleteNotification(@Path("id") String notificationId);
 

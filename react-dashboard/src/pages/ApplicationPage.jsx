@@ -14,9 +14,6 @@ import {
   Eye,
   Clock,
   Settings,
-  Tag,
-  Plus,
-  X,
 } from "lucide-react";
 import api from "../services/api";
 import SegmentManager from "../components/segments/SegmentManager";
@@ -28,12 +25,6 @@ import ServiceAccountManager from "../components/ServiceAccountManager";
 function ApplicationPage() {
   const { appId } = useParams();
   const [activeTab, setActiveTab] = useState("send");
-
-  // Interest management states
-  const [newInterestId, setNewInterestId] = useState("");
-  const [newInterestName, setNewInterestName] = useState("");
-  const [newInterestDescription, setNewInterestDescription] = useState("");
-  const [managingInterests, setManagingInterests] = useState(false);
   const [appInfo, setAppInfo] = useState(null);
 
   const [title, setTitle] = useState("");
@@ -269,61 +260,6 @@ function ApplicationPage() {
     );
   };
 
-  // Interest management functions
-  const handleAddInterest = async () => {
-    if (!newInterestId.trim() || !newInterestName.trim()) {
-      setError("Interest ID and Name are required");
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem("token");
-      const updatedInterests = [...availableInterests, newInterestId];
-
-      await api.put(
-        `/applications/${appId}/interests`,
-        {
-          interests: updatedInterests,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      setAvailableInterests(updatedInterests);
-      setNewInterestId("");
-      setNewInterestName("");
-      setNewInterestDescription("");
-      setMessage("Interest added successfully!");
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to add interest");
-    }
-  };
-
-  const handleRemoveInterest = async (interestToRemove) => {
-    try {
-      const token = localStorage.getItem("token");
-      const updatedInterests = availableInterests.filter(
-        (interest) => interest !== interestToRemove
-      );
-
-      await api.put(
-        `/applications/${appId}/interests`,
-        {
-          interests: updatedInterests,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      setAvailableInterests(updatedInterests);
-      setMessage("Interest removed successfully!");
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to remove interest");
-    }
-  };
-
   const handleIndividualChange = (token, field, value) => {
     setIndividualMessage((prev) => ({
       ...prev,
@@ -437,7 +373,6 @@ function ApplicationPage() {
                 { id: "history", label: "Sent Notifications", icon: History },
                 { id: "individual", label: "Send to Individual", icon: User },
                 { id: "segments", label: "Manage Segments", icon: Users },
-                { id: "interests", label: "Manage Interests", icon: Tag },
                 { id: "firebase", label: "Firebase Settings", icon: Settings },
               ].map((tab) => (
                 <button
@@ -1094,190 +1029,6 @@ function ApplicationPage() {
                   setSegments(res.data || []);
                 }}
               />
-            </motion.div>
-          )}
-
-          {activeTab === "interests" && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-6"
-            >
-              <div className="card">
-                <div className="card-header">
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    Manage Application Interests
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    Define which interest categories your application supports.
-                    Users will be able to choose from these categories in the
-                    Android SDK.
-                  </p>
-                </div>
-
-                <div className="card-body space-y-6">
-                  {/* Add New Interest */}
-                  <div className="border-b pb-6">
-                    <h4 className="text-md font-medium text-gray-900 mb-4">
-                      Add New Interest Category
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Interest ID *
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="e.g., news, sports, tech"
-                          value={newInterestId}
-                          onChange={(e) =>
-                            setNewInterestId(
-                              e.target.value.toLowerCase().replace(/\s+/g, "_")
-                            )
-                          }
-                          className="input"
-                          required
-                        />
-                        <p className="text-xs text-gray-500 mt-1">
-                          Used internally (lowercase, no spaces)
-                        </p>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Display Name *
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="e.g., News, Sports, Technology"
-                          value={newInterestName}
-                          onChange={(e) => setNewInterestName(e.target.value)}
-                          className="input"
-                          required
-                        />
-                        <p className="text-xs text-gray-500 mt-1">
-                          Shown to users
-                        </p>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Description (Optional)
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="Brief description"
-                          value={newInterestDescription}
-                          onChange={(e) =>
-                            setNewInterestDescription(e.target.value)
-                          }
-                          className="input"
-                        />
-                        <p className="text-xs text-gray-500 mt-1">
-                          Additional info
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex justify-end mt-4">
-                      <button
-                        onClick={handleAddInterest}
-                        disabled={
-                          !newInterestId.trim() ||
-                          !newInterestName.trim() ||
-                          managingInterests
-                        }
-                        className="btn-primary flex items-center gap-2"
-                      >
-                        <Plus className="w-4 h-4" />
-                        Add Interest
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Current Interests */}
-                  <div>
-                    <h4 className="text-md font-medium text-gray-900 mb-4">
-                      Current Interest Categories ({availableInterests.length})
-                    </h4>
-                    {availableInterests.length === 0 ? (
-                      <div className="text-center py-8">
-                        <Tag className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">
-                          No interests defined yet
-                        </h3>
-                        <p className="text-gray-600">
-                          Add interest categories that your application supports
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {availableInterests.map((interest, index) => (
-                          <motion.div
-                            key={interest}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: index * 0.1 }}
-                            className="border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow"
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <div className="p-2 bg-primary-100 rounded-lg">
-                                  <Tag className="w-4 h-4 text-primary-600" />
-                                </div>
-                                <div>
-                                  <h5 className="font-medium text-gray-900">
-                                    {interest}
-                                  </h5>
-                                  <p className="text-sm text-gray-500">
-                                    ID: {interest}
-                                  </p>
-                                </div>
-                              </div>
-                              <button
-                                onClick={() => handleRemoveInterest(interest)}
-                                disabled={managingInterests}
-                                className="p-2 text-gray-400 hover:text-error-600 hover:bg-error-50 rounded-lg transition-colors"
-                                title="Remove Interest"
-                              >
-                                <X className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </motion.div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Instructions */}
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <h5 className="font-medium text-blue-900 mb-2">
-                      How to use in Android SDK:
-                    </h5>
-                    <div className="text-sm text-blue-800 space-y-2">
-                      <p>
-                        1. The SDK will automatically load these interest
-                        categories
-                      </p>
-                      <p>
-                        2. Users can choose which interests they want to
-                        subscribe to
-                      </p>
-                      <p>
-                        3. You can send targeted notifications based on user
-                        interests
-                      </p>
-                      <p>
-                        4. Changes here will be reflected in the SDK immediately
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="card-footer">
-                  {message && (
-                    <p className="text-sm text-success-600">{message}</p>
-                  )}
-                  {error && <p className="text-sm text-error-600">{error}</p>}
-                </div>
-              </div>
             </motion.div>
           )}
 
