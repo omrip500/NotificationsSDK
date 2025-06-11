@@ -356,10 +356,7 @@ function ApplicationPage() {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             {appInfo?.name || "Application Management"}
           </h1>
-          <p className="text-gray-600">
-            App ID: {appId}{" "}
-            {appInfo?.platform && `• Platform: ${appInfo.platform}`}
-          </p>
+          <p className="text-gray-600">App ID: {appId}</p>
         </motion.div>
 
         {/* Tabs */}

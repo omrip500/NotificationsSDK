@@ -1,0 +1,33 @@
+name: Deploy Backend to Elastic Beanstalk
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Zip backend folder (without node_modules)
+        run: |
+          cd backend
+          rm -rf node_modules
+          zip -r ../backend.zip . -x "node_modules/*" ".env" "*.log"
+
+      - name: Deploy to Elastic Beanstalk
+        uses: einaregilsson/beanstalk-deploy@v21
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          application_name: ${{ secrets.EB_APPLICATION_NAME }}
+          environment_name: ${{ secrets.EB_ENVIRONMENT_NAME }}
+          version_label: ${{ github.run_number }}-${{ github.sha }}
+          region: ${{ secrets.AWS_REGION }}
+          deployment_package: backend.zip

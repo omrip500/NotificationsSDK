@@ -1,5 +1,5 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Bell,
@@ -12,6 +12,16 @@ import {
 } from "lucide-react";
 
 function HomePage() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // בדיקה אם המשתמש מחובר
+    const token = localStorage.getItem("token");
+    if (token) {
+      // אם המשתמש מחובר, הפנה אותו לדשבורד
+      navigate("/dashboard", { replace: true });
+    }
+  }, [navigate]);
   const features = [
     {
       icon: Bell,

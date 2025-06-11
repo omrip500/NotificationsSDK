@@ -288,6 +288,88 @@ export const getServiceAccountStatus = async (req, res) => {
 };
 
 /**
+ * מחיקת אפליקציה
+ */
+export const deleteApplication = async (req, res) => {
+  try {
+    const { appId } = req.params;
+
+    const app = await Application.findById(appId);
+    if (!app) {
+      return res.status(404).json({ message: "Application not found" });
+    }
+
+    if (app.user.toString() !== req.userId) {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    // מחיקת service account מ-S3
+    try {
+      const s3Key = `clients/${app.clientId}.json`;
+      await s3
+        .deleteObject({
+          Bucket: process.env.FIREBASE_SA_BUCKET,
+          Key: s3Key,
+        })
+        .promise();
+      console.log(`🗑️ Deleted service account from S3: ${s3Key}`);
+    } catch (s3Error) {
+      console.warn(
+        `⚠️ Failed to delete service account from S3: ${s3Error.message}`
+      );
+      // ממשיכים עם המחיקה גם אם נכשלנו במחיקת הקובץ מ-S3
+    }
+
+    // מחיקת כל הנתונים הקשורים לאפליקציה
+    const { default: Device } = await import("../models/Device.js");
+    const { default: Segment } = await import("../models/Segment.js");
+    const { default: ScheduledNotification } = await import(
+      "../models/ScheduledNotification.js"
+    );
+    const { default: NotificationLog } = await import(
+      "../models/NotificationLog.js"
+    );
+
+    // מחיקת כל המכשירים הקשורים לאפליקציה
+    const deletedDevices = await Device.deleteMany({ appId });
+    console.log(`🗑️ Deleted ${deletedDevices.deletedCount} devices`);
+
+    // מחיקת כל הסגמנטים הקשורים לאפליקציה
+    const deletedSegments = await Segment.deleteMany({ appId });
+    console.log(`🗑️ Deleted ${deletedSegments.deletedCount} segments`);
+
+    // מחיקת כל ההתראות המתוזמנות הקשורות לאפליקציה
+    const deletedScheduled = await ScheduledNotification.deleteMany({ appId });
+    console.log(
+      `🗑️ Deleted ${deletedScheduled.deletedCount} scheduled notifications`
+    );
+
+    // מחיקת כל לוגי ההתראות הקשורים לאפליקציה
+    const deletedLogs = await NotificationLog.deleteMany({ appId });
+    console.log(`🗑️ Deleted ${deletedLogs.deletedCount} notification logs`);
+
+    // מחיקת האפליקציה מהמסד נתונים
+    await Application.findByIdAndDelete(appId);
+
+    res.status(200).json({
+      message: "Application and all related data deleted successfully",
+      deletedCounts: {
+        devices: deletedDevices.deletedCount,
+        segments: deletedSegments.deletedCount,
+        scheduledNotifications: deletedScheduled.deletedCount,
+        notificationLogs: deletedLogs.deletedCount,
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error deleting application:", error);
+    res.status(500).json({
+      message: "Failed to delete application",
+      error: error.message,
+    });
+  }
+};
+
+/**
  * החלפת service account עבור אפליקציה קיימת
  */
 export const updateServiceAccount = async (req, res) => {

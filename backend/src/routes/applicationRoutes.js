@@ -8,6 +8,7 @@ import {
   uploadServiceAccount,
   getServiceAccountStatus,
   updateServiceAccount,
+  deleteApplication,
 } from "../controllers/applicationController.js";
 import authenticate from "../middlewares/authMiddleware.js";
 import Application from "../models/Application.js";
@@ -26,13 +27,17 @@ router.get("/my-apps", authenticate, getApplications);
 // Debug endpoint - רשימת כל ה-applications (ללא authentication)
 router.get("/debug/all", async (req, res) => {
   try {
-    const apps = await Application.find({}).select('_id name platform clientId createdAt');
+    const apps = await Application.find({}).select(
+      "_id name platform clientId createdAt"
+    );
     res.json({
       total: apps.length,
-      applications: apps
+      applications: apps,
     });
   } catch (err) {
-    res.status(500).json({ message: "Failed to fetch applications", error: err.message });
+    res
+      .status(500)
+      .json({ message: "Failed to fetch applications", error: err.message });
   }
 });
 
@@ -49,5 +54,8 @@ router.get(
   getServiceAccountStatus
 );
 router.put("/:appId/service-account", authenticate, updateServiceAccount);
+
+// מחיקת אפליקציה
+router.delete("/:appId", authenticate, deleteApplication);
 
 export default router;

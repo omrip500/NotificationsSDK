@@ -11,13 +11,13 @@ import {
   FileText,
   CheckCircle,
   AlertCircle,
+  Trash2,
 } from "lucide-react";
 import api from "../services/api";
 
 function DashboardPage() {
   const [applications, setApplications] = useState([]);
   const [name, setName] = useState("");
-  const [platform, setPlatform] = useState("android");
   const [interests, setInterests] = useState("");
   const [serviceAccountFile, setServiceAccountFile] = useState(null);
   const [clientId, setClientId] = useState("");
@@ -25,6 +25,7 @@ function DashboardPage() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(null);
   const navigate = useNavigate();
 
   const fetchApplications = async () => {
@@ -110,7 +111,7 @@ function DashboardPage() {
         "/applications/create",
         {
           name,
-          platform,
+          platform: "android", // תמיד android
           clientId,
           interests: interestsArray,
         },
@@ -123,7 +124,6 @@ function DashboardPage() {
 
       // Reset form
       setName("");
-      setPlatform("android");
       setInterests("");
       setServiceAccountFile(null);
       setClientId("");
@@ -139,6 +139,33 @@ function DashboardPage() {
 
   const handleAppClick = (appId) => {
     navigate(`/apps/${appId}`);
+  };
+
+  const handleDeleteApp = async (appId, appName) => {
+    if (
+      !window.confirm(
+        `האם אתה בטוח שברצונך למחוק את האפליקציה "${appName}"? פעולה זו לא ניתנת לביטול.`
+      )
+    ) {
+      return;
+    }
+
+    setDeleteLoading(appId);
+    try {
+      const token = localStorage.getItem("token");
+      await api.delete(`/applications/${appId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      // רענון רשימת האפליקציות
+      fetchApplications();
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to delete application.");
+    } finally {
+      setDeleteLoading(null);
+    }
   };
 
   React.useEffect(() => {
@@ -218,21 +245,6 @@ function DashboardPage() {
                       className="input"
                       required
                     />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Platform
-                    </label>
-                    <select
-                      value={platform}
-                      onChange={(e) => setPlatform(e.target.value)}
-                      className="input"
-                    >
-                      <option value="android">Android</option>
-                      <option value="ios">iOS</option>
-                      <option value="web">Web</option>
-                    </select>
                   </div>
 
                   <div>
@@ -370,7 +382,6 @@ function DashboardPage() {
                     onClick={() => {
                       setShowCreateForm(false);
                       setName("");
-                      setPlatform("android");
                       setInterests("");
                       setServiceAccountFile(null);
                       setClientId("");
@@ -403,8 +414,7 @@ function DashboardPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
               whileHover={{ y: -5, scale: 1.02 }}
-              onClick={() => handleAppClick(app._id)}
-              className="card cursor-pointer group hover:shadow-large transition-all duration-300"
+              className="card group hover:shadow-large transition-all duration-300 relative"
             >
               <div className="card-body">
                 <div className="flex items-center justify-between mb-4">
@@ -421,27 +431,44 @@ function DashboardPage() {
                     <div className="p-2 bg-gray-100 rounded-lg group-hover:bg-gray-200 transition-colors">
                       <Settings className="w-4 h-4 text-gray-600" />
                     </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteApp(app._id, app.name);
+                      }}
+                      disabled={deleteLoading === app._id}
+                      className="p-2 bg-red-100 rounded-lg hover:bg-red-200 transition-colors disabled:opacity-50"
+                      title="Delete Application"
+                    >
+                      {deleteLoading === app._id ? (
+                        <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+                      ) : (
+                        <Trash2 className="w-4 h-4 text-red-600" />
+                      )}
+                    </button>
                   </div>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-primary-600 transition-colors">
-                  {app.name}
-                </h3>
-                <div className="space-y-1 mb-4">
-                  <p className="text-sm text-gray-500">App ID: {app._id}</p>
-                  {app.clientId && (
-                    <p className="text-sm text-gray-500">
-                      Client ID: {app.clientId}
-                    </p>
-                  )}
-                  <p className="text-sm text-gray-500">
-                    Platform: {app.platform || "android"}
-                  </p>
-                </div>
-                <div className="flex items-center justify-between text-sm text-gray-600">
-                  <span>Click to manage</span>
-                  <span className="text-primary-600 group-hover:text-primary-700">
-                    →
-                  </span>
+                <div
+                  onClick={() => handleAppClick(app._id)}
+                  className="cursor-pointer"
+                >
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-primary-600 transition-colors">
+                    {app.name}
+                  </h3>
+                  <div className="space-y-1 mb-4">
+                    <p className="text-sm text-gray-500">App ID: {app._id}</p>
+                    {app.clientId && (
+                      <p className="text-sm text-gray-500">
+                        Client ID: {app.clientId}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between text-sm text-gray-600">
+                    <span>Click to manage</span>
+                    <span className="text-primary-600 group-hover:text-primary-700">
+                      →
+                    </span>
+                  </div>
                 </div>
               </div>
             </motion.div>
