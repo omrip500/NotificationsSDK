@@ -59,7 +59,7 @@ afterEvaluate {
             register<MavenPublication>("release") {
                 groupId = "com.github.omrip500"
                 artifactId = "NotificationsSDK"
-                version = findProperty("version")?.toString() ?: "1.0.0"
+                version = "1.1.6"
 
                 from(components["release"])
 
