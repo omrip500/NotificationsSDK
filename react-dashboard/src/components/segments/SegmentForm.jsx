@@ -1,18 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Users, User, Calendar, Heart, X, Check } from "lucide-react";
+import { Users, User, Heart, X, Check } from "lucide-react";
 import api from "../../services/api";
-
-const interestsOptions = [
-  "sports",
-  "politics",
-  "tech",
-  "beauty",
-  "health",
-  "food",
-  "finance",
-  "education",
-];
 
 function SegmentForm({
   appId,
@@ -27,6 +16,32 @@ function SegmentForm({
   const [ageMin, setAgeMin] = useState("");
   const [ageMax, setAgeMax] = useState("");
   const [selectedInterests, setSelectedInterests] = useState([]);
+  const [availableInterests, setAvailableInterests] = useState([]);
+  const [loadingInterests, setLoadingInterests] = useState(true);
+
+  // טעינת אינטרסים מהשרת
+  useEffect(() => {
+    const loadInterests = async () => {
+      try {
+        setLoadingInterests(true);
+        const token = localStorage.getItem("token");
+        const response = await api.get(`/applications/${appId}/interests`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setAvailableInterests(response.data.interests || []);
+      } catch (error) {
+        console.error("Failed to load interests:", error);
+        // במקרה של שגיאה, נשתמש ברשימה ברירת מחדל
+        setAvailableInterests(["sports", "technology", "breaking_news", "weather"]);
+      } finally {
+        setLoadingInterests(false);
+      }
+    };
+
+    if (appId) {
+      loadInterests();
+    }
+  }, [appId]);
 
   useEffect(() => {
     if (editMode && initialValues) {
@@ -66,14 +81,18 @@ function SegmentForm({
         };
         if (onUpdate) onUpdate(updatedSegment);
       } else {
-        await api.post(
+        const response = await api.post(
           "/segments",
           { appId, name, filters },
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-        if (onSegmentCreated) onSegmentCreated();
+        console.log("✅ SegmentForm: Segment created successfully:", response.data);
+        if (onSegmentCreated) {
+          console.log("🔄 SegmentForm: Calling onSegmentCreated callback...");
+          onSegmentCreated();
+        }
       }
 
       setName("");
@@ -187,8 +206,24 @@ function SegmentForm({
             <h4 className="text-md font-medium text-gray-900">Interests</h4>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {interestsOptions.map((interest) => (
+          {loadingInterests ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+              <span className="ml-2 text-gray-600">Loading interests...</span>
+            </div>
+          ) : availableInterests.length === 0 ? (
+            <div className="text-center py-8">
+              <Heart className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                No interests configured
+              </h3>
+              <p className="text-gray-600">
+                Configure interests in the "Manage Interests" tab first
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {availableInterests.map((interest) => (
               <motion.label
                 key={interest}
                 whileHover={{ scale: 1.02 }}
@@ -218,8 +253,9 @@ function SegmentForm({
                   </motion.div>
                 )}
               </motion.label>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           {selectedInterests.length > 0 && (
             <motion.div

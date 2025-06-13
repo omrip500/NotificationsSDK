@@ -43,7 +43,7 @@ public class SDKConfiguration {
         // Default field visibility
         showAgeField = false;
         showGenderField = false;
-        showLocationBasedNotifications = true;
+        showLocationBasedNotifications = false;
 
         // Default titles
         signupTitle = "Enable Notifications";

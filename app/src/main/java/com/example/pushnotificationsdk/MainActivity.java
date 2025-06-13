@@ -1,7 +1,9 @@
 package com.example.pushnotificationsdk;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Button;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -10,6 +12,7 @@ import com.example.pushnotificationsdk.PushNotificationManager;
 import com.example.pushnotificationsdk.SDKConfiguration;
 import com.example.pushnotificationsdk.UserInfo;
 import com.google.firebase.FirebaseApp;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,33 +31,41 @@ public class MainActivity extends AppCompatActivity {
 
         // ✨ אתחול SDK
         initializeSDK();
+
+        // ✨ הגדרת כפתורי הדמו
+        setupDemoButtons();
     }
 
     private void initializeSDK() {
         // מזהה ה-App שלך מה-Dashboard
-        String appId = "6849b32cc94b2490180b8bb4";
+        String appId = "684b0552a1b58761558f1068";
         notificationManager = PushNotificationManager.initialize(this, appId);
 
-        // קונפיגורציה (סוגי נוטיפיקציות, UI וכו’)
-        SDKConfiguration config = notificationManager.getConfigurationBuilder()
-                .setSignupTitle("Enable Notifications")
-                .setSignupSubtitle("Choose what notifications you'd like to receive")
-                .addInterest(new InterestOption("breaking_news", "Breaking News", "Important breaking news alerts", true))
-                .addInterest(new InterestOption("sports", "Sports", "Game updates and scores"))
-                .addInterest(new InterestOption("weather", "Weather", "Weather alerts"))
-                .addInterest(new InterestOption("technology", "Technology", "Tech news and trends"))
-                .showLocationBasedNotifications(true) // אם רלוונטי
-                .build();
+        // טעינת האינטרסים מהשרת במקום הגדרה ידנית
+        notificationManager.loadInterestsFromServer(new PushNotificationManager.InterestsLoadCallback() {
+            @Override
+            public void onInterestsLoaded(List<String> interests) {
+                Log.d("MainActivity", "✅ Interests loaded from server: " + interests);
+            }
 
-        notificationManager.configure(config);
+            @Override
+            public void onInterestsLoadFailed(String error) {
+                Log.w("MainActivity", "⚠️ Failed to load interests from server: " + error);
+                Log.d("MainActivity", "🔄 Using default configuration...");
+            }
+        });
+
+//        List<String> userInterests = new ArrayList<>();
+//        userInterests.add("sports");
+//        userInterests.add("breaking news");
 
         // משתמש לדוגמה
         UserInfo currentUser = new UserInfo(
-                "user_omri",        // מזהה יוזר שלך
-                "male",             // מין
-                24,                 // גיל
-                new ArrayList<>(),  // תחומי עניין
-                32.0853,            // קואורדינטה (אופציונלי)
+                "user_omri",
+                "male",
+                24,
+                new ArrayList<>(),
+                32.0853,
                 34.7818
         );
 
@@ -78,6 +89,38 @@ public class MainActivity extends AppCompatActivity {
 
         Log.d("MainActivity", "✅ Push SDK initialized successfully.");
         Log.d("MainActivity", "🚀 Device registration initiated...");
+
+        // הוסף בסוף פונקציית initializeSDK()
+        FirebaseMessaging.getInstance().getToken()
+            .addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    String token = task.getResult();
+                    Log.d("MainActivity", "FCM Token: " + token);
+                    Log.e("MainActivity", "FCM Token for verification: " + token); // לוג ברמת ERROR לוודא שמופיע
+                } else {
+                    Log.e("MainActivity", "Failed to get FCM token", task.getException());
+                }
+            });
+    }
+
+    private void setupDemoButtons() {
+        Button btnNotificationSetup = findViewById(R.id.btn_notification_setup);
+        btnNotificationSetup.setOnClickListener(v -> {
+            Log.d("MainActivity", "🔔 Opening Notification Setup Screen");
+            notificationManager.launchNotificationSetupScreen(this);
+        });
+
+        Button btnSettings = findViewById(R.id.btn_settings);
+        btnSettings.setOnClickListener(v -> {
+            Log.d("MainActivity", "⚙️ Opening Settings Screen");
+            notificationManager.launchSettingsScreen(this);
+        });
+
+        Button btnNotificationHistory = findViewById(R.id.btn_notification_history);
+        btnNotificationHistory.setOnClickListener(v -> {
+            Log.d("MainActivity", "📋 Opening Notification History Screen");
+            notificationManager.launchNotificationHistoryScreen(this);
+        });
     }
 
     @Override

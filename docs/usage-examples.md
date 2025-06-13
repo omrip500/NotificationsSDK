@@ -67,7 +67,7 @@ public class NewsMainActivity extends AppCompatActivity {
                     "Sports news and scores"))
                 .addInterest(new InterestOption("entertainment", "Entertainment", 
                     "Celebrity news and entertainment"))
-                .showLocationBasedNotifications(true)
+                .showLocationBasedNotifications(false)
                 .build();
 
         notificationManager.configure(config);

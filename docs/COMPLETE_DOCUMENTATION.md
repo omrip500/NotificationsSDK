@@ -264,7 +264,7 @@ Configuration class for customizing SDK behavior.
 **setSignupTitle(String title)** - Sets the title for the signup screen
 **setSignupSubtitle(String subtitle)** - Sets the subtitle for the signup screen
 **addInterest(InterestOption interest)** - Adds an interest option for users to select
-**showLocationBasedNotifications(boolean show)** - Enables or disables location-based notifications
+**showLocationBasedNotifications(boolean show)** - Enables or disables location-based notifications (recommended: false)
 **build()** - Builds the configuration object
 
 ### InterestOption

@@ -20,7 +20,7 @@ SDKConfiguration config = notificationManager.getConfigurationBuilder()
     .addInterest(new InterestOption("breaking_news", "Breaking News", "Important breaking news alerts", true))
     .addInterest(new InterestOption("sports", "Sports", "Sports scores and game updates"))
     .addInterest(new InterestOption("weather", "Weather", "Weather alerts and daily forecasts"))
-    .showLocationBasedNotifications(true)
+    .showLocationBasedNotifications(false)
     .build();
 
 notificationManager.configure(config);

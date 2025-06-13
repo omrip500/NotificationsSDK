@@ -1,6 +1,7 @@
 package com.example.pushnotificationsdk;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.*;
 import androidx.appcompat.app.AppCompatActivity;
@@ -143,6 +144,10 @@ public class NotificationSignupActivity extends AppCompatActivity {
             interestCheckboxes.add(checkBox);
             interestsContainer.addView(checkBox);
         }
+
+        // טען את האינטרסים הקיימים של המשתמש אחרי יצירת הצ'קבוקסים
+        Log.d("NotificationSignup", "🔄 setupInterests completed, calling loadExistingData...");
+        loadExistingData();
     }
 
     private int getIconForInterest(String interestId) {
@@ -167,11 +172,42 @@ public class NotificationSignupActivity extends AppCompatActivity {
     }
 
     private void loadExistingData() {
-        // אם במצב עדכון – נמלא את השדות
+        Log.d("NotificationSignup", "🔄 Loading existing data...");
+
+        // טעינת אינטרסים קיימים של המשתמש
+        if (currentUser != null && currentUser.getInterests() != null) {
+            List<String> userInterests = currentUser.getInterests();
+            Log.d("NotificationSignup", "✅ User interests found: " + userInterests);
+
+            for (CheckBox checkBox : interestCheckboxes) {
+                String interestId = (String) checkBox.getTag();
+                if (userInterests.contains(interestId)) {
+                    Log.d("NotificationSignup", "✅ Checking interest: " + interestId);
+                    checkBox.setChecked(true);
+                } else {
+                    Log.d("NotificationSignup", "⚪ Interest not selected: " + interestId);
+                }
+            }
+        } else {
+            Log.w("NotificationSignup", "⚠️ No current user or interests found");
+            if (currentUser == null) {
+                Log.w("NotificationSignup", "❌ currentUser is null");
+            } else if (currentUser.getInterests() == null) {
+                Log.w("NotificationSignup", "❌ currentUser.getInterests() is null");
+            }
+        }
+
+        // אם במצב עדכון – נמלא גם מהאינטנט (עדיפות גבוהה יותר)
         if (isUpdate) {
             ArrayList<String> interestsExtra = getIntent().getStringArrayListExtra("interests");
 
             if (interestsExtra != null) {
+                // נקה תחילה את כל הסימונים
+                for (CheckBox checkBox : interestCheckboxes) {
+                    checkBox.setChecked(false);
+                }
+
+                // סמן את האינטרסים מהאינטנט
                 for (CheckBox checkBox : interestCheckboxes) {
                     String interestId = (String) checkBox.getTag();
                     if (interestsExtra.contains(interestId)) {
@@ -192,6 +228,8 @@ public class NotificationSignupActivity extends AppCompatActivity {
                 }
             }
 
+            Log.d("NotificationSignup", "🎯 Selected interests: " + interests);
+
             // Check if location-based notifications are enabled
             boolean locationBased = locationBasedCheckbox != null && locationBasedCheckbox.isChecked();
 
@@ -205,10 +243,13 @@ public class NotificationSignupActivity extends AppCompatActivity {
                     currentUser.getLng()
             );
 
+            Log.d("NotificationSignup", "📝 Created UserInfo with interests: " + userInfo.getInterests());
+
             // First, always request notification permissions (Android 13+)
             requestNotificationPermissionsAndContinue(userInfo, locationBased);
 
         } catch (Exception e) {
+            Log.e("NotificationSignup", "❌ Error in handleRegistration", e);
             Toast.makeText(this, "Please select at least one notification type", Toast.LENGTH_SHORT).show();
         }
     }
@@ -262,16 +303,21 @@ public class NotificationSignupActivity extends AppCompatActivity {
     }
 
     private void completeRegistration(UserInfo userInfo) {
+        Log.d("NotificationSignup", "🚀 Completing registration with interests: " + userInfo.getInterests());
+
         if (isUpdate) {
+            Log.d("NotificationSignup", "🔄 Updating user...");
             PushNotificationManager.getInstance()
                     .updateUser(userInfo);
             Toast.makeText(this, "Notification preferences updated!", Toast.LENGTH_SHORT).show();
         } else {
+            Log.d("NotificationSignup", "📝 Registering new user...");
             PushNotificationManager.getInstance()
                     .registerUser(userInfo);
             Toast.makeText(this, "Notifications enabled!", Toast.LENGTH_SHORT).show();
         }
 
+        Log.d("NotificationSignup", "✅ Registration completed, finishing activity");
         finish();
     }
 

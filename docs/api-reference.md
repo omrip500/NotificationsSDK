@@ -162,7 +162,7 @@ builder.addInterest(interest);
 Enables or disables location-based notifications.
 
 ```java
-builder.showLocationBasedNotifications(true);
+builder.showLocationBasedNotifications(false);
 ```
 
 #### build()
@@ -257,7 +257,7 @@ public class MainActivity extends AppCompatActivity {
                 .addInterest(new InterestOption("sports", "Sports", "Sports updates"))
                 .addInterest(new InterestOption("technology", "Technology", "Tech news"))
                 .addInterest(new InterestOption("weather", "Weather", "Weather alerts"))
-                .showLocationBasedNotifications(true)
+                .showLocationBasedNotifications(false)
                 .build();
 
         notificationManager.configure(config);

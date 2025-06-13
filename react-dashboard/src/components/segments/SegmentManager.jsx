@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, forwardRef, useImperativeHandle } from "react";
 import { motion } from "framer-motion";
 import { Users, Edit, Trash2, Filter, Tag } from "lucide-react";
 import api from "../../services/api";
 import SegmentForm from "./SegmentForm";
 
-function SegmentManager({ appId, onSegmentsChange }) {
+const SegmentManager = forwardRef(({ appId, onSegmentsChange }, ref) => {
   const [segments, setSegments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingSegment, setEditingSegment] = useState(null);
@@ -13,13 +13,20 @@ function SegmentManager({ appId, onSegmentsChange }) {
     fetchSegments();
   }, [appId]);
 
+  // חשיפת פונקציה לקומפוננט האב
+  useImperativeHandle(ref, () => ({
+    refreshSegments: fetchSegments
+  }));
+
   const fetchSegments = async () => {
+    console.log("🔄 SegmentManager: Fetching segments...");
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
       const res = await api.get(`/segments/${appId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      console.log("✅ SegmentManager: Segments fetched:", res.data);
       setSegments(res.data || []);
     } catch (err) {
       console.error("❌ Failed to fetch segments", err);
@@ -186,6 +193,8 @@ function SegmentManager({ appId, onSegmentsChange }) {
       )}
     </div>
   );
-}
+});
+
+SegmentManager.displayName = 'SegmentManager';
 
 export default SegmentManager;

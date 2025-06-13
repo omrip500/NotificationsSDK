@@ -45,6 +45,9 @@ router.get("/debug/all", async (req, res) => {
 // קבלת clientId לפי appId (עבור SDK - ללא authentication) - חייב להיות לפני /:appId
 router.get("/:appId/client-id", getClientIdByAppId);
 
+// קבלת אינטרסים לפי appId (עבור SDK - ללא authentication) - חייב להיות לפני /:appId
+router.get("/:appId/interests-config", getApplicationInterests);
+
 router.get("/:appId", authenticate, getApplicationById);
 router.get("/:appId/interests", authenticate, getApplicationInterests);
 

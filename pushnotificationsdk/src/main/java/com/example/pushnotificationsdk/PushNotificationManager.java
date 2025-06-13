@@ -176,6 +176,10 @@ public class PushNotificationManager {
             Log.w("PushSDK", "💡 Consider calling requestNotificationPermissions() first or use launchNotificationSetupScreen()");
         }
 
+        // Update current user with the new information
+        this.currentUser = userInfo;
+        Log.d("PushSDK", "✅ Current user updated during registration: " + userInfo.getUserId());
+
         getToken(new OnTokenReceivedListener() {
             @Override
             public void onTokenReceived(String token) {
@@ -236,6 +240,10 @@ public class PushNotificationManager {
      * @param userInfo Updated user information
      */
     public void updateUser(UserInfo userInfo) {
+        // Update current user with the new information
+        this.currentUser = userInfo;
+        Log.d("PushSDK", "✅ Current user updated during update: " + userInfo.getUserId());
+
         getToken(new OnTokenReceivedListener() {
             @Override
             public void onTokenReceived(String token) {
@@ -359,6 +367,78 @@ public class PushNotificationManager {
      */
     public SDKConfiguration.Builder getConfigurationBuilder() {
         return new SDKConfiguration.Builder();
+    }
+
+    /**
+     * Load interests configuration from server and configure SDK automatically
+     * @param callback Callback to handle success/failure
+     */
+    public void loadInterestsFromServer(InterestsLoadCallback callback) {
+        Log.d("PushSDK", "🔄 Loading interests configuration from server for app: " + appId);
+
+        PushApiService service = ApiClient.getService();
+        service.getApplicationInterestsConfig(appId).enqueue(new Callback<InterestsConfigResponse>() {
+            @Override
+            public void onResponse(Call<InterestsConfigResponse> call, Response<InterestsConfigResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    List<String> serverInterests = response.body().getInterests();
+                    Log.d("PushSDK", "✅ Successfully loaded interests from server: " + serverInterests);
+
+                    // Create configuration with server interests
+                    SDKConfiguration.Builder configBuilder = getConfigurationBuilder()
+                            .setSignupTitle("Enable Notifications")
+                            .setSignupSubtitle("Choose what notifications you'd like to receive")
+                            .showLocationBasedNotifications(false);
+
+                    // Add interests from server
+                    for (String interestId : serverInterests) {
+                        // Create InterestOption with basic info (can be enhanced later)
+                        InterestOption interest = new InterestOption(interestId,
+                                capitalizeFirst(interestId.replace("_", " ")),
+                                "Notifications about " + interestId.replace("_", " "));
+                        configBuilder.addInterest(interest);
+                    }
+
+                    SDKConfiguration config = configBuilder.build();
+                    configure(config);
+
+                    if (callback != null) {
+                        callback.onInterestsLoaded(serverInterests);
+                    }
+                } else {
+                    Log.w("PushSDK", "⚠️ Failed to load interests from server. Response code: " + response.code());
+                    if (callback != null) {
+                        callback.onInterestsLoadFailed("Server returned error: " + response.code());
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<InterestsConfigResponse> call, Throwable t) {
+                Log.e("PushSDK", "❌ Error loading interests from server: " + t.getMessage());
+                if (callback != null) {
+                    callback.onInterestsLoadFailed("Network error: " + t.getMessage());
+                }
+            }
+        });
+    }
+
+    /**
+     * Helper method to capitalize first letter of a string
+     */
+    private String capitalizeFirst(String str) {
+        if (str == null || str.isEmpty()) {
+            return str;
+        }
+        return str.substring(0, 1).toUpperCase() + str.substring(1);
+    }
+
+    /**
+     * Callback interface for interests loading
+     */
+    public interface InterestsLoadCallback {
+        void onInterestsLoaded(List<String> interests);
+        void onInterestsLoadFailed(String error);
     }
 
     /**

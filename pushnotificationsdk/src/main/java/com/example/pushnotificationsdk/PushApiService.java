@@ -32,6 +32,9 @@ public interface PushApiService {
     @GET("/api/applications/{appId}/client-id")
     Call<ClientIdResponse> getClientIdByAppId(@Path("appId") String appId);
 
+    @GET("/api/applications/{appId}/interests-config")
+    Call<InterestsConfigResponse> getApplicationInterestsConfig(@Path("appId") String appId);
+
     @PUT("/api/applications/{appId}/interests")
     Call<Void> updateApplicationInterests(@Path("appId") String appId, @Body UpdateInterestsRequest request);
 

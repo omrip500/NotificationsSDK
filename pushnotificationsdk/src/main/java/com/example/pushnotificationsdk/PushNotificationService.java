@@ -26,6 +26,7 @@ public class PushNotificationService extends FirebaseMessagingService {
     public void onCreate() {
         super.onCreate();
         Log.d(TAG, "🚀 PushNotificationService CREATED!");
+        Log.e(TAG, "🚀 PushNotificationService CREATED!"); // גם ברמת ERROR לוודא שמופיע
         System.out.println("🚀 PushNotificationService CREATED!");
     }
 
@@ -49,7 +50,7 @@ public class PushNotificationService extends FirebaseMessagingService {
         Log.d(TAG, "📤 From: " + remoteMessage.getFrom());
         Log.d(TAG, "🕒 Timestamp: " + System.currentTimeMillis());
         Log.d(TAG, "📦 Data payload size: " + remoteMessage.getData().size());
-
+        
         // If there is a Notification message (not just Data)
         if (remoteMessage.getNotification() != null) {
             String title = remoteMessage.getNotification().getTitle();

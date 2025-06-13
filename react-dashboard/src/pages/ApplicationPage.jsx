@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -21,11 +21,13 @@ import SegmentForm from "../components/segments/SegmentForm";
 import StatisticsTab from "../components/analytics/StatisticsTab";
 import ScheduledNotificationsTab from "../components/scheduled/ScheduledNotificationsTab";
 import ServiceAccountManager from "../components/ServiceAccountManager";
+import InterestsManager from "../components/InterestsManager";
 
 function ApplicationPage() {
   const { appId } = useParams();
   const [activeTab, setActiveTab] = useState("send");
   const [appInfo, setAppInfo] = useState(null);
+  const segmentManagerRef = useRef();
 
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -373,6 +375,7 @@ function ApplicationPage() {
                 { id: "history", label: "Sent Notifications", icon: History },
                 { id: "individual", label: "Send to Individual", icon: User },
                 { id: "segments", label: "Manage Segments", icon: Users },
+                { id: "interests", label: "Manage Interests", icon: Filter },
                 { id: "firebase", label: "Firebase Settings", icon: Settings },
               ].map((tab) => (
                 <button
@@ -1011,15 +1014,19 @@ function ApplicationPage() {
             >
               <SegmentForm
                 appId={appId}
-                onSegmentCreated={async () => {
-                  const token = localStorage.getItem("token");
-                  const res = await api.get(`/segments/${appId}`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                  });
-                  setSegments(res.data || []);
+                onSegmentCreated={() => {
+                  console.log("🔄 Segment created, refreshing list...");
+                  // רענון הסגמנטים ב-SegmentManager
+                  if (segmentManagerRef.current) {
+                    console.log("✅ Calling refreshSegments...");
+                    segmentManagerRef.current.refreshSegments();
+                  } else {
+                    console.error("❌ segmentManagerRef.current is null");
+                  }
                 }}
               />
               <SegmentManager
+                ref={segmentManagerRef}
                 appId={appId}
                 onSegmentsChange={async () => {
                   const token = localStorage.getItem("token");
@@ -1027,6 +1034,26 @@ function ApplicationPage() {
                     headers: { Authorization: `Bearer ${token}` },
                   });
                   setSegments(res.data || []);
+                }}
+              />
+            </motion.div>
+          )}
+
+          {activeTab === "interests" && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-6"
+            >
+              <InterestsManager
+                appId={appId}
+                availableInterests={availableInterests}
+                onInterestsUpdated={async () => {
+                  const token = localStorage.getItem("token");
+                  const res = await api.get(`/applications/${appId}/interests`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                  });
+                  setAvailableInterests(res.data.interests || []);
                 }}
               />
             </motion.div>
