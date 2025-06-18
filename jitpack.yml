@@ -4,3 +4,5 @@ before_install:
   - ./gradlew clean
 install:
   - ./gradlew :pushnotificationsdk:publishToMavenLocal
+env:
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false"
