@@ -19,7 +19,7 @@ public class MainActivity extends AppCompatActivity {
         FirebaseApp.initializeApp(this);
 
         // Simple SDK initialization
-        String appId = "6849b32cc94b2490180b8bb4";
+        String appId = "YOUR_APP_ID_HERE";
         notificationManager = PushNotificationManager.initialize(this, appId);
         
         // Set user and start
@@ -48,7 +48,7 @@ public class NewsMainActivity extends AppCompatActivity {
     }
 
     private void setupNewsNotifications() {
-        String appId = "your-news-app-id";
+        String appId = "YOUR_APP_ID_HERE";
         notificationManager = PushNotificationManager.initialize(this, appId);
 
         // Configure for news app
@@ -65,9 +65,8 @@ public class NewsMainActivity extends AppCompatActivity {
                     "Tech industry news and trends"))
                 .addInterest(new InterestOption("sports", "Sports", 
                     "Sports news and scores"))
-                .addInterest(new InterestOption("entertainment", "Entertainment", 
+                .addInterest(new InterestOption("entertainment", "Entertainment",
                     "Celebrity news and entertainment"))
-                .showLocationBasedNotifications(false)
                 .build();
 
         notificationManager.configure(config);
@@ -120,9 +119,8 @@ public class ShoppingMainActivity extends AppCompatActivity {
                     "Price reductions on your wishlist items"))
                 .addInterest(new InterestOption("order_updates", "Order Updates", 
                     "Shipping and delivery notifications", true))
-                .addInterest(new InterestOption("recommendations", "Recommendations", 
+                .addInterest(new InterestOption("recommendations", "Recommendations",
                     "Personalized product suggestions"))
-                .showLocationBasedNotifications(false) // Not needed for e-commerce
                 .build();
 
         notificationManager.configure(config);

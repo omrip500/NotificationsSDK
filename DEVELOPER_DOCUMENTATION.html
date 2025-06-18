@@ -328,7 +328,7 @@ dependencies {
         <h4>Step 4: Get Your App ID</h4>
         <p>After creating the application, you'll receive:</p>
         <ul>
-            <li><strong>App ID</strong>: A unique identifier (e.g., <code>6825f0b2f5d70b84cf230fbf</code>)</li>
+            <li><strong>App ID</strong>: A unique identifier (e.g., <code>YOUR_APP_ID_HERE</code>)</li>
             <li><strong>API Keys</strong>: For server-side integration</li>
             <li><strong>Dashboard Access</strong>: To manage notifications and view analytics</li>
         </ul>
@@ -342,27 +342,30 @@ dependencies {
     <div class="step">
         <h4>Step 1: Add SDK to Your Project</h4>
         
-        <h5>Option A: AAR File (Recommended)</h5>
-        <ol>
-            <li>Download the <code>pushnotificationsdk-release.aar</code> file</li>
-            <li>Create a <code>libs</code> folder in your app directory if it doesn't exist</li>
-            <li>Copy the AAR file to <code>app/libs/</code></li>
-            <li>Add to your <code>app/build.gradle</code>:</li>
-        </ol>
+        <h5>JitPack Integration</h5>
 
-        <pre><code>dependencies {
-    implementation files('libs/pushnotificationsdk-release.aar')
-    
-    // Required dependencies
-    implementation platform('com.google.firebase:firebase-bom:33.13.0')
-    implementation 'com.google.firebase:firebase-messaging'
-    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
-    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+        <p>Add JitPack repository to your <code>settings.gradle.kts</code>:</p>
+        <pre><code>dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+        maven { url = uri("https://jitpack.io") }
+    }
 }</code></pre>
 
-        <h5>Option B: Maven Repository</h5>
+        <p>Add to your <code>app/build.gradle.kts</code>:</p>
         <pre><code>dependencies {
-    implementation 'com.yourcompany:pushnotificationsdk:1.0.0'
+    implementation("com.github.omrip500:NotificationsSDK:v1.2.0")
+    implementation("com.google.firebase:firebase-messaging:24.1.1")
+    implementation(platform("com.google.firebase:firebase-bom:33.15.0"))
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+}</code></pre>
+
+        <p>Add the Google services plugin to your app's <code>build.gradle.kts</code>:</p>
+        <pre><code>plugins {
+    id("com.google.gms.google-services")
 }</code></pre>
     </div>
 

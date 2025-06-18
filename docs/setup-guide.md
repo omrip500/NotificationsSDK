@@ -95,7 +95,7 @@ android {
 
 dependencies {
     // Push Notification SDK
-    implementation("com.github.omrip500:NotificationsSDK:v1.1.5")
+    implementation("com.github.omrip500:NotificationsSDK:v1.2.0")
     
     // Firebase dependencies
     implementation("com.google.firebase:firebase-messaging:24.1.1")
@@ -119,13 +119,6 @@ Add these permissions to your `AndroidManifest.xml`:
     <!-- Required permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    
-    <!-- Optional: for location-based notifications -->
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    
-    <!-- Optional: for wake lock -->
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
         android:allowBackup="true"
@@ -182,7 +175,7 @@ Add these permissions to your `AndroidManifest.xml`:
 2. **Important**: Copy your **App ID** from the success message
 3. Save this App ID - you'll need it in your Android code
 
-Example App ID: `6849b32cc94b2490180b8bb4`
+Example App ID: `YOUR_APP_ID_HERE`
 
 ## 4. SDK Integration
 
@@ -206,7 +199,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void initializeSDK() {
         // Replace with your actual App ID from the dashboard
-        String appId = "6849b32cc94b2490180b8bb4";
+        String appId = "YOUR_APP_ID_HERE";
         notificationManager = PushNotificationManager.initialize(this, appId);
 
         // Configure the SDK

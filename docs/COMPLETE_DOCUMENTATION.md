@@ -124,7 +124,7 @@ The Push Notification SDK is a comprehensive Android library that provides seaml
 2. **Important**: Copy your **App ID** from the success message
 3. Save this App ID - you'll need it in your Android code
 
-Example App ID: `6849b32cc94b2490180b8bb4`
+Example App ID: `YOUR_APP_ID_HERE`
 
 ## Android Integration
 
@@ -134,7 +134,7 @@ Add these dependencies to your app's `build.gradle.kts` file:
 
 ```kotlin
 dependencies {
-    implementation("com.github.omrip500:NotificationsSDK:v1.1.5")
+    implementation("com.github.omrip500:NotificationsSDK:v1.2.0")
     implementation("com.google.firebase:firebase-messaging:24.1.1")
     implementation(platform("com.google.firebase:firebase-bom:33.15.0"))
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
@@ -165,8 +165,6 @@ Add these permissions to your `AndroidManifest.xml`:
 ```xml
 <uses-permission android:name="android.permission.INTERNET" />
 <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 ```
 
 ### Step 3: Initialize SDK
@@ -191,7 +189,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void initializeSDK() {
         // Replace with your App ID from the dashboard
-        String appId = "6849b32cc94b2490180b8bb4";
+        String appId = "YOUR_APP_ID_HERE";
         notificationManager = PushNotificationManager.initialize(this, appId);
 
         // Configure notification categories
@@ -264,7 +262,7 @@ Configuration class for customizing SDK behavior.
 **setSignupTitle(String title)** - Sets the title for the signup screen
 **setSignupSubtitle(String subtitle)** - Sets the subtitle for the signup screen
 **addInterest(InterestOption interest)** - Adds an interest option for users to select
-**showLocationBasedNotifications(boolean show)** - Enables or disables location-based notifications (recommended: false)
+
 **build()** - Builds the configuration object
 
 ### InterestOption

@@ -4,6 +4,8 @@
 
 A comprehensive Android SDK for push notifications with Firebase Cloud Messaging and user preference management.
 
+> **🚀 Latest Version: v1.2.0** - Now with production API endpoint! Update your dependencies to use the latest version.
+
 ## Quick Start
 
 ### 1. Setup Firebase
@@ -19,8 +21,6 @@ A comprehensive Android SDK for push notifications with Firebase Cloud Messaging
 4. Get your unique App ID
 
 ### 3. Add SDK to Your Project
-
-#### Option A: JitPack (Recommended)
 
 Add JitPack repository to your `settings.gradle.kts`:
 
@@ -39,7 +39,7 @@ Add to your `app/build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    implementation("com.github.omrip500:NotificationsSDK:v1.1.5")
+    implementation("com.github.omrip500:NotificationsSDK:v1.2.0")
     implementation("com.google.firebase:firebase-messaging:24.1.1")
     implementation(platform("com.google.firebase:firebase-bom:33.15.0"))
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
@@ -52,18 +52,6 @@ Add the Google services plugin to your app's `build.gradle.kts`:
 ```kotlin
 plugins {
     id("com.google.gms.google-services")
-}
-```
-
-#### Option B: Manual AAR File
-
-```gradle
-dependencies {
-    implementation files('libs/pushnotificationsdk-release.aar')
-    implementation platform('com.google.firebase:firebase-bom:33.13.0')
-    implementation 'com.google.firebase:firebase-messaging'
-    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
-    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
 }
 ```
 
@@ -82,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
         FirebaseApp.initializeApp(this);
 
         // Initialize SDK
-        String appId = "6849b32cc94b2490180b8bb4"; // Replace with your App ID from dashboard
+        String appId = "YOUR_APP_ID_HERE"; // Replace with your App ID from dashboard
         notificationManager = PushNotificationManager.initialize(this, appId);
 
         // Configure notification categories

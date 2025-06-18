@@ -1,5 +1,35 @@
 # Changelog - NotificationManager API Improvements
 
+## Version 1.2.0 - Production API Endpoint
+
+### 🚀 Major Changes
+
+#### Updated Base URL
+- **Updated**: API base URL changed from local development to production
+- **New URL**: `https://api.notificationspanel.com`
+- **Impact**: All API calls now go to production server
+
+#### Documentation Updates
+- Updated all documentation to reflect production URLs
+- Removed references to AAR files - JitPack only
+- Removed location-based notification references
+- Updated all App ID examples to generic placeholders
+- Updated support email addresses to production domains
+
+### 📋 Breaking Changes
+- **Base URL**: If you were using a custom base URL, update to production
+- **Dependencies**: Update to `v1.2.0` in your build.gradle
+
+### 🔄 Migration Guide
+Update your dependency version:
+```kotlin
+dependencies {
+    implementation("com.github.omrip500:NotificationsSDK:v1.2.0")
+}
+```
+
+---
+
 ## Version 2.0.0 - API Redesign
 
 ### 🚀 Major Changes

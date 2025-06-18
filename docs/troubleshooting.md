@@ -11,7 +11,7 @@ Common issues and solutions when using the Push Notification SDK.
 **Solution:**
 ```java
 // Make sure you're using a valid App ID from the dashboard
-String appId = "6849b32cc94b2490180b8bb4"; // Replace with your actual App ID
+String appId = "YOUR_APP_ID_HERE"; // Replace with your actual App ID
 notificationManager = PushNotificationManager.initialize(this, appId);
 ```
 
@@ -44,7 +44,7 @@ notificationManager = PushNotificationManager.initialize(this, appId);
 ```kotlin
 dependencies {
     // Use exact versions to avoid conflicts
-    implementation("com.github.omrip500:NotificationsSDK:v1.1.5")
+    implementation("com.github.omrip500:NotificationsSDK:v1.2.0")
     implementation("com.google.firebase:firebase-messaging:24.1.1")
     implementation(platform("com.google.firebase:firebase-bom:33.15.0"))
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
@@ -77,26 +77,7 @@ if (!notificationManager.hasNotificationPermissions()) {
 - ✅ App not in battery optimization whitelist
 - ✅ Notification channels enabled (Android 8+)
 
-### 2. Location Permissions
 
-**Problem:** Location-based notifications not working
-
-**Solution:**
-```xml
-<!-- Add to AndroidManifest.xml -->
-<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-```
-
-```java
-// Request location permissions
-if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) 
-    != PackageManager.PERMISSION_GRANTED) {
-    ActivityCompat.requestPermissions(this, 
-        new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 
-        LOCATION_PERMISSION_REQUEST);
-}
-```
 
 ## Dashboard Issues
 

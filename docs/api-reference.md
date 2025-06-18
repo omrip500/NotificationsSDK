@@ -157,13 +157,7 @@ InterestOption interest = new InterestOption("news", "News", "Breaking news aler
 builder.addInterest(interest);
 ```
 
-#### showLocationBasedNotifications(boolean show)
 
-Enables or disables location-based notifications.
-
-```java
-builder.showLocationBasedNotifications(false);
-```
 
 #### build()
 
@@ -216,14 +210,14 @@ UserInfo(String userId, String gender, int age, List<String> interests, double l
 - `gender` - User's gender ("male", "female", "other")
 - `age` - User's age
 - `interests` - List of interest IDs the user is subscribed to
-- `latitude` - User's latitude (for location-based notifications)
-- `longitude` - User's longitude (for location-based notifications)
+- `latitude` - User's latitude (not currently used)
+- `longitude` - User's longitude (not currently used)
 
 ### Example
 
 ```java
 List<String> interests = Arrays.asList("news", "sports");
-UserInfo user = new UserInfo("user123", "male", 25, interests, 32.0853, 34.7818);
+UserInfo user = new UserInfo("user123", "male", 25, interests, 0.0, 0.0);
 ```
 
 ## Complete Integration Example
@@ -246,7 +240,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void initializeSDK() {
         // 1. Initialize with your App ID
-        String appId = "6849b32cc94b2490180b8bb4";
+        String appId = "YOUR_APP_ID_HERE";
         notificationManager = PushNotificationManager.initialize(this, appId);
 
         // 2. Configure notification categories
@@ -257,7 +251,6 @@ public class MainActivity extends AppCompatActivity {
                 .addInterest(new InterestOption("sports", "Sports", "Sports updates"))
                 .addInterest(new InterestOption("technology", "Technology", "Tech news"))
                 .addInterest(new InterestOption("weather", "Weather", "Weather alerts"))
-                .showLocationBasedNotifications(false)
                 .build();
 
         notificationManager.configure(config);

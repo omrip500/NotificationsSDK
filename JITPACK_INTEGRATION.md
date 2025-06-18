@@ -29,10 +29,13 @@ Add the SDK dependency to your app's `build.gradle.kts` file:
 
 ```kotlin
 dependencies {
-    implementation("com.github.omrip500:NotificationsSDK:v1.0.0")
-    
-    // Required Firebase dependency
-    implementation("com.google.firebase:firebase-messaging:23.4.0")
+    implementation("com.github.omrip500:NotificationsSDK:v1.2.0")
+
+    // Required dependencies
+    implementation("com.google.firebase:firebase-messaging:24.1.1")
+    implementation(platform("com.google.firebase:firebase-bom:33.15.0"))
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
 }
 ```
 
@@ -71,30 +74,31 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         
         // Initialize with your app ID
-        notificationManager = new PushNotificationManager("your-app-id");
+        String appId = "YOUR_APP_ID_HERE";
+        notificationManager = PushNotificationManager.initialize(this, appId);
     }
 }
 ```
 
-### Show Notification Settings
+### Launch Notification Setup Screen
 
 ```java
-// Show notification preferences screen
-notificationManager.showNotificationSettings(this, availableInterests);
+// Launch notification setup screen
+notificationManager.launchNotificationSetupScreen(this);
 ```
 
-### Set User Details Programmatically
+### Set User Information
 
 ```java
-// Set user details without showing forms
-notificationManager.setUserName("John Doe");
-notificationManager.setUserAge(25);
-notificationManager.setUserGender("Male");
+// Set user information
+UserInfo user = new UserInfo("user123", "male", 25, new ArrayList<>(), 0.0, 0.0);
+notificationManager.setCurrentUser(user);
+notificationManager.start();
 ```
 
 ## Available Versions
 
-- `v1.0.0` - Initial release with core notification functionality
+- `v1.2.0` - Latest stable release with production API endpoint
 - `main-SNAPSHOT` - Latest development version (not recommended for production)
 
 ## Requirements

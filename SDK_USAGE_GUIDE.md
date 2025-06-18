@@ -6,7 +6,7 @@
 
 ```java
 // Initialize the SDK with your App ID (get this from your dashboard)
-String appId = "your-app-id-here";
+String appId = "YOUR_APP_ID_HERE";
 PushNotificationManager notificationManager = PushNotificationManager.initialize(this, appId);
 ```
 
@@ -20,7 +20,6 @@ SDKConfiguration config = notificationManager.getConfigurationBuilder()
     .addInterest(new InterestOption("breaking_news", "Breaking News", "Important breaking news alerts", true))
     .addInterest(new InterestOption("sports", "Sports", "Sports scores and game updates"))
     .addInterest(new InterestOption("weather", "Weather", "Weather alerts and daily forecasts"))
-    .showLocationBasedNotifications(false)
     .build();
 
 notificationManager.configure(config);
@@ -36,8 +35,8 @@ UserInfo currentUser = new UserInfo(
     "male",              // Gender from user profile
     25,                  // Age from user profile
     emptyInterests,      // Empty - will be filled in setup screen
-    32.0853,             // User's latitude
-    34.7818              // User's longitude
+    0.0,                 // Latitude (not used)
+    0.0                  // Longitude (not used)
 );
 
 notificationManager.setCurrentUser(currentUser);
@@ -68,7 +67,7 @@ notificationManager.launchNotificationSetupScreen(this);
   - `context`: Application context
   - `appId`: Your unique app ID from the dashboard
 - **Returns**: PushNotificationManager instance
-- **Example**: `PushNotificationManager.initialize(this, "your-app-id")`
+- **Example**: `PushNotificationManager.initialize(this, "YOUR_APP_ID_HERE")`
 
 #### `getInstance()`
 
@@ -129,25 +128,7 @@ notificationManager.launchNotificationSetupScreen(this);
 
 - **Purpose**: Launch the settings screen
 
-### Location Methods
 
-#### `requestLocationPermissions(Activity activity, LocationPermissionCallback callback)`
-
-- **Purpose**: Request location permissions from user
-- **Parameters**: Activity and callback for results
-
-#### `startLocationTracking()`
-
-- **Purpose**: Start location tracking (if permissions granted)
-
-#### `stopLocationTracking()`
-
-- **Purpose**: Stop location tracking
-
-#### `hasLocationPermissions()`
-
-- **Purpose**: Check if location permissions are granted
-- **Returns**: boolean
 
 ## Migration from Old API
 
@@ -210,7 +191,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void initializeSDK() {
         // 1. Initialize with your App ID
-        String appId = "6825f0b2f5d70b84cf230fbf"; // Your app ID from the dashboard
+        String appId = "YOUR_APP_ID_HERE"; // Your app ID from the dashboard
         notificationManager = PushNotificationManager.initialize(this, appId);
 
         // 2. Configure (optional)
@@ -227,14 +208,13 @@ public class MainActivity extends AppCompatActivity {
         SDKConfiguration config = notificationManager.getConfigurationBuilder()
             .addInterest(new InterestOption("news", "News", "Breaking news alerts"))
             .addInterest(new InterestOption("sports", "Sports", "Sports updates"))
-            .showLocationBasedNotifications(true)
             .build();
 
         notificationManager.configure(config);
     }
 
     private void setCurrentUser() {
-        UserInfo user = new UserInfo("user123", "male", 25, new ArrayList<>(), 32.0853, 34.7818);
+        UserInfo user = new UserInfo("user123", "male", 25, new ArrayList<>(), 0.0, 0.0);
         notificationManager.setCurrentUser(user);
     }
 

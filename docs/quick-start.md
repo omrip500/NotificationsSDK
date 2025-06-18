@@ -8,7 +8,7 @@ Add these dependencies to your app's `build.gradle.kts` file:
 
 ```kotlin
 dependencies {
-    implementation("com.github.omrip500:NotificationsSDK:v1.1.5")
+    implementation("com.github.omrip500:NotificationsSDK:v1.2.0")
     implementation("com.google.firebase:firebase-messaging:24.1.1")
     implementation(platform("com.google.firebase:firebase-bom:33.15.0"))
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
@@ -91,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void initializeSDK() {
         // Replace with your App ID from the dashboard
-        String appId = "6849b32cc94b2490180b8bb4";
+        String appId = "YOUR_APP_ID_HERE";
         notificationManager = PushNotificationManager.initialize(this, appId);
 
         // Configure notification categories
@@ -128,8 +128,6 @@ Add these permissions to your `AndroidManifest.xml`:
 ```xml
 <uses-permission android:name="android.permission.INTERNET" />
 <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 ```
 
 ## 🎉 You're Done!

@@ -46,7 +46,7 @@
 
 1. **Sign Up**
 
-   - Visit: [Your Dashboard URL]
+   - Visit: [https://notificationspanel.com](https://notificationspanel.com)
    - Create account → Verify email
 
 2. **Create Application**
@@ -64,24 +64,32 @@
    - Upload to dashboard
 
 4. **Save Your App ID**
-   - Copy the generated App ID (e.g., `6825f0b2f5d70b84cf230fbf`)
+   - Copy the generated App ID (e.g., `YOUR_APP_ID_HERE`)
 
 ### Step 3: Add SDK (2 minutes)
 
-1. **Download AAR**
+1. **Add JitPack Repository**
 
-   - Download `pushnotificationsdk-release.aar`
-   - Create `app/libs/` folder
-   - Copy AAR file to `libs/`
+   Add to your `settings.gradle.kts`:
+   ```kotlin
+   dependencyResolutionManagement {
+       repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+       repositories {
+           google()
+           mavenCentral()
+           maven { url = uri("https://jitpack.io") }
+       }
+   }
+   ```
 
-2. **Update `app/build.gradle`:**
-   ```gradle
+2. **Update `app/build.gradle.kts`:**
+   ```kotlin
    dependencies {
-       implementation files('libs/pushnotificationsdk-release.aar')
-       implementation platform('com.google.firebase:firebase-bom:33.13.0')
-       implementation 'com.google.firebase:firebase-messaging'
-       implementation 'com.squareup.retrofit2:retrofit:2.9.0'
-       implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+       implementation("com.github.omrip500:NotificationsSDK:v1.2.0")
+       implementation("com.google.firebase:firebase-messaging:24.1.1")
+       implementation(platform("com.google.firebase:firebase-bom:33.15.0"))
+       implementation("com.squareup.retrofit2:retrofit:2.9.0")
+       implementation("com.squareup.retrofit2:converter-gson:2.9.0")
    }
    ```
 
@@ -185,14 +193,13 @@ Your app now has:
 
 - Read [DEVELOPER_DOCUMENTATION.md](DEVELOPER_DOCUMENTATION.md) for advanced features
 - Customize notification categories for your app
-- Enable location-based notifications
 - Set up analytics tracking
 
 ## 🆘 Need Help?
 
 - **Debug logs**: `adb logcat -s PushSDK`
 - **Documentation**: [DEVELOPER_DOCUMENTATION.md](DEVELOPER_DOCUMENTATION.md)
-- **Support**: support@yourcompany.com
+- **Support**: support@notificationspanel.com
 
 ---
 

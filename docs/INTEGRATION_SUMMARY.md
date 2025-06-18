@@ -6,7 +6,7 @@ Add these exact dependencies to your app's `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    implementation("com.github.omrip500:NotificationsSDK:v1.1.5")
+    implementation("com.github.omrip500:NotificationsSDK:v1.2.0")
     implementation("com.google.firebase:firebase-messaging:24.1.1")
     implementation(platform("com.google.firebase:firebase-bom:33.15.0"))
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
@@ -79,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
         FirebaseApp.initializeApp(this);
 
         // Initialize SDK with your App ID
-        String appId = "6849b32cc94b2490180b8bb4"; // Replace with your App ID
+        String appId = "YOUR_APP_ID_HERE"; // Replace with your App ID
         notificationManager = PushNotificationManager.initialize(this, appId);
 
         // Configure

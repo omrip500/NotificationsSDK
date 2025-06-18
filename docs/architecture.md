@@ -163,8 +163,8 @@ Web Dashboard → Backend API → Firebase FCM → Android Device
     age: Number,
     interests: [String],
     location: {
-      latitude: Number,
-      longitude: Number
+      latitude: Number, // Not currently used
+      longitude: Number // Not currently used
     }
   },
   isActive: Boolean,

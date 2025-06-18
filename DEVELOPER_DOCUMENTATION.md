@@ -106,7 +106,7 @@ dependencies {
 
 ### Step 1: Access the Dashboard
 
-1. Navigate to our web dashboard: [http://sdk-app-react.s3-website-us-east-1.amazonaws.com/]
+1. Navigate to our web dashboard: [https://notificationspanel.com](https://notificationspanel.com)
 2. Click **"Sign Up"** or **"Create Account"**
 3. Fill in your company/developer information
 4. Verify your email address
@@ -141,7 +141,7 @@ dependencies {
 
 After creating the application, you'll receive:
 
-- **App ID**: A unique identifier (e.g., `6825f0b2f5d70b84cf230fbf`)
+- **App ID**: A unique identifier (e.g., `YOUR_APP_ID_HERE`)
 - **Dashboard Access**: To manage notifications and view analytics
 
 **⚠️ Important**: Save your App ID - you'll need it for SDK initialization.
@@ -152,30 +152,36 @@ After creating the application, you'll receive:
 
 ### Step 1: Add SDK to Your Project
 
-#### Option A: AAR File (Recommended)
+Add JitPack repository to your `settings.gradle.kts`:
 
-1. Download the `pushnotificationsdk-release.aar` file
-2. Create a `libs` folder in your app directory if it doesn't exist
-3. Copy the AAR file to `app/libs/`
-4. Add to your `app/build.gradle`:
-
-```gradle
-dependencies {
-    implementation files('libs/pushnotificationsdk-release.aar')
-
-    // Required dependencies
-    implementation platform('com.google.firebase:firebase-bom:33.13.0')
-    implementation 'com.google.firebase:firebase-messaging'
-    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
-    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+```kotlin
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+        maven { url = uri("https://jitpack.io") }
+    }
 }
 ```
 
-#### Option B: Maven Repository
+Add to your `app/build.gradle.kts`:
 
-```gradle
+```kotlin
 dependencies {
-    implementation 'com.yourcompany:pushnotificationsdk:1.0.0'
+    implementation("com.github.omrip500:NotificationsSDK:v1.2.0")
+    implementation("com.google.firebase:firebase-messaging:24.1.1")
+    implementation(platform("com.google.firebase:firebase-bom:33.15.0"))
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+}
+```
+
+Add the Google services plugin to your app's `build.gradle.kts`:
+
+```kotlin
+plugins {
+    id("com.google.gms.google-services")
 }
 ```
 
@@ -665,7 +671,7 @@ Common log messages:
 1. **Documentation**: Check this guide and the API reference
 2. **Debug Logs**: Use `adb logcat -s PushSDK` to see detailed logs
 3. **Dashboard**: Check your app dashboard for analytics and errors
-4. **Contact Support**: Email us at support@yourcompany.com
+4. **Contact Support**: Email us at support@notificationspanel.com
 
 ### Reporting Issues
 
@@ -718,5 +724,5 @@ Before going live, ensure you have:
 
 **© 2024 Your Company Name. All rights reserved.**
 
-For technical support, please contact: **support@yourcompany.com**
-For business inquiries: **business@yourcompany.com**
+For technical support, please contact: **support@notificationspanel.com**
+For business inquiries: **business@notificationspanel.com**
