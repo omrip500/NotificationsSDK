@@ -3,16 +3,19 @@ package com.example.pushnotificationsdk;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.Button;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.pushnotificationsdk.InterestOption;
-import com.example.pushnotificationsdk.PushNotificationManager;
-import com.example.pushnotificationsdk.SDKConfiguration;
-import com.example.pushnotificationsdk.UserInfo;
-import com.google.firebase.FirebaseApp;
-import com.google.firebase.messaging.FirebaseMessaging;
+import com.example.pushnotificationsdk.adapter.NewsAdapter;
+import com.example.pushnotificationsdk.data.NewsDataProvider;
+import com.example.pushnotificationsdk.model.NewsArticle;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,28 +23,27 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
     private PushNotificationManager notificationManager;
+    private RecyclerView newsRecyclerView;
+    private NewsAdapter newsAdapter;
+    private List<NewsArticle> newsList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main); // ודא שקיים קובץ layout כזה
+        setContentView(R.layout.activity_main);
 
-        // 🟡 אתחול Firebase חובה לפני כל שימוש ב-SDK
-        FirebaseApp.initializeApp(this);
+        // Setup toolbar
+        setupToolbar();
 
-        // ✨ אתחול SDK
         initializeSDK();
 
-        // ✨ הגדרת כפתורי הדמו
-        setupDemoButtons();
+        setupNewsRecyclerView();
     }
 
     private void initializeSDK() {
-        // מזהה ה-App שלך מה-Dashboard
         String appId = "684b0552a1b58761558f1068";
         notificationManager = PushNotificationManager.initialize(this, appId);
 
-        // טעינת האינטרסים מהשרת במקום הגדרה ידנית
         notificationManager.loadInterestsFromServer(new PushNotificationManager.InterestsLoadCallback() {
             @Override
             public void onInterestsLoaded(List<String> interests) {
@@ -55,11 +57,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-//        List<String> userInterests = new ArrayList<>();
-//        userInterests.add("sports");
-//        userInterests.add("breaking news");
 
-        // משתמש לדוגמה
         UserInfo currentUser = new UserInfo(
                 "user_omri",
                 "male",
@@ -71,57 +69,9 @@ public class MainActivity extends AppCompatActivity {
 
         notificationManager.setCurrentUser(currentUser);
 
-        // הפעלת SDK
-        notificationManager.start();
-
-        // 🔥 רישום המכשיר למסד הנתונים עם בקשת הרשאות!
-        notificationManager.requestPermissionsAndRegister(this, new PushNotificationManager.NotificationPermissionCallback() {
-            @Override
-            public void onPermissionGranted() {
-                Log.d("MainActivity", "✅ Notification permissions granted and user registered!");
-            }
-
-            @Override
-            public void onPermissionDenied() {
-                Log.w("MainActivity", "⚠️ Notification permissions denied but user registered anyway");
-            }
-        });
-
-        Log.d("MainActivity", "✅ Push SDK initialized successfully.");
-        Log.d("MainActivity", "🚀 Device registration initiated...");
-
-        // הוסף בסוף פונקציית initializeSDK()
-        FirebaseMessaging.getInstance().getToken()
-            .addOnCompleteListener(task -> {
-                if (task.isSuccessful()) {
-                    String token = task.getResult();
-                    Log.d("MainActivity", "FCM Token: " + token);
-                    Log.e("MainActivity", "FCM Token for verification: " + token); // לוג ברמת ERROR לוודא שמופיע
-                } else {
-                    Log.e("MainActivity", "Failed to get FCM token", task.getException());
-                }
-            });
     }
 
-    private void setupDemoButtons() {
-        Button btnNotificationSetup = findViewById(R.id.btn_notification_setup);
-        btnNotificationSetup.setOnClickListener(v -> {
-            Log.d("MainActivity", "🔔 Opening Notification Setup Screen");
-            notificationManager.launchNotificationSetupScreen(this);
-        });
 
-        Button btnSettings = findViewById(R.id.btn_settings);
-        btnSettings.setOnClickListener(v -> {
-            Log.d("MainActivity", "⚙️ Opening Settings Screen");
-            notificationManager.launchSettingsScreen(this);
-        });
-
-        Button btnNotificationHistory = findViewById(R.id.btn_notification_history);
-        btnNotificationHistory.setOnClickListener(v -> {
-            Log.d("MainActivity", "📋 Opening Notification History Screen");
-            notificationManager.launchNotificationHistoryScreen(this);
-        });
-    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
@@ -130,6 +80,126 @@ public class MainActivity extends AppCompatActivity {
         // Forward permission results to the SDK
         if (notificationManager != null) {
             notificationManager.onNotificationPermissionResult(requestCode, permissions, grantResults);
+        }
+    }
+
+    private void setupToolbar() {
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle("News Demo App");
+        }
+    }
+
+    private void setupNewsRecyclerView() {
+        newsRecyclerView = findViewById(R.id.news_recycler_view);
+        newsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+        // Load sample news data
+        newsList = NewsDataProvider.getSampleNews();
+        newsAdapter = new NewsAdapter(newsList);
+
+        // Set click listener for news articles
+        newsAdapter.setOnArticleClickListener(article -> {
+            Intent intent = new Intent(MainActivity.this, NewsDetailActivity.class);
+            intent.putExtra("article_id", article.getId());
+            intent.putExtra("article_title", article.getTitle());
+            intent.putExtra("article_summary", article.getSummary());
+            intent.putExtra("article_category", article.getCategory());
+            intent.putExtra("article_time", article.getPublishTime());
+            intent.putExtra("article_breaking", article.isBreaking());
+            startActivity(intent);
+        });
+
+        newsRecyclerView.setAdapter(newsAdapter);
+
+        Log.d("MainActivity", "✅ News RecyclerView setup complete with " + newsList.size() + " articles");
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        if (id == R.id.action_settings) {
+            Intent intent = new Intent(this, AppSettingsActivity.class);
+            startActivity(intent);
+            return true;
+        } else if (id == R.id.action_enable_notifications) {
+            Log.d("MainActivity", "🔔 Opening Notification Setup Screen");
+            notificationManager.launchNotificationSetupScreen(this);
+            return true;
+        } else if (id == R.id.action_notification_history) {
+            Log.d("MainActivity", "📋 Opening Notification History Screen");
+            notificationManager.launchNotificationHistoryScreen(this);
+            return true;
+        } else if (id == R.id.action_filter_all) {
+            showAllNews();
+            return true;
+        } else if (id == R.id.action_filter_breaking) {
+            filterNewsByCategory("breaking_news");
+            return true;
+        } else if (id == R.id.action_filter_sports) {
+            filterNewsByCategory("sports");
+            return true;
+        } else if (id == R.id.action_filter_technology) {
+            filterNewsByCategory("technology");
+            return true;
+        } else if (id == R.id.action_filter_weather) {
+            filterNewsByCategory("weather");
+            return true;
+        } else if (id == R.id.action_filter_entertainment) {
+            filterNewsByCategory("entertainment");
+            return true;
+        } else if (id == R.id.action_refresh) {
+            refreshNews();
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void filterNewsByCategory(String category) {
+        List<NewsArticle> filteredNews;
+        String categoryName;
+
+        if (category.equals("breaking_news")) {
+            filteredNews = NewsDataProvider.getBreakingNews();
+            categoryName = "Breaking News";
+        } else {
+            filteredNews = NewsDataProvider.getNewsByCategory(category);
+            categoryName = getCategoryDisplayName(category);
+        }
+
+        newsAdapter.updateArticles(filteredNews);
+        Toast.makeText(this, "Showing " + filteredNews.size() + " " + categoryName + " articles", Toast.LENGTH_SHORT).show();
+    }
+
+    private void showAllNews() {
+        newsAdapter.updateArticles(newsList);
+        Toast.makeText(this, "Showing all " + newsList.size() + " articles", Toast.LENGTH_SHORT).show();
+    }
+
+    private void refreshNews() {
+        // Simulate refresh by reloading data
+        newsList = NewsDataProvider.getSampleNews();
+        newsAdapter.updateArticles(newsList);
+        Toast.makeText(this, "News refreshed", Toast.LENGTH_SHORT).show();
+    }
+
+    private String getCategoryDisplayName(String category) {
+        switch (category) {
+            case "breaking_news": return "Breaking News";
+            case "sports": return "Sports";
+            case "technology": return "Technology";
+            case "weather": return "Weather";
+            case "entertainment": return "Entertainment";
+            default: return "News";
         }
     }
 }

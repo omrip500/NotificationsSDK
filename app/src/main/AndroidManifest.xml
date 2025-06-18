@@ -30,6 +30,18 @@
             </intent-filter>
         </activity>
 
+        <!-- מסך פרטי חדשה -->
+        <activity
+            android:name=".NewsDetailActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity" />
+
+        <!-- מסך הגדרות אפליקציה -->
+        <activity
+            android:name=".AppSettingsActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity" />
+
     </application>
 
 </manifest>

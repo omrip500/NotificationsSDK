@@ -2,6 +2,13 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <!-- Refresh -->
+    <item
+        android:id="@+id/action_refresh"
+        android:title="Refresh"
+        android:icon="@android:drawable/ic_menu_rotate"
+        app:showAsAction="ifRoom" />
+
     <!-- Categories submenu -->
     <item
         android:id="@+id/menu_categories"
@@ -9,36 +16,41 @@
         app:showAsAction="never">
         <menu>
             <item
-                android:id="@+id/action_all_news"
+                android:id="@+id/action_filter_all"
                 android:title="📰 All News" />
             <item
-                android:id="@+id/action_breaking"
+                android:id="@+id/action_filter_breaking"
                 android:title="🔴 Breaking News" />
             <item
-                android:id="@+id/action_sports"
+                android:id="@+id/action_filter_sports"
                 android:title="🏈 Sports" />
             <item
-                android:id="@+id/action_technology"
+                android:id="@+id/action_filter_technology"
                 android:title="💻 Technology" />
             <item
-                android:id="@+id/action_weather"
+                android:id="@+id/action_filter_weather"
                 android:title="☁️ Weather" />
             <item
-                android:id="@+id/action_entertainment"
+                android:id="@+id/action_filter_entertainment"
                 android:title="🎬 Entertainment" />
         </menu>
     </item>
 
-    <!-- Notifications -->
+    <!-- SDK Features -->
     <item
-        android:id="@+id/action_notifications"
-        android:title="🔔 Notifications"
+        android:id="@+id/action_enable_notifications"
+        android:title="🔔 Enable Notifications"
         app:showAsAction="never" />
 
-    <!-- History -->
     <item
-        android:id="@+id/action_history"
-        android:title="📋 History"
+        android:id="@+id/action_notification_history"
+        android:title="📋 Notification History"
+        app:showAsAction="never" />
+
+    <!-- Settings -->
+    <item
+        android:id="@+id/action_settings"
+        android:title="⚙️ App Settings"
         app:showAsAction="never" />
 
 </menu>

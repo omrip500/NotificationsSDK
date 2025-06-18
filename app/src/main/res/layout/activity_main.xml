@@ -15,7 +15,7 @@
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
         app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
 
-    <!-- SDK Demo Buttons -->
+    <!-- News Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -28,59 +28,20 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Push Notifications SDK Demo"
+            android:text="Latest News"
             android:textSize="20sp"
             android:textStyle="bold"
             android:textColor="#1F2937"
-            android:gravity="center"
-            android:layout_marginBottom="16dp" />
+            android:gravity="center" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Test the SDK screens:"
+            android:text="Stay updated with the latest news and notifications"
             android:textSize="14sp"
             android:textColor="#6B7280"
             android:gravity="center"
-            android:layout_marginBottom="20dp" />
-
-        <!-- Notification Setup Button -->
-        <Button
-            android:id="@+id/btn_notification_setup"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:text="📱 Notification Setup"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:textColor="#FFFFFF"
-            android:background="@drawable/button_primary"
-            android:layout_marginBottom="12dp"
-            android:elevation="2dp" />
-
-        <!-- Settings Button -->
-        <Button
-            android:id="@+id/btn_settings"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:text="⚙️ Settings"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:textColor="#FFFFFF"
-            android:background="@drawable/button_secondary"
-            android:layout_marginBottom="12dp"
-            android:elevation="2dp" />
-
-        <!-- Notification History Button -->
-        <Button
-            android:id="@+id/btn_notification_history"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:text="📋 Notification History"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:textColor="#FFFFFF"
-            android:background="@drawable/button_tertiary"
-            android:elevation="2dp" />
+            android:layout_marginTop="4dp" />
 
     </LinearLayout>
 

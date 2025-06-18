@@ -1,4 +1,35 @@
 <resources>
-    <string name="app_name">NewsHub</string>
+    <string name="app_name">NewsHub Demo</string>
     <string name="default_notification_channel_id">push_notification_channel</string>
+
+    <!-- Main Activity -->
+    <string name="main_title">Push Notifications SDK Demo</string>
+    <string name="main_subtitle">Test the SDK screens:</string>
+
+    <!-- Menu items -->
+    <string name="menu_refresh">Refresh</string>
+    <string name="menu_all_news">All News</string>
+    <string name="menu_breaking_only">Breaking Only</string>
+    <string name="menu_settings">Settings</string>
+
+    <!-- News Detail -->
+    <string name="news_detail_title">Article Details</string>
+    <string name="full_article">Full Article</string>
+
+    <!-- App Settings -->
+    <string name="app_settings_title">App Settings</string>
+    <string name="auto_refresh">Auto Refresh News</string>
+    <string name="auto_refresh_desc">Automatically refresh news articles</string>
+    <string name="dark_mode">Dark Mode</string>
+    <string name="dark_mode_desc">Use dark theme (requires restart)</string>
+    <string name="breaking_first">Breaking News First</string>
+    <string name="breaking_first_desc">Show breaking news at the top</string>
+    <string name="notification_settings">Notification Settings</string>
+    <string name="notification_settings_desc">Manage your push notification preferences</string>
+    <string name="open_notification_settings">Open Notification Settings</string>
+    <string name="actions">Actions</string>
+    <string name="clear_cache">Clear Cache</string>
+    <string name="about">About</string>
+    <string name="app_information">App Information</string>
+    <string name="version">Version 1.0.0 (Demo)</string>
 </resources>

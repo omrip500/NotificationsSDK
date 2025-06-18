@@ -260,7 +260,6 @@ public class PushNotificationManager {
     // Internal method for server registration
     private void registerToServerInternal(String token, UserInfo userInfo) {
         Log.d("PushSDK", "🚀 Registering device to server...");
-        Log.d("PushSDK", "🌐 Server URL: http://10.0.2.2:8000");
         Log.d("PushSDK", "📱 Token: " + token.substring(0, Math.min(20, token.length())) + "...");
         Log.d("PushSDK", "👤 User: " + userInfo.getUserId());
         Log.d("PushSDK", "🎯 Interests: " + userInfo.getInterests());
