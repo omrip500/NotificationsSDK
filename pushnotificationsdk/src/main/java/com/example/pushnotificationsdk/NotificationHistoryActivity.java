@@ -22,9 +22,9 @@ import retrofit2.Response;
 public class NotificationHistoryActivity extends AppCompatActivity {
 
     private RecyclerView recyclerView;
-    private ConstraintLayout rootLayout; // נוסיף גישה לשורש
+    private ConstraintLayout rootLayout; // Add access to root layout
 
-    private ImageButton backButton; // נוסיף כפתור חזרה אם נדרש
+    private ImageButton backButton; // Add back button if needed
     private static final String TAG = "History";
 
     @Override
@@ -40,7 +40,7 @@ public class NotificationHistoryActivity extends AppCompatActivity {
         backButton = findViewById(R.id.button_back);
 
         backButton.setOnClickListener(v -> {
-            finish(); // סוגר את הפעילות הנוכחית
+            finish(); // Close current activity
                 });
 
         PushNotificationManager.getInstance(this).getToken(new PushNotificationManager.OnTokenReceivedListener() {
@@ -62,7 +62,7 @@ public class NotificationHistoryActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<UserInfoResponse> call, Response<UserInfoResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    fetchHistory(token); // ✅ רשום – טען היסטוריה
+                    fetchHistory(token); // ✅ Registered - load history
                 } else {
                     showUnregisteredWarning();
                 }
@@ -102,7 +102,7 @@ public class NotificationHistoryActivity extends AppCompatActivity {
         warningText.setTextSize(16);
         warningText.setPadding(32, 24, 32, 0);
 
-        rootLayout.addView(warningText); // ✅ זה כבר ה־ConstraintLayout הנכון
+        rootLayout.addView(warningText); // ✅ This is already the correct ConstraintLayout
     }
 
 }

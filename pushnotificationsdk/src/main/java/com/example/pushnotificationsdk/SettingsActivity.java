@@ -24,7 +24,7 @@ public class SettingsActivity extends AppCompatActivity {
     private Button updateButton, unregisterButton;
     private ImageButton backButton;
 
-    private UserInfo currentUserInfo; // ✅ מידע שמור
+    private UserInfo currentUserInfo; // ✅ Saved information
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,7 +57,7 @@ public class SettingsActivity extends AppCompatActivity {
 
         unregisterButton.setOnClickListener(v -> {
             PushNotificationManager.getInstance(this).unregisterDevice();
-            finish(); // או הוסף Toast אם תרצה לתת חיווי
+            finish(); // or add Toast if you want to provide feedback
         });
 
 
@@ -74,7 +74,7 @@ public class SettingsActivity extends AppCompatActivity {
                     public void onResponse(Call<UserInfoResponse> call, Response<UserInfoResponse> response) {
                         if (response.isSuccessful() && response.body() != null) {
                             UserInfo info = response.body().getUserInfo();
-                            currentUserInfo = info; // ✅ שמור מידע
+                            currentUserInfo = info; // ✅ Save information
 
                             textUserId.setText(info.getUserId());
                             textGender.setText(info.getGender());
@@ -109,7 +109,7 @@ public class SettingsActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        loadUserInfo(); // ← רענון הנתונים בכל פעם שהמסך חוזר לפעולה
+        loadUserInfo(); // ← Refresh data every time the screen returns to activity
     }
 
 }

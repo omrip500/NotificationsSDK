@@ -45,5 +45,5 @@ public class UserInfo {
 
 
 
-    // Getters and setters (או השתמש ב־Gson אם אתה לא צריך אותם ידנית)
+    // Getters and setters (or use Gson if you don't need them manually)
 }

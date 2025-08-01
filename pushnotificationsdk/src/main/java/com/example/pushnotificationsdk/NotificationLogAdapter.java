@@ -40,7 +40,7 @@ public class NotificationLogAdapter extends RecyclerView.Adapter<NotificationLog
         holder.sentAtText.setText("Sent at: " + log.getSentAt());
 
         holder.deleteButton.setOnClickListener(v -> {
-            String logId = log.getId(); // ודא ש־NotificationLog כולל את השדה _id
+            String logId = log.getId(); // Ensure NotificationLog includes the _id field
             Log.d("Adapter", "Delete request sent for ID: " + logId);
             PushApiService service = ApiClient.getService();
             service.deleteNotification(logId).enqueue(new Callback<Void>() {

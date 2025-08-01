@@ -281,7 +281,7 @@ public class PushNotificationManager {
         Log.d("PushSDK", "🎯 Interests: " + userInfo.getInterests());
         Log.d("PushSDK", "🆔 App ID: " + appId);
 
-        // קודם נקבל את ה-clientId מהשרת
+        // First get the clientId from the server
         PushApiService service = ApiClient.getService();
         Log.d("PushSDK", "🔍 Requesting Client ID for App ID: " + appId);
         getClientIdWithRetry(service, appId, token, userInfo, 0);
@@ -307,7 +307,7 @@ public class PushNotificationManager {
                     String clientId = response.body().getClientId();
                     Log.d("PushSDK", "✅ Retrieved Client ID: " + clientId);
 
-                    // עכשיו נרשום את המכשיר עם ה-clientId
+                    // Now register the device with the clientId
                     Log.d("PushSDK", "📝 Creating RegisterDeviceRequest with:");
                     Log.d("PushSDK", "   Token: " + token.substring(0, Math.min(10, token.length())) + "...");
                     Log.d("PushSDK", "   AppId: " + appId);
@@ -412,7 +412,7 @@ public class PushNotificationManager {
         // Configuration is handled by the singleton pattern in SDKConfiguration
         Log.d("PushSDK", "✅ SDK configured successfully");
 
-        // שליחת האינטרסים לשרת
+        // Send interests to server
         updateApplicationInterests(configuration);
     }
 
@@ -497,8 +497,8 @@ public class PushNotificationManager {
     }
 
     /**
-     * שליחת האינטרסים לשרת לעדכון האפליקציה
-     * @param configuration הקונפיגורציה עם האינטרסים
+     * Send interests to server to update the application
+     * @param configuration Configuration with interests
      */
     private void updateApplicationInterests(SDKConfiguration configuration) {
         if (configuration == null || configuration.getAvailableInterests() == null) {
@@ -506,7 +506,7 @@ public class PushNotificationManager {
             return;
         }
 
-        // המרת האינטרסים לרשימת מחרוזות
+        // Convert interests to list of strings
         List<String> interestIds = new ArrayList<>();
         for (InterestOption interest : configuration.getAvailableInterests()) {
             interestIds.add(interest.getId());
@@ -519,7 +519,7 @@ public class PushNotificationManager {
 
         Log.d("PushSDK", "📤 Updating application interests: " + interestIds);
 
-        // שליחת האינטרסים לשרת
+        // Send interests to server
         PushApiService service = ApiClient.getService();
         UpdateInterestsRequest request = new UpdateInterestsRequest(interestIds);
 

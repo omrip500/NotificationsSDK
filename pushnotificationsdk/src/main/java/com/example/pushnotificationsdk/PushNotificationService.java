@@ -26,7 +26,7 @@ public class PushNotificationService extends FirebaseMessagingService {
     public void onCreate() {
         super.onCreate();
         Log.d(TAG, "🚀 PushNotificationService CREATED!");
-        Log.e(TAG, "🚀 PushNotificationService CREATED!"); // גם ברמת ERROR לוודא שמופיע
+        Log.e(TAG, "🚀 PushNotificationService CREATED!"); // Also at ERROR level to ensure it appears
         System.out.println("🚀 PushNotificationService CREATED!");
     }
 
@@ -36,7 +36,7 @@ public class PushNotificationService extends FirebaseMessagingService {
         Log.d(TAG, "🔄 FCM Token refreshed: " + token.substring(0, Math.min(20, token.length())) + "...");
         Log.d(TAG, "📱 Full new token: " + token);
         System.out.println("🔄 FCM Token refreshed: " + token);
-        Log.e(TAG, "🔄 FCM Token refreshed: " + token); // גם ברמת ERROR
+        Log.e(TAG, "🔄 FCM Token refreshed: " + token); // Also at ERROR level
         // Here you can send the token to the server if needed
     }
 
@@ -46,7 +46,7 @@ public class PushNotificationService extends FirebaseMessagingService {
 
         Log.d(TAG, "🔔 NOTIFICATION RECEIVED!");
         System.out.println("🔔 NOTIFICATION RECEIVED!");
-        Log.e(TAG, "🔔 NOTIFICATION RECEIVED!"); // גם ברמת ERROR כדי שיופיע בוודאות
+        Log.e(TAG, "🔔 NOTIFICATION RECEIVED!"); // Also at ERROR level to ensure it appears
         Log.d(TAG, "📤 From: " + remoteMessage.getFrom());
         Log.d(TAG, "🕒 Timestamp: " + System.currentTimeMillis());
         Log.d(TAG, "📦 Data payload size: " + remoteMessage.getData().size());

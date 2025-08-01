@@ -145,7 +145,7 @@ public class NotificationSignupActivity extends AppCompatActivity {
             interestsContainer.addView(checkBox);
         }
 
-        // טען את האינטרסים הקיימים של המשתמש אחרי יצירת הצ'קבוקסים
+        // Load existing user interests after creating checkboxes
         Log.d("NotificationSignup", "🔄 setupInterests completed, calling loadExistingData...");
         loadExistingData();
     }
@@ -174,7 +174,7 @@ public class NotificationSignupActivity extends AppCompatActivity {
     private void loadExistingData() {
         Log.d("NotificationSignup", "🔄 Loading existing data...");
 
-        // טעינת אינטרסים קיימים של המשתמש
+        // Load existing user interests
         if (currentUser != null && currentUser.getInterests() != null) {
             List<String> userInterests = currentUser.getInterests();
             Log.d("NotificationSignup", "✅ User interests found: " + userInterests);
@@ -197,17 +197,17 @@ public class NotificationSignupActivity extends AppCompatActivity {
             }
         }
 
-        // אם במצב עדכון – נמלא גם מהאינטנט (עדיפות גבוהה יותר)
+        // If in update mode - also fill from intent (higher priority)
         if (isUpdate) {
             ArrayList<String> interestsExtra = getIntent().getStringArrayListExtra("interests");
 
             if (interestsExtra != null) {
-                // נקה תחילה את כל הסימונים
+                // First clear all selections
                 for (CheckBox checkBox : interestCheckboxes) {
                     checkBox.setChecked(false);
                 }
 
-                // סמן את האינטרסים מהאינטנט
+                // Mark interests from intent
                 for (CheckBox checkBox : interestCheckboxes) {
                     String interestId = (String) checkBox.getTag();
                     if (interestsExtra.contains(interestId)) {
