@@ -80,6 +80,22 @@ public class PushNotificationManager {
      */
     public void start() {
         FirebaseMessaging.getInstance().setAutoInitEnabled(true);
+
+        // Enable high priority notifications for immediate delivery
+        try {
+            // Subscribe to a high-priority topic to ensure FCM connection is active
+            FirebaseMessaging.getInstance().subscribeToTopic("high_priority_" + appId)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Log.d("PushSDK", "✅ Subscribed to high priority topic");
+                    } else {
+                        Log.w("PushSDK", "⚠️ Failed to subscribe to high priority topic", task.getException());
+                    }
+                });
+        } catch (Exception e) {
+            Log.w("PushSDK", "⚠️ Could not subscribe to high priority topic", e);
+        }
+
         Log.d("PushSDK", "🚀 SDK started with App ID: " + appId);
 
         // Test server connection
@@ -268,6 +284,21 @@ public class PushNotificationManager {
         // קודם נקבל את ה-clientId מהשרת
         PushApiService service = ApiClient.getService();
         Log.d("PushSDK", "🔍 Requesting Client ID for App ID: " + appId);
+        getClientIdWithRetry(service, appId, token, userInfo, 0);
+    }
+
+    // Method to retry getting Client ID with exponential backoff
+    private void getClientIdWithRetry(PushApiService service, String appId, String token, UserInfo userInfo, int retryCount) {
+        final int maxRetries = 3;
+        final int baseDelay = 2000; // 2 seconds
+
+        if (retryCount >= maxRetries) {
+            Log.e("PushSDK", "❌ Max retries reached for getting Client ID");
+            return;
+        }
+
+        Log.d("PushSDK", "🔄 Attempt " + (retryCount + 1) + "/" + maxRetries + " to get Client ID");
+
         service.getClientIdByAppId(appId).enqueue(new Callback<ClientIdResponse>() {
             @Override
             public void onResponse(Call<ClientIdResponse> call, Response<ClientIdResponse> response) {
@@ -315,15 +346,40 @@ public class PushNotificationManager {
                     } catch (Exception e) {
                         Log.e("PushSDK", "❌ Could not read error body", e);
                     }
+
+                    // Retry if it's a server error (5xx) or timeout
+                    if (response.code() >= 500 || response.code() == 408) {
+                        scheduleRetry(service, appId, token, userInfo, retryCount, baseDelay);
+                    }
                 }
             }
 
             @Override
             public void onFailure(Call<ClientIdResponse> call, Throwable t) {
-                Log.e("PushSDK", "❌ Network failure while getting Client ID", t);
-                Log.e("PushSDK", "🌐 Check internet connection and server availability");
+                Log.e("PushSDK", "❌ Network failure while getting Client ID (attempt " + (retryCount + 1) + ")", t);
+
+                // Check if it's a network issue that might be resolved with retry
+                if (t instanceof java.net.SocketException ||
+                    t instanceof java.net.ConnectException ||
+                    t instanceof java.net.UnknownHostException ||
+                    t instanceof javax.net.ssl.SSLException) {
+
+                    Log.d("PushSDK", "🔄 Network issue detected, will retry...");
+                    scheduleRetry(service, appId, token, userInfo, retryCount, baseDelay);
+                } else {
+                    Log.e("PushSDK", "❌ Non-retryable error: " + t.getClass().getSimpleName());
+                }
             }
         });
+    }
+
+    private void scheduleRetry(PushApiService service, String appId, String token, UserInfo userInfo, int retryCount, int baseDelay) {
+        int delay = baseDelay * (int) Math.pow(2, retryCount); // Exponential backoff
+        Log.d("PushSDK", "⏰ Scheduling retry in " + delay + "ms");
+
+        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+            getClientIdWithRetry(service, appId, token, userInfo, retryCount + 1);
+        }, delay);
     }
 
     // Internal method for updating user info

@@ -81,14 +81,21 @@ public class PushNotificationService extends FirebaseMessagingService {
 
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
 
-        // Building the notification
+        // Building the notification with maximum priority settings
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.ic_dialog_info)  // Small icon for the notification
                 .setContentTitle(title != null ? title : "Notification")  // Notification title
                 .setContentText(body != null ? body : "")  // Notification body
-                .setPriority(NotificationCompat.PRIORITY_HIGH)  // High priority
+                .setPriority(NotificationCompat.PRIORITY_MAX)  // Maximum priority for immediate display
+                .setCategory(NotificationCompat.CATEGORY_MESSAGE)  // Message category
+                .setDefaults(NotificationCompat.DEFAULT_ALL)  // Default sound, vibration, lights
+                .setVibrate(new long[]{0, 250, 250, 250})  // Custom vibration pattern
+                .setLights(0xFF0000FF, 300, 100)  // Blue light
                 .setContentIntent(pendingIntent)  // Button to open the app when clicked on the notification
-                .setAutoCancel(true);  // The notification will be dismissed when clicked
+                .setAutoCancel(true)  // The notification will be dismissed when clicked
+                .setOnlyAlertOnce(false)  // Always alert, even for updates
+                .setShowWhen(true)  // Show timestamp
+                .setWhen(System.currentTimeMillis());  // Set current time
 
         // Displaying the notification
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
@@ -111,10 +118,24 @@ public class PushNotificationService extends FirebaseMessagingService {
             NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
             channel.setDescription(description);
 
+            // Enable all notification features for immediate delivery
+            channel.enableLights(true);
+            channel.setLightColor(0xFF0000FF); // Blue light
+            channel.enableVibration(true);
+            channel.setVibrationPattern(new long[]{0, 250, 250, 250});
+            channel.setShowBadge(true);
+            channel.setLockscreenVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+
+            // Bypass Do Not Disturb for high priority notifications
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                channel.setAllowBubbles(true);
+            }
+
             // Creating the channel in the OS
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
             if (notificationManager != null) {
                 notificationManager.createNotificationChannel(channel);
+                Log.d(TAG, "✅ High-priority notification channel created");
             }
         }
     }

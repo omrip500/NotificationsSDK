@@ -83,6 +83,30 @@ export const sendNotification = async (req, res) => {
         const message = {
           notification: { title, body },
           tokens,
+          android: {
+            priority: "high",
+            notification: {
+              priority: "high",
+              default_sound: true,
+              default_vibrate_timings: true,
+              default_light_settings: true,
+            },
+          },
+          apns: {
+            headers: {
+              "apns-priority": "10",
+            },
+            payload: {
+              aps: {
+                alert: {
+                  title,
+                  body,
+                },
+                sound: "default",
+                badge: 1,
+              },
+            },
+          },
         };
 
         console.log(
@@ -241,6 +265,30 @@ export const sendToSpecificTokens = async (req, res) => {
         const message = {
           notification: { title, body },
           tokens: clientTokens,
+          android: {
+            priority: "high",
+            notification: {
+              priority: "high",
+              default_sound: true,
+              default_vibrate_timings: true,
+              default_light_settings: true,
+            },
+          },
+          apns: {
+            headers: {
+              "apns-priority": "10",
+            },
+            payload: {
+              aps: {
+                alert: {
+                  title,
+                  body,
+                },
+                sound: "default",
+                badge: 1,
+              },
+            },
+          },
         };
 
         console.log(
@@ -502,6 +550,30 @@ export const sendNotificationByLocation = async (req, res) => {
         const message = {
           notification: { title, body },
           tokens,
+          android: {
+            priority: "high",
+            notification: {
+              priority: "high",
+              default_sound: true,
+              default_vibrate_timings: true,
+              default_light_settings: true,
+            },
+          },
+          apns: {
+            headers: {
+              "apns-priority": "10",
+            },
+            payload: {
+              aps: {
+                alert: {
+                  title,
+                  body,
+                },
+                sound: "default",
+                badge: 1,
+              },
+            },
+          },
         };
 
         console.log(

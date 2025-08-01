@@ -18,7 +18,7 @@ public class ApiClient {
             HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
             logging.setLevel(HttpLoggingInterceptor.Level.BODY);
 
-            OkHttpClient client = new OkHttpClient.Builder()
+            OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder()
                     .addInterceptor(chain -> {
                         Request original = chain.request();
                         Request request = original.newBuilder()
@@ -28,8 +28,11 @@ public class ApiClient {
                     })
                     .addInterceptor(logging)
                     .connectTimeout(30, TimeUnit.SECONDS)
-                    .readTimeout(30, TimeUnit.SECONDS)
-                    .build();
+                    .readTimeout(30, TimeUnit.SECONDS);
+
+            // Use default SSL configuration for production security
+
+            OkHttpClient client = clientBuilder.build();
 
 
             retrofit = new Retrofit.Builder()

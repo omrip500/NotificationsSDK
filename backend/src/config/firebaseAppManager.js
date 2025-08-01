@@ -26,14 +26,19 @@ async function getServiceAccountFromS3(clientId) {
       Key: `clients/${clientId}.json`,
     };
 
-    console.log(`🔍 Loading service account for client: ${clientId}`);
+    console.log(`🔍 DEBUG: Loading service account for client: ${clientId}`);
+    console.log(`🔍 DEBUG: S3 Bucket: ${process.env.FIREBASE_SA_BUCKET}`);
+    console.log(`🔍 DEBUG: S3 Key: clients/${clientId}.json`);
+
     const data = await s3.getObject(params).promise();
+    console.log(`✅ DEBUG: Service account loaded successfully for client: ${clientId}`);
     return JSON.parse(data.Body.toString());
   } catch (error) {
     console.error(
       `❌ Failed to load service account for client ${clientId}:`,
       error.message
     );
+    console.error(`❌ DEBUG: S3 error details:`, error);
     throw new Error(`Service account not found for client: ${clientId}`);
   }
 }
@@ -101,16 +106,26 @@ export async function getFirebaseAppForClient(clientId) {
  */
 export async function sendNotificationForClient(clientId, message) {
   try {
+    console.log(`🔍 DEBUG: Attempting to send notification for client: ${clientId}`);
+    console.log(`🔍 DEBUG: Message tokens count: ${message.tokens?.length || 0}`);
+    console.log(`🔍 DEBUG: Message title: ${message.notification?.title}`);
+
     const app = await getFirebaseAppForClient(clientId);
     const messaging = app.messaging();
 
     console.log(`📤 Sending notification for client: ${clientId}`);
-    return await messaging.sendEachForMulticast(message);
+    const result = await messaging.sendEachForMulticast(message);
+
+    console.log(`✅ DEBUG: Notification sent successfully for client ${clientId}`);
+    console.log(`✅ DEBUG: Success count: ${result.successCount}, Failure count: ${result.failureCount}`);
+
+    return result;
   } catch (error) {
     console.error(
       `❌ Failed to send notification for client ${clientId}:`,
       error.message
     );
+    console.error(`❌ DEBUG: Full error:`, error);
     throw error;
   }
 }
