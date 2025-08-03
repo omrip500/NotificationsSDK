@@ -7,7 +7,7 @@ import applicationRoutes from "./routes/applicationRoutes.js";
 import deviceRoutes from "./routes/deviceRoutes.js";
 import segmentRoutes from "./routes/segmentRoutes.js";
 import statsRoutes from "./routes/stats.js";
-// import startNotificationWorker from "./workers/notificationWorker.js";
+import startNotificationWorker from "./workers/notificationWorker.js";
 import connectDB from "./config/db.js";
 import { clearCache } from "./config/firebaseAppManager.js";
 
@@ -45,6 +45,6 @@ app.listen(PORT, () => {
   // Clear Firebase apps cache on startup
   clearCache();
 
-  // Start scheduled notifications worker
-  // startNotificationWorker();
+  // Start scheduled notifications worker (every 10 seconds for faster processing)
+  startNotificationWorker();
 });

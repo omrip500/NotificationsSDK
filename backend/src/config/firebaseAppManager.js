@@ -106,17 +106,27 @@ export async function getFirebaseAppForClient(clientId) {
  */
 export async function sendNotificationForClient(clientId, message) {
   try {
-    console.log(`🔍 DEBUG: Attempting to send notification for client: ${clientId}`);
+    const startTime = Date.now();
+    console.log(`🔍 [TIMING] Starting Firebase send for client: ${clientId} at ${new Date().toISOString()}`);
     console.log(`🔍 DEBUG: Message tokens count: ${message.tokens?.length || 0}`);
     console.log(`🔍 DEBUG: Message title: ${message.notification?.title}`);
 
+    const appStartTime = Date.now();
     const app = await getFirebaseAppForClient(clientId);
+    const appEndTime = Date.now();
+    console.log(`⏱️ [TIMING] Firebase app initialization took: ${appEndTime - appStartTime}ms`);
+
     const messaging = app.messaging();
 
-    console.log(`📤 Sending notification for client: ${clientId}`);
+    console.log(`📤 [TIMING] Sending notification for client: ${clientId}`);
+    const sendStartTime = Date.now();
     const result = await messaging.sendEachForMulticast(message);
+    const sendEndTime = Date.now();
+    console.log(`⏱️ [TIMING] Firebase sendEachForMulticast took: ${sendEndTime - sendStartTime}ms`);
 
-    console.log(`✅ DEBUG: Notification sent successfully for client ${clientId}`);
+    const endTime = Date.now();
+    const totalTime = endTime - startTime;
+    console.log(`✅ [TIMING] Notification sent successfully for client ${clientId} in ${totalTime}ms`);
     console.log(`✅ DEBUG: Success count: ${result.successCount}, Failure count: ${result.failureCount}`);
 
     return result;

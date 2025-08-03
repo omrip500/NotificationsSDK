@@ -88,6 +88,8 @@ public class PushNotificationManager {
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
                         Log.d("PushSDK", "✅ Subscribed to high priority topic");
+                        // Warm up the FCM connection by getting token immediately
+                        warmUpFCMConnection();
                     } else {
                         Log.w("PushSDK", "⚠️ Failed to subscribe to high priority topic", task.getException());
                     }
@@ -108,6 +110,21 @@ public class PushNotificationManager {
     @Deprecated
     public void initialize() {
         start();
+    }
+
+    /**
+     * Warm up FCM connection to reduce notification delays
+     */
+    private void warmUpFCMConnection() {
+        Log.d("PushSDK", "🔥 Warming up FCM connection...");
+        FirebaseMessaging.getInstance().getToken()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful() && task.getResult() != null) {
+                        Log.d("PushSDK", "✅ FCM connection warmed up successfully");
+                    } else {
+                        Log.w("PushSDK", "⚠️ FCM connection warm-up failed", task.getException());
+                    }
+                });
     }
 
     private void testServerConnection() {

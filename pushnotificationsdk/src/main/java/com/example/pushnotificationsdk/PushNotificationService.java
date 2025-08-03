@@ -44,11 +44,14 @@ public class PushNotificationService extends FirebaseMessagingService {
     public void onMessageReceived(@NonNull RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage);
 
+        long receiveTime = System.currentTimeMillis();
         Log.d(TAG, "🔔 NOTIFICATION RECEIVED!");
         System.out.println("🔔 NOTIFICATION RECEIVED!");
         Log.e(TAG, "🔔 NOTIFICATION RECEIVED!"); // Also at ERROR level to ensure it appears
         Log.d(TAG, "📤 From: " + remoteMessage.getFrom());
-        Log.d(TAG, "🕒 Timestamp: " + System.currentTimeMillis());
+        Log.d(TAG, "🕒 Receive timestamp: " + receiveTime);
+        Log.d(TAG, "🕒 Server timestamp: " + remoteMessage.getSentTime());
+        Log.d(TAG, "⏱️ Delivery delay: " + (receiveTime - remoteMessage.getSentTime()) + "ms");
         Log.d(TAG, "📦 Data payload size: " + remoteMessage.getData().size());
         
         // If there is a Notification message (not just Data)
@@ -81,7 +84,7 @@ public class PushNotificationService extends FirebaseMessagingService {
 
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
 
-        // Building the notification with maximum priority settings
+        // Building the notification with maximum priority settings for immediate delivery
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.ic_dialog_info)  // Small icon for the notification
                 .setContentTitle(title != null ? title : "Notification")  // Notification title
@@ -95,7 +98,9 @@ public class PushNotificationService extends FirebaseMessagingService {
                 .setAutoCancel(true)  // The notification will be dismissed when clicked
                 .setOnlyAlertOnce(false)  // Always alert, even for updates
                 .setShowWhen(true)  // Show timestamp
-                .setWhen(System.currentTimeMillis());  // Set current time
+                .setWhen(System.currentTimeMillis())  // Set current time
+                .setTimeoutAfter(0)  // Never timeout
+                .setFullScreenIntent(pendingIntent, false);  // High priority for immediate display
 
         // Displaying the notification
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
@@ -110,7 +115,7 @@ public class PushNotificationService extends FirebaseMessagingService {
     }
 
     private void createNotificationChannel() {
-        // Creating a notification channel for Android 8 and above
+        // Creating a notification channel for Android 8 and above with maximum priority
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence name = "Push Notification Channel";
             String description = "Channel for push notifications";
@@ -125,8 +130,10 @@ public class PushNotificationService extends FirebaseMessagingService {
             channel.setVibrationPattern(new long[]{0, 250, 250, 250});
             channel.setShowBadge(true);
             channel.setLockscreenVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+            channel.setBypassDnd(true); // Bypass Do Not Disturb
+            channel.setSound(android.provider.Settings.System.DEFAULT_NOTIFICATION_URI, null);
 
-            // Bypass Do Not Disturb for high priority notifications
+            // Enable bubbles and other high-priority features
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 channel.setAllowBubbles(true);
             }

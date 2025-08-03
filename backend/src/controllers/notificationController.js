@@ -17,9 +17,10 @@ function haversineDistance(lat1, lng1, lat2, lng2) {
   return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 }
 
-// 🔹 שליחה מיידית
+// 🔹 שליחה מיידית (עם תיעוד זמנים לזיהוי עיכובים)
 export const sendNotification = async (req, res) => {
-  console.log("📢 Sending notification...");
+  const startTime = Date.now();
+  console.log("📢 [TIMING] Starting notification send at:", new Date().toISOString());
   const { title, body, appId, filters = {} } = req.body;
 
   console.log("title", title);
@@ -85,16 +86,24 @@ export const sendNotification = async (req, res) => {
           tokens,
           android: {
             priority: "high",
+            ttl: 0, // No caching - deliver immediately or not at all
             notification: {
               priority: "high",
               default_sound: true,
               default_vibrate_timings: true,
               default_light_settings: true,
+              channel_id: "push_notification_channel",
+              notification_priority: 2, // PRIORITY_HIGH
+            },
+            data: {
+              immediate: "true",
+              timestamp: Date.now().toString(),
             },
           },
           apns: {
             headers: {
               "apns-priority": "10",
+              "apns-push-type": "alert",
             },
             payload: {
               aps: {
@@ -104,13 +113,15 @@ export const sendNotification = async (req, res) => {
                 },
                 sound: "default",
                 badge: 1,
+                "content-available": 1,
               },
             },
           },
         };
 
+        const clientStartTime = Date.now();
         console.log(
-          `📤 Sending to ${tokens.length} devices for client: ${clientId}`
+          `📤 [TIMING] Sending to ${tokens.length} devices for client: ${clientId} at ${new Date().toISOString()}`
         );
         console.log(
           `🔑 Tokens: ${tokens
@@ -118,6 +129,8 @@ export const sendNotification = async (req, res) => {
             .join(", ")}`
         );
         const response = await sendNotificationForClient(clientId, message);
+        const clientEndTime = Date.now();
+        console.log(`⏱️ [TIMING] Client ${clientId} processing took: ${clientEndTime - clientStartTime}ms`);
 
         totalSuccessCount += response.successCount;
         totalFailureCount += response.failureCount;
@@ -157,6 +170,10 @@ export const sendNotification = async (req, res) => {
       await NotificationLog.insertMany(allLogs);
     }
 
+    const endTime = Date.now();
+    const totalTime = endTime - startTime;
+    console.log(`⏱️ [TIMING] Total notification processing time: ${totalTime}ms`);
+
     res.status(200).json({
       message: `Notification sent to ${totalSuccessCount} devices across ${
         Object.keys(devicesByClient).length
@@ -164,6 +181,7 @@ export const sendNotification = async (req, res) => {
       successCount: totalSuccessCount,
       failures: totalFailureCount,
       clientsCount: Object.keys(devicesByClient).length,
+      processingTimeMs: totalTime,
     });
   } catch (err) {
     console.error("❌ Error sending notification:", err);

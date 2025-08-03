@@ -152,7 +152,8 @@ async function processScheduledNotification(notification) {
 
 // פונקציית worker — נרשמת ברגע שהשרת עולה
 export default function startNotificationWorker() {
-  cron.schedule("* * * * *", async () => {
+  // Run every 10 seconds for faster notification processing
+  cron.schedule("*/10 * * * * *", async () => {
     const now = new Date(new Date().toISOString());
     console.log(
       "🕐 Checking for scheduled notifications at",
