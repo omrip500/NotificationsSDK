@@ -10,6 +10,7 @@ import {
   getServiceAccountStatus,
   updateServiceAccount,
   deleteApplication,
+  clearFirebaseCache,
 } from "../controllers/applicationController.js";
 import authenticate from "../middlewares/authMiddleware.js";
 import Application from "../models/Application.js";
@@ -64,5 +65,8 @@ router.put("/:appId/service-account", authenticate, updateServiceAccount);
 
 // מחיקת אפליקציה
 router.delete("/:appId", authenticate, deleteApplication);
+
+// ניקוי cache של Firebase apps (לפתרון בעיות)
+router.post("/clear-cache", authenticate, clearFirebaseCache);
 
 export default router;

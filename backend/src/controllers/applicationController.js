@@ -2,6 +2,7 @@ import Application from "../models/Application.js";
 import AWS from "aws-sdk";
 import { v4 as uuidv4 } from "uuid";
 import dotenv from "dotenv";
+import { clearCache, clearClientCache } from "../config/firebaseAppManager.js";
 
 dotenv.config();
 
@@ -472,6 +473,10 @@ export const updateServiceAccount = async (req, res) => {
     console.log(`🔄 Updating service account for client: ${app.clientId}`);
     await s3.upload(uploadParams).promise();
 
+    // Clear Firebase cache for this specific client to force reload of new service account
+    console.log(`🧹 Clearing Firebase cache for updated service account: ${app.clientId}`);
+    clearClientCache(app.clientId);
+
     res.status(200).json({
       message: "Service account updated successfully",
       clientId: app.clientId,
@@ -481,6 +486,27 @@ export const updateServiceAccount = async (req, res) => {
     console.error("❌ Error updating service account:", error);
     res.status(500).json({
       message: "Failed to update service account",
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Clear Firebase apps cache manually
+ */
+export const clearFirebaseCache = async (req, res) => {
+  try {
+    console.log("🧹 Manual Firebase cache clear requested");
+    clearCache();
+
+    res.status(200).json({
+      message: "Firebase cache cleared successfully",
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("❌ Error clearing Firebase cache:", error);
+    res.status(500).json({
+      message: "Failed to clear Firebase cache",
       error: error.message,
     });
   }

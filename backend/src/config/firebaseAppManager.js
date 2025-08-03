@@ -164,6 +164,34 @@ export function clearCache() {
 }
 
 /**
+ * מנקה cache עבור clientId ספציפי
+ * @param {string} clientId - מזהה הלקוח
+ */
+export function clearClientCache(clientId) {
+  if (appsCache.has(clientId)) {
+    try {
+      const app = appsCache.get(clientId);
+      if (app && typeof app.delete === "function") {
+        app.delete();
+        console.log(`🗑️ Deleted Firebase app for client: ${clientId}`);
+      }
+    } catch (error) {
+      console.error(
+        `❌ Error deleting Firebase app for client ${clientId}:`,
+        error.message
+      );
+    }
+
+    appsCache.delete(clientId);
+    console.log(`🧹 Firebase cache cleared for client: ${clientId}`);
+    return true;
+  }
+
+  console.log(`ℹ️ No cached Firebase app found for client: ${clientId}`);
+  return false;
+}
+
+/**
  * מחזיר רשימת כל ה-clientIds שנטענו כרגע
  */
 export function getCachedClients() {
